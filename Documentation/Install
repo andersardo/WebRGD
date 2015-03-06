@@ -1,0 +1,102 @@
+  sudo apt-get install emacs  emacs23-el
+edit fstab add noatime to options for SSD-disks
+Tillagt i /etc/network/interfaces
+auto eth0
+iface eth0 inet dhcp
+för att sshd ska starta vid boot
+
+#ssh keys from other computers
+mv id_rsa.pub .ssh/authorized_keys 
+use port 3119 for ssh
+
+stäng av onödiga startup programs
+
+Fixa power button?
+sudo apt-get install acpi-support?
+
+  sudo apt-get install psensor lm-sensors
+  sensors
+  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
+  echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+  sudo apt-get update
+  sudo apt-get install mongodb-org
+  sudo apt-get install libsvm-dev libsvm-tools python-libsvm python-pip python-setuptools python-dev
+
+sudo emacs /etc/hosts
+  comment out rgd.eit.lth.se or change to correct IP-no
+
+PyLucene
+  160  sudo apt-get install openjdk-7-jdk ant
+  167  cd Downloads/
+  168  tar zxvf pylucene-4.8.0-1-src.tar.gz 
+  169  cd pylucene-4.8.0-1/
+cd pylucene-4.5.1-1/
+cd jcc
+#Check setup.py 
+python setup.py build
+sudo python setup.py install
+
+cd ..
+#Check Makefile - uncomment Linux
+make
+make test > tst
+more tst
+sudo make install
+--------------
+
+added wheezy-backports to sources.list
+# 
+
+# deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official amd64 NETINST Binary-1 20131012-14:04]/ wheezy main
+
+#deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official amd64 NETINST Binary-1 20131012-14:04]/ wheezy main
+
+deb http://debian.lth.se/debian/ wheezy main contrib non-free
+deb-src http://debian.lth.se/debian/ wheezy main contrib non-free
+
+deb http://debian.lth.se/debian wheezy-backports main
+
+deb http://security.debian.org/ wheezy/updates main
+deb-src http://security.debian.org/ wheezy/updates main
+
+# wheezy-updates, previously known as 'volatile'
+deb http://debian.lth.se/debian/ wheezy-updates main
+deb-src http://debian.lth.se/debian/ wheezy-updates main
+--------------------------------
+sudo aptitude -t wheezy-backports install linux-image-amd64
+
+  sudo easy_install pymongo
+  sudo easy_install -U bottle
+  sudo easy_install Beaker
+  sudo easy_install bottle-cork
+
+git clone openRGD
+
+cd openRGD
+
+sudo easy_install cherrypy
+
+mkdir conf
+cp -r conf.example/* conf/
+  <EVT edit>
+cp conf.example/fsndata.txt PHP/
+
+#indataValidering PHP-program
+sudo apt-get install php5-cli
+sudo apt-get install php5-mysql mysql-server
+
+FIX  files needed in files/
+  README test*.sql
+
+Fixa mysql enligt files/README
+php-programmen behöver
+MySQL
+  databas test initialiserad från testDump.sql (som innehåller test.sql också)
+  användare 'rgd' passwd 'pilot' med access till databas test
+
+mysql -u root
+mysql> CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_swedish_ci;
+mysql> CREATE USER 'rgd'@'localhost' IDENTIFIED BY 'pilot';
+mysql> GRANT ALL PRIVILEGES ON test.* TO 'rgd'@'localhost' WITH GRANT OPTION;
+
+mysql -u root test < files/testDump.sql 
