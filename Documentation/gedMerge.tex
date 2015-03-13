@@ -32,6 +32,8 @@ cherryPy (http://www.cherrypy.org/) webserver, libsvm
 \section{Översikt, arbetsflöde}
 \begin{figure}[htb]
 \includegraphics[width=\textwidth,height=11cm]{openRGD}
+\caption{Översikt openRGD. Rektanglar: externa program; Ovaler:
+  funktioner i UI}
 \end{figure}
 
 Systemet består av (UI-numreringen hänvisar till sidan ``Startsida -
@@ -39,28 +41,28 @@ arbetsflöde'' i Web-gränssnittet):
 \begin{itemize}
 \item Web-gränssnitt - \verb+UI.py+  se http://rgd.eit.lth.se:8085 och avsnitt \ref{UI} nedan
 \item Indatavalidering av Gedcom-fil - \verb+indataValidering.py+
-  (UI 1-2)\\
+  (UI:1-2)\\
 huvudsakligen en wrapper som anropar ett antal PHP-program som
 Carl-Johan Gustafsson har skrivit.
-\item Import av Gedcom till databas - \verb+importGedcom.py+ (UI 3) - se
+\item Import av Gedcom till databas - \verb+importGedcom.py+ (UI:3) - se
   avsnitt \ref{import} nedan
-\item Maskinell matchning av två databaser - \verb+match.py+ (UI 4) - se
+\item Maskinell matchning av två databaser - \verb+match.py+ (UI:4) - se
   avsnitt \ref{match} nedan
 \item Manuell matchning/korrigering - intern funktion i
-  Web-gränssnittet (UI 5)
+  Web-gränssnittet (UI:5)
 \item Visa skillnader - intern funktion i
-  Web-gränssnittet (UI 6)
-\item Sammanslagning av två databaser - \verb+merge.py+ (UI 7) - se
+  Web-gränssnittet (UI:6)
+\item Sammanslagning av två databaser - \verb+merge.py+ (UI:7) - se
   avsnitt \ref{merge} nedan
 \item Export av en databas i Gedcom-format - \verb+exportGedcom.py+
-  (UI 8) - se avsnitt \ref{export} nedan
+  (UI:8) - se avsnitt \ref{export} nedan
 \end{itemize}
 
 Dessutom finns ett antal globala variabler och rutiner i filerna
 \begin{itemize}
 \item \verb+common.py+ globala definitioner och variabler, mongodb-klienter
 \item \verb+graphUtils.py+ används i Web-gränssnitt 
-\item \verb+importUtil.py+ används vid import av Gedcom-fil
+%\item \verb+importUtil.py+ används vid import av Gedcom-fil
 \item \verb+luceneUtils.py+ används för hantering av Lucene-databaser
 \item \verb+matchtext.py+ används vid matchning för att ta fram texter
   för indexering i Lucene
@@ -84,16 +86,15 @@ möjligt att komma åt värdet.
 Ett värde kan vara data, en lista \verb+[ ]+ eller en nästlad
 'namn/nyckel - värde' struktur \verb+{ }+. En lista kan innehålla
 värden eller nästlade listor/'namn/nyckel - värde' strukturer. Ett enkelt exempel (men kanske
-inte användbart) på hur en familj (med man, hustru och 2 barn) kan representeras i ett dokument:
+inte användbart) på hur en familj (med man Anders, hustru Kajsa och 2
+barn Hans, Else) kan representeras i ett dokument:
 \begin{verbatim}
 {
   "man": {
     'namn': 'Anders Oskarsson',
     'ålder': 47
-  }
-  'hustru': {
-    'namn': 'Kajsa Nilsson',
-  }
+  },
+  'hustru': { 'namn': 'Kajsa Nilsson' },
   'barn': [
             { 'namn': 'Hans'},
             { 
@@ -122,7 +123,7 @@ också vilken databas som är matchad. T.ex. databasen
 \verb+RGDadm+, som är tänkt att
 innehålla bl.a. information om bidragsgivare. Dessutom innehåller den
 en collection, \verb+seq+, som används för att generera systemunika ID av
-olika typer som identifieras av ett prefix ('P\_', 'F\_', 'A\_').
+olika typer (person, familj, admin) som identifieras av ett prefix ('P\_', 'F\_', 'A\_').
 
 \subsection{Collection: \tt persons}
 Innehåller id, namn, kön, född, och död för personer.
@@ -195,9 +196,9 @@ Innehåller familje-data som id, giftermål, och relationslänkar (man, hustru, 
 }
 \end{verbatim}
 \subsubsection{Beskrivning}
-\verb+refId, RGDid+ som ovan
+\verb+refId, RGDid, normPlaceUid+ som ovan
 
-\verb+normPlaceUid+ som ovan
+\verb+husb, wife, children+ pekare till object i \verb+persons+
 
 \verb+husbOrgId, wifeOrgId, childrenOrgId+ används inte längre och kan
 förmodligen tas bort.
@@ -206,7 +207,7 @@ förmodligen tas bort.
 Innehåller orginaldata (inklusive Gedcom-rader) från den importerade
 Gedcomfilen.
 
-\subsubsection{Exempel type admin}
+\subsubsection{Exempel type \tt admin}
 Ska innehålla koppling till bidragsgivare och specifikt bidrag. Nu
 används filnamnet på den uppladdade Gedcom-filen som identifikation.
 \begin{verbatim}
@@ -219,7 +220,7 @@ används filnamnet på den uppladdade Gedcom-filen som identifikation.
 }
 \end{verbatim}
 
-\subsubsection{Exempel type person}
+\subsubsection{Exempel type \tt person}
 \begin{verbatim}
 {
   "_id" : ObjectId("54e5c226a9bcf10adfa93809"),
@@ -271,7 +272,7 @@ används filnamnet på den uppladdade Gedcom-filen som identifikation.
 }
 \end{verbatim}
 {\bf Beskrivning}\\
-som för type person ovan.
+som för type {\tt person} ovan.
 
 \subsection{Matchning temporär collection: \tt matches}
 \subsubsection{Exempel}
@@ -298,12 +299,13 @@ som för type person ovan.
 }
 \end{verbatim}
 {\tt Beskrivning}\\
-\verb+workid, matchid+ pekar på ett dokument i \verb+persons+
+\verb+workid, matchid+ pekar på ett dokument i \verb+persons+ (vid
+matchning av DBI mot DBII är workid i DBI och matchid i DBII
 
 \verb+score, familysim, nodesim, svmscore+ är olika mått på likhet
 mellan de två personerna.
 
-\verb+status+ är status på matchningen (se nedan \ref{match}).
+\verb+status+ är status på matchningen (se nedan avsnitt \ref{match}).
 
 \subsection{Matchning temporär collection: \tt fam\_matches}
 \subsubsection{Exempel}
@@ -399,7 +401,8 @@ görs med programbiliteket simplepyged
 (https://github.com/dijxtra/simplepyged).
 \item Normaliserade värden på datum, namn, och ort tas från
   \verb+date.dat+, \verb+name.dat+, och \verb+plac.dat+ genererade
-  under indatavalideringen.
+  under indatavalideringen.\\
+\verb+sour.dat+
 \item Alla personer lagras i databasens collection \verb+persons+ och \verb+originalData+.
 \item Alla familjer med mer än 1 medlem (KOLLA??) lagras i databasens collection
   \verb+families+ och \verb+originalData+.
@@ -415,7 +418,7 @@ Beskrivning av matchning av en databas (work, DBI) mot en annan
 (match, DBII). OBS ordningen på databaserna är signifikant - det blir
 olika resultat om databas A matchas mot B jämfört med matchning av
 databas B mot A. Detta beror bl.a. på hur matchnings-kandidater väljs
-ut och hur likhets-värden mellan personer beräknas.
+ut och vilken sök-score dom får (se nedan avsnitt \ref{kand}).
 
 Tiden för en matchning är linjärt beroende på storleken hos databas
 DBI men (i stort sett) oberoende av storleken på databas DBII.
@@ -515,7 +518,7 @@ MotherDDate18200418 MotherBNPlace3944 Father/Nilsson/ FatherDNPlace904
 FatherDDate18180123 MotherDDateY1820
 \end{verbatim}
 Observera att textrepresentationen innehåller en del familje-data (för
-personens föräldrar) om den finns tillgänglig.
+personens föräldrar Father*, Mother*) om den finns tillgänglig.
 
 \subsubsection{SVM klassificering personer}\label{svm}
 Support Vector Machines, förkortat SVM,
@@ -588,7 +591,7 @@ ges status 'Match' annars ges status 'Manuell'.
 
 {\bf FamilySim} Ger ett värde mellan -1 (helt olika) och 1 (helt lika)\\
 \begin{itemize}
-\item Föräldrar NodeSim (om inga föräldrar finns avsluta med värde 0)
+\item Föräldrar NodeSim (om inga föräldrar finns 0)
 \item Barn NodeSim
 \item Giftermål
 \begin{itemize}
