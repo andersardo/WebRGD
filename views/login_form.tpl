@@ -31,7 +31,21 @@ Files for guests are not saved.
 </div>
 </div>
 <br style="clear: left;" />
-
+<h4>Nyheter/Händelser/Meddelanden</h4>
+<ul>
+<li> 2015-03-15: Programkoden tillgänglig som OpenSource via GitHub <a
+href="https://github.com/andersardo/gedMerge">https://github.com/andersardo/gedMerge</a>
+<li> 2015-02-26: DIS projektledare Christer Gustavsson ger en
+  statusrapport om arbetet med projektet RGD
+  i <a href="http://www.cognatus.se/podcastgen/?name=2015-02-26_cognatus_slaktforskningspod_1.mp3">Cognatus
+    Släkforskningpod</a>. 
+<li> 2015-02-12: I den GEDCOM-fil som skapas via punkt "8. Skapa
+ GEDCOM fil" ska nu all information (NOTE m.m.) från de tidigare inladdade
+GEDCOM-filerna finnas med. (<b>OBS</b> för att detta ska fungera måste
+ filerna vara uppladdade ("1-3 Ladda upp -
+ indatavalidering/egenkontroll - import") efter 2015-02-12, dvs med
+ openRGD version 0.5 eller högre.)
+</ul>
 
 <h4>Funktionalitet</h4>
 <ul>
@@ -50,15 +64,42 @@ Två matchade GEDCOM filer kan sammanföras till en gemensam fil utan dubbletter
 <li>Skapa GEDCOM fil av sammanslaget släktforskningsdata<br>
 Resultatet från sammanslagningen kan laddas in i ett släktforskningsprogram
 </ul>
+GEDCOM-filerna, som bearbetas i alpha- och beta-versionerna kommer inte att kopieras
+och användas i något annat syfte, varken DIS, RGDs produktions-version
+eller i något kommersiellt sammanhang.<br>
+<b>Däremot kan de GEDCOM-filer som bearbetas i version 0.5 komma att
+  användas för interna tester av programvaran (som t.ex. sammanslagning med andra
+  filer) under utvecklingstiden fram till version 1.0.  Filer som
+  skapas av eller används under dessa tester sparas inte.
+</b>
 
 <p><b><a href="/static/Lathund.pdf">Lathund för användare</a></b>
 (utkast Rolf Carlsson)</p>
 <hr style="clear: left;" />
 
+<b>Utveckling/Roadmap</b>
+<ul>
+<li> Alpha-release slutet Oktober 2014
+<li> Beta-release slutet November 2014
+<li> Version 0.5 slutet Januari 2015
+<li> Version 1.0 Maj 2015
+</ul>
+
 I projektet används metoder från områden som
 Machine Learning och Information Retrieval. Verktyg/metoder som används är
 Python, MongoDB, Lucene, och SVM.
 <p>
+<b>Vill du medverka i projektet?</b><br>
+Du kan bidra med teknisk kunskap i produktutformning (inkluderar programutveckling, Web
+användargränssnitt, layout, testning, mm), administrativ erfarenhet vid behandling
+av inkommande datafiler liksom att rapportera in
+egna forskningsresultat.
+<p>
+Hör av Dig till någon av oss!
+<br>
+Christer Gustavsson (DIS), christer.gustavsson@dis.se<br>
+<a href="http://www.eit.lth.se/staff/Anders.Ardo">Anders Ardö</a> (EIT, Lunds universitet)
+
 
 <h4>Mer information</h4>
 Rikstäckande Genealogisk Databas (RGD) är ett projekt som drivs av
