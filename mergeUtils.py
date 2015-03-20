@@ -37,20 +37,19 @@ def merge(items):
 
 def mergeEvent(eventType, orgDataRec):
     evDict = {}
-    for item in	("date", "source", "place" "normPlaceUid") :
+    for field in ("date", "source", "place", "normPlaceUid"):
         ll = []
         for rec in orgDataRec['data']:
             if eventType in rec['record']:
-                if item in rec['record'][eventType]:
-                    ll.append(rec['record'][eventType][item])
+                if field in rec['record'][eventType]:
+                    ll.append(rec['record'][eventType][field])
         if ll:
-           evDict[item] = merge(ll)
+           evDict[field] = merge(ll)
     return evDict
 
 def mergeOrgDataPers(recordid, persons, originalData):
     persDict = persons.find_one({'_id': recordid})
     orgDataRec = originalData.find_one({'recordId': recordid, 'type': 'person'})
-#    print 'mergeOrgDataPers', recordid
     for field in ('name', 'sex', 'grpNameLast', 'grpNameGiven'):
         ll = []
         for rec in orgDataRec['data']:
@@ -61,7 +60,6 @@ def mergeOrgDataPers(recordid, persons, originalData):
     #events
     for ev in ('birth', 'death'):
         persDict[ev] = mergeEvent(ev, orgDataRec)
-#    print 'persDict', persDict
     return persDict
 
 def mergeOrgDataFamImport(recordid, families, originalData):
