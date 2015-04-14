@@ -1,21 +1,3 @@
-  sudo apt-get install emacs  emacs23-el
-edit fstab add noatime to options for SSD-disks
-Tillagt i /etc/network/interfaces
-auto eth0
-iface eth0 inet dhcp
-för att sshd ska starta vid boot
-
-#ssh keys from other computers
-mv id_rsa.pub .ssh/authorized_keys 
-use port 3119 for ssh
-
-stäng av onödiga startup programs
-
-Fixa power button?
-sudo apt-get install acpi-support?
-
-  sudo apt-get install psensor lm-sensors
-  sensors
   sudo apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
   echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
   sudo apt-get update
