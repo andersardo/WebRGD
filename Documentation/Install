@@ -45,7 +45,10 @@ cp simplepyged/simplepyged/* gedcom/
 #initialize conf-directory
 mkdir conf
 cp -r conf.example/* conf/
-  <EVT edit conf/config.py t.ex. porten>
+  <EVT edit conf/config.py like port and host >
+  # possibly change the URL in views/password_reset_email.tpl
+  # to reflect the new host (also check that the host entry in
+  # /etc/hosts is the external IP-no)
 cp conf.example/fsndata.txt PHP/
 
 #Fixa mysql-databas enligt PHP/README
@@ -59,6 +62,7 @@ mysql> CREATE USER 'rgd'@'localhost' IDENTIFIED BY 'pilot';
 mysql> GRANT ALL PRIVILEGES ON test.* TO 'rgd'@'localhost' WITH GRANT OPTION;
 
 mysql -u root test < PHP/testDump.sql 
+
 
 #start webserver
 python UI.py
