@@ -1,7 +1,10 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<meta content="text/html; charset=utf-8" http-equiv="content-type">
+  <meta content="text/html; charset=utf-8" http-equiv="content-type">
+  <title>openRGD</title>
+</head>
+<body>
 <div id="hbox">
   <div class="box">
       <h2>Logga in</h2>
@@ -33,6 +36,12 @@ Files for guests are not saved.
 <br style="clear: left;" />
 <h4>Nyheter/Händelser/Meddelanden</h4>
 <ul>
+  <li> 2015-04-23: Arbetet med att flytta openRGD Web-tjänster till en
+  DIS-server har påbörjats. Inga databaser kommer att flyttas med
+    automatiskt. Servern rgd.eit.lth.se:8085 kommer att
+  stängas av senast 2015-06-01.
+  <li> 2015-04-23: Artikel "Släkttrim Trimma din släktforskning", Rolf Carlsson, i
+  Diskulogen nr 108, 2015-04, sid 36 -- 38.
 <li> 2015-03-15: Programkoden tillgänglig som OpenSource via GitHub <a
 href="https://github.com/andersardo/gedMerge">https://github.com/andersardo/gedMerge</a>
 <li> 2015-02-26: DIS projektledare Christer Gustavsson ger en
@@ -173,3 +182,5 @@ input {
 }
 input:hover { background: #fefefe}
 </style>
+</body>
+</html>
