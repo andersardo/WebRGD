@@ -433,8 +433,8 @@ def nameGroupDiff(work, match):
              (work['grpNameLast']  != match['grpNameLast']) )
 
 def nameSpellDiff(work, match):
-    return (work['name'].replace('*','').replace('(','').replace(')','').replace(' ','') !=
-            match['name'].replace('*','').replace('(','').replace(')','').replace(' ',''))
+    return (work['name'].lower().replace('*','').replace('(','').replace(')','').replace(' ','') !=
+            match['name'].lower().replace('*','').replace('(','').replace(')','').replace(' ',''))
 
 def eventDiff(work, match, events, items = ('date', 'normPlaceUid')):
     for typ in events:
