@@ -5,7 +5,7 @@ sudo apt-get update
 sudo apt-get install -y mongodb-org
 
 #standard packages
-sudo apt-get install libsvm-dev libsvm-tools python-libsvm python-pip python-setuptools python-dev openjdk-7-jdk ant g++ git
+sudo apt-get install libsvm-dev libsvm-tools python-libsvm python-pip python-setuptools python-dev openjdk-7-jdk ant g++ git graphviz
 
 #för indataValidering PHP-program
 sudo apt-get install php5-cli php5-mysql mysql-server 
