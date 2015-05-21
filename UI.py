@@ -40,7 +40,6 @@ app = SessionMiddleware(app, session_opts)
 
 @bottle.route('/static/<filepath:path>')
 def server_static(filepath):
-#    return bottle.static_file(filepath, root='/home/anders/SVNprojects/staff.it-aar.RGDmongo/static')
     return bottle.static_file(filepath, root='static')
 
 @bottle.route('/img/<filepath:path>')
@@ -365,7 +364,10 @@ def search():
 @authorize()
 def listdubl():
     if not bottle.request.query.workDB:
-        bottle.request.query.workDB = bottle.request.session['workDB']
+        if 'workDB' in bottle.request.session:
+            bottle.request.query.workDB = bottle.request.session['workDB']
+        else:
+            return 'Databas I ej vald - programmet avslutas<br><a href="/">Tillbaka till startsida</a>'
     bottle.request.query.matchDB = bottle.request.query.workDB
     bottle.request.session['matchDB'] = bottle.request.query.workDB
     #need to re-init database collections
