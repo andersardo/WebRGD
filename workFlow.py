@@ -52,7 +52,7 @@ def workFlowUI(user, workingDir):
     #8 = len rootdir FIX!
     activeUser = workingDir[8:]
     for db in client.database_names():
-        if db.startswith(activeUser) or (user == 'admin'):
+        if db.startswith(activeUser+'_') or (user == 'admin'):
             dbs.append(db)
     return (files, dbs, workingDir, activeUser)
 
