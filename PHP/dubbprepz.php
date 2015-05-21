@@ -56,7 +56,9 @@ else
 	$checksum=md5($dbl);
 //	Anropa disnamnREST
 	ini_set('default_socket_timeout',60);
-	$url = "http://dev.dis.se/disnamnREST.php?download=1&md5=".$checksum;
+//      Moved to dis4/rgd
+//	$url = "http://dev.dis.se/disnamnREST.php?download=1&md5=".$checksum;
+	$url = "https://rgd.dis.se/disnamnREST.php?download=1&md5=".$checksum;
 	$db = file_get_contents($url);
 //	Alternativ
 	if(($db===FALSE)||($db=='NoChanges')) {
