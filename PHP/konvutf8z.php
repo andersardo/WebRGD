@@ -89,17 +89,13 @@ if(file_exists($filein)) {
 //	Testa NAME						
 		$tagg = substr($str,0,6);
 		if($tagg == '1 NAME') {
-			$zlen = strlen($str);
-			$zant = 0;
 			$sant = 0;
-			while($zant < $zlen) {
-				$ztkn = substr($str,$zant,1);
-				if($ztkn == '/') {
-					$sant++;
-				}
-				$zant++;
-			}
+			$zant = count_chars($str,0);
+			$sant = $zant[ord('/')]; //hur många '/'?
 //	Rätta formellt felaktiga						
+//	Alltid en ' ' för första '/'
+			$str = preg_replace('/\//', ' /', $str, 1);
+			$str = preg_replace('/  \//', ' /', $str, 1);
 			if($sant == 0) {
 				$str = $str." //";
 			}	
