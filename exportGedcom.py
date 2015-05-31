@@ -183,13 +183,14 @@ for fam in config['families'].find({}):
     parsedGed = []
     for rec in orgData['data']:
         printTag('1 NOTE', 'original GEDCOMid ' + rec['record']['refId'])
-        try:
-            ged = Gedcom('/dev/null')
-        except Exception, e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(exc_type, exc_value, exc_traceback)
-        parseGedcom(ged, rec['gedcom'])
-        parsedGed.append(ged.family_list()[0])
+	if 'gedcom' in rec:
+            try:
+               ged = Gedcom('/dev/null')
+            except Exception, e:
+               exc_type, exc_value, exc_traceback = sys.exc_info()
+               traceback.print_exception(exc_type, exc_value, exc_traceback)
+            parseGedcom(ged, rec['gedcom'])
+            parsedGed.append(ged.family_list()[0])
     for gedTag in parsedGed:
         for tag in gedTag.children_lines():
             if tag.level() == 1:
