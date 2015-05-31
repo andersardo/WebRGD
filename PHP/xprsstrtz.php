@@ -16,6 +16,7 @@ $larmrub5 = 1;
 $larmrub6 = 1;
 $larmrub7 = 1;
 $larmrub8 = 1;
+$larmrub9 = 1;
 //			
 $fileix=$directory . "RGD1.GED";
 //
@@ -23,6 +24,7 @@ echo "<br/>";
 //
 $typ = '';
 $typtest = '';
+$larmi = 0;
 $larmv = 0;
 if(file_exists($fileix)) {
 	echo "Program xprsstrtz startat * * * * * <br/>";
@@ -954,7 +956,21 @@ else
 		}
 // TRLR
 		fwrite($handut,$str."\r\n");
-//
+//		
+		if($larmrub5 > 1) {
+			$filelarm=$directory . "Check_lista.txt";
+			$handlarm=fopen($filelarm,"a");
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			$larm = "* * * Personer måste ges könstillhörighet för att kunna bearbetas";
+			fwrite($handlarm,$larm."\r\n");
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			fclose($handlarm);
+		}
+//		
 		echo "Program konvordn avslutad <br/n>";
 		echo "<br/n>";
 		fclose($handin);
@@ -2844,6 +2860,21 @@ Ladda array med kända värden.
 			}
 			fwrite($handut,$str."\r\n");
 		}
+//		
+		if($larmrub6 > 1) {
+			$filelarm=$directory . "Check_lista.txt";
+			$handlarm=fopen($filelarm,"a");
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			$larm = "* * * Dessa punkter i Check-listan bör kollas och om möjligt åtgärdas";
+			fwrite($handlarm,$larm."\r\n");
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			fclose($handlarm);
+		}
+//		
 		if($kant > 0) {
 			echo "<br/>";
 			echo $kant." DATE post(er) med felaktigt kalenderdatum hittad, måste rättas. <br/>";
@@ -2873,7 +2904,6 @@ Tester på felaktig ordningsföld av datum för individ
 Test om intervallen av årtal överstiger 110 år
 Test om datum större än dd
 */
-//
 $filename=$directory . "RGDF.GED";
 //
 $imax=0;
@@ -2888,8 +2918,12 @@ $fdat=0;
 $cdat=0;
 $ddat=0;
 $bdat=0;
-$fmin=9999;
 $dmax=0;
+$fnum=0;
+$cnum=0;
+$dnum=0;
+$bnum=0;
+$fmin=9999;
 $fflag="";
 $cflag="";
 $dflag="";
@@ -2910,7 +2944,9 @@ if(file_exists($filename))
 		$tagg=substr($str,0,6);
 		$tagk=substr($str,0,5);
 		$aar=substr($str,7,4);
+		$man=substr($str,11,2);
 		$dat=substr($str,7,8);
+		$dag=substr($str,13,2);
 		$dlen = strlen($dat);
 		if(($pos1 == '0') || ($pos1 == '1'))
 		{
@@ -2959,6 +2995,11 @@ if(file_exists($filename))
 				$faar = $aar;
 				if($dlen == 8) {
 					$fdat = $dat;
+					$fnum = 365*$aar + 30*$man + $dag;
+				}
+				else
+				{
+					$fnum = 0;
 				}	
 			}
 			if($cflag == "C")
@@ -2966,6 +3007,11 @@ if(file_exists($filename))
 				$caar = $aar;
 				if($dlen == 8) {
 					$cdat = $dat;
+					$cnum = 365*$aar + 30*$man + $dag;
+				}	
+				else
+				{
+					$cnum = 0;
 				}	
 			}
 			if($dflag == "D")
@@ -2973,6 +3019,11 @@ if(file_exists($filename))
 				$daar = $aar;
 				if($dlen == 8) {
 					$ddat = $dat;
+					$dnum = 365*$aar + 30*$man + $dag;
+				}	
+				else
+				{
+					$dnum = 0;
 				}	
 			}
 			if($bflag == "B")
@@ -2980,17 +3031,22 @@ if(file_exists($filename))
 				$baar = $aar;
 				if($dlen == 8) {
 					$bdat = $dat;
+					$bnum = 365*$aar + 30*$man + $dag;
+				}	
+				else
+				{
+					$bnum = 0;
 				}	
 			}
 			$feltxt = '';
 			if($dat > date('Ymd')) {
 				$feltxt = "Framtida datum ".$dat.", som måste åtgärdas";
-//				echo "Framtida datum ".$dat.", som måste åtgärdas  
+//				echo "** Framtida datum ".$dat.", som måste åtgärdas  
 //				. . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 			}	
 			elseif($aar > date('Y')) {
 				$feltxt = "Framtida årtal ".$aar.", som måste åtgärdas";
-//				echo "Framtida årtal ".$aar.", som måste åtgärdas  
+//				echo "** Framtida årtal ".$aar.", som måste åtgärdas  
 //				. . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 			}
 //	Larm
@@ -3027,13 +3083,71 @@ if(file_exists($filename))
 		}
 		if($nytt == '0 @')
 		{
+//	Test intervall
+			$inttxt = '';
+			if(($cnum > 0) && ($fnum > 0)) {
+				$dagtst = $cnum-$fnum;
+				if($dagtst > 295) {
+					$inttxt = $dagtst." dagars intervall - född ".$fdat." - döpt ".$cdat.", bör kollas ";
+//					echo $dagtst." dagars intervall - född ".$fdat." - döpt ".$cdat.", 
+//					bör kollas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
+// Larm och beskrivande feltext
+					$larmi++;
+					$lrmi[] = $inttxt." - Id => ".$znum." - ".$lnamn;
+//
+				}	
+			}	
+			elseif(($caar > 0) && ($faar > 0)) {
+				if($caar > $faar) {
+					$dagtst = $caar-$faar;
+					$inttxt = $dagtst." års intervall - född ".$faar." - döpt ".$caar.", bör kollas ";
+//					echo $dagtst." års intervall - född ".$faar." - döpt ".$caar.", 
+//					bör kollas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
+// Larm och beskrivande feltext
+					$larmi++;
+					$lrmi[] = $inttxt." - Id => ".$znum." - ".$lnamn;
+//
+				}	
+			}	
+			if(($bnum > 0) && ($dnum > 0)) {
+				$dagtst = $bnum-$dnum;
+				if($dagtst > 295) {
+					$inttxt = $dagtst." dagars intervall - död ".$ddat." -  begravd ".$bdat.", bör kollas ";
+//					echo $dagtst." dagars intervall - död ".$ddat." - begravd ".$bdat.", 
+//					bör kollas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
+// Larm och beskrivande feltext
+					$larmi++;
+					$lrmi[] = $inttxt." - Id => ".$znum." - ".$lnamn;
+//
+				}	
+			}
+			elseif(($baar > 0) && ($daar > 0)) {
+				if($baar > $daar) {
+					$dagtst = $baar-$daar;
+					$inttxt = $dagtst." års intervall - död ".$daar." - begravd ".$baar.", bör kollas ";
+//					echo $dagtst." års intervall - död ".$daar." - begravd ".$baar.", 
+//					bör kollas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
+// Larm och beskrivande feltext
+					$larmi++;
+					$lrmi[] = $inttxt." - Id => ".$znum." - ".$lnamn;
+//
+				}	
+			}	
+//	0-ställ till nästa individ		
+			$fnum = 0;
+			$cnum = 0;
+			$dnum = 0;
+			$bnum = 0;
+			$dagtst = 0;
+//			
+//	Test sekvensfel
 			$feltxt = '';
 			if(($fdat > 0) && ($bdat > 0))
 			{
 				if($fdat > $bdat)
 				{
 					$feltxt = "Begravd ".$bdat." före född ".$fdat;
-//					echo "Begravd ".$bdat." före född ".$fdat." är omöjligt och det måste 
+//					echo "** Begravd ".$bdat." före född ".$fdat." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$ddat = 0;
 					$cdat = 0;
@@ -3045,7 +3159,7 @@ if(file_exists($filename))
 				if($faar > $baar)
 				{
 					$feltxt = "Begravd ".$baar." före född ".$faar;
-//					echo "Begravd ".$baar." före född ".$faar." är omöjligt och det måste 
+//					echo "** Begravd ".$baar." före född ".$faar." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$daar = 0;
 					$caar = 0;
@@ -3057,7 +3171,7 @@ if(file_exists($filename))
 				if($cdat > $bdat)
 				{
 					$feltxt = "Begravd ".$bdat." före döpt ".$cdat;
-//					echo "Begravd ".$bdat." före döpt ".$cdat." är omöjligt och det måste 
+//					echo "** Begravd ".$bdat." före döpt ".$cdat." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$ddat = 0;
 					$cdat = 0;
@@ -3068,7 +3182,7 @@ if(file_exists($filename))
 				if($caar > $baar)
 				{
 					$feltxt = "Begravd ".$baar." före döpt ".$caar;
-//					echo "Begravd ".$baar." före döpt ".$caar." är omöjligt och det måste 
+//					echo "** Begravd ".$baar." före döpt ".$caar." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$daar = 0;
 					$caar = 0;
@@ -3079,7 +3193,7 @@ if(file_exists($filename))
 				if($ddat > $bdat)
 				{
 					$feltxt = "Begravd ".$bdat." före död ".$ddat;
-//					echo "Begravd ".$bdat." före död ".$ddat." är omöjligt och det måste 
+//					echo "** Begravd ".$bdat." före död ".$ddat." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$ddat = 0;
 				}
@@ -3089,7 +3203,7 @@ if(file_exists($filename))
 				if($daar > $baar)
 				{
 					$feltxt = "Begravd ".$baar." före död ".$daar;
-//					echo "Begravd ".$baar." före död ".$daar." är omöjligt och det måste 
+//					echo "** Begravd ".$baar." före död ".$daar." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$daar = 0;
 				}
@@ -3099,7 +3213,7 @@ if(file_exists($filename))
 				if($fdat > $ddat)
 				{
 					$feltxt = "Död ".$ddat." före född ".$fdat;
-//					echo "Död ".$ddat." före född ".$fdat." är omöjligt och det måste 
+//					echo "** Död ".$ddat." före född ".$fdat." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$cdat = 0;
 					$fdat = 0;
@@ -3110,7 +3224,7 @@ if(file_exists($filename))
 				if($faar > $daar)
 				{
 					$feltxt = "Död ".$daar." före född ".$faar;
-//					echo "Död ".$daar." före född ".$faar." är omöjligt och det måste 
+//					echo "** Död ".$daar." före född ".$faar." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$caar = 0;
 					$faar = 0;
@@ -3121,7 +3235,7 @@ if(file_exists($filename))
 				if($cdat > $ddat)
 				{
 					$feltxt = "Död ".$ddat." före döpt ".$cdat;
-//					echo "Död ".$ddat." före döpt ".$cdat." är omöjligt och det måste 
+//					echo "** Död ".$ddat." före döpt ".$cdat." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$cdat = 0;
 				}
@@ -3131,7 +3245,7 @@ if(file_exists($filename))
 				if($caar > $daar)
 				{
 					$feltxt = "Död ".$daar." före döpt ".$caar;
-//					echo "Död ".$daar." före döpt ".$caar." är omöjligt och det måste 
+//					echo "** Död ".$daar." före döpt ".$caar." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 					$caar = 0;
 				}
@@ -3141,7 +3255,7 @@ if(file_exists($filename))
 				if($fdat > $cdat)
 				{
 					$feltxt = "Döpt ".$cdat." före född ".$fdat;
-//					echo "Döpt ".$cdat." före född ".$fdat." är omöjligt och det måste 
+//					echo "** Döpt ".$cdat." före född ".$fdat." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 				}
 			}
@@ -3150,7 +3264,7 @@ if(file_exists($filename))
 				if($faar > $caar)
 				{
 					$feltxt = "Döpt ".$caar." före född ".$faar;
-//					echo "Döpt ".$caar." före född ".$faar." är omöjligt och det måste 
+//					echo "** Döpt ".$caar." före född ".$faar." är omöjligt och det måste 
 //					åtgärdas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 				}
 			}
@@ -3210,8 +3324,8 @@ if(file_exists($filename))
 				$diff=($dmax-$fmin);
 				if($diff > 110)
 				{
-					$feltxt = "År ".$fmin." - ".$dmax." ger en ålder av ".$diff." år";
-//					echo "År ".$dmax." minus ".$fmin." ger en diff på ".$diff.
+					$feltxt = "År ".$fmin." - ".$dmax." ger en diff av ".$diff." år";
+//					echo "* År ".$dmax." minus ".$fmin." ger en diff på ".$diff.
 //					" år, bör kollas . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 				}
 			}	
@@ -3259,6 +3373,8 @@ if(file_exists($filename))
 			$cdat = 0;
 			$ddat = 0;
 			$bdat = 0;
+//			$dmax = 0;
+//			$fmin = 9999;
 //
 			$imax=3;
 			$znum='';
@@ -3280,22 +3396,14 @@ if(file_exists($filename))
 	}
 	fclose($handle);
 //
-	if($larmant > 0) {
-//		echo "<br/>";
-//			echo "Check-lista med ".$larmant." post(er) har skrivits ut, måste rättas. <br/>";
-//		echo "<br/>";
-//			
+	if($larmrub7 > 1) {
 		$filelarm=$directory . "Check_lista.txt";
 		$handlarm=fopen($filelarm,"a");
 		$larm = " ";
 		fwrite($handlarm,$larm."\r\n");
 		$larm = " ";
 		fwrite($handlarm,$larm."\r\n");
-		$larm = "* * * Dessa fel i Check-listan är av sådan karaktär att de bör åtgärdas";
-//		fwrite($handlarm,$larm."\r\n");
-//		$larm = "* * * för att resultatet av bearbetningen inte skall misslyckas.";
-		fwrite($handlarm,$larm."\r\n");
-		$larm = " ";
+		$larm = "* * * Dessa punkter i Check-listan bör kollas och åtgärdas";
 		fwrite($handlarm,$larm."\r\n");
 		$larm = " ";
 		fwrite($handlarm,$larm."\r\n");
@@ -3809,8 +3917,9 @@ if(file_exists($filename))
 		}	
 	}
 	fclose($handle);
-//
-	if($larmv > 0)
+//	
+//	Varningslista ologiskt placerad för att få rätt sekvens vid utskrift
+	if($larmi > 0)
 	{
 //	Larm
 		$brytr = 0;
@@ -3820,11 +3929,47 @@ if(file_exists($filename))
 			$larm = " ";
 			fwrite($handlarm,$larm."\r\n");
 			fwrite($handlarm,$larm."\r\n");
-			$larm = "*** V A R N I N G  (VIII) Text";
+			$larm = "*** V A R N I N G  (VIII) Datum, intervall";
 			fwrite($handlarm,$larm."\r\n");
 			$larm = " ";
 			fwrite($handlarm,$larm."\r\n");
 			$larmrub8++;
+		}
+		if($larmi > 0) {
+			$lrmlisti=array_unique($lrmi);
+			foreach($lrmlisti as $lrmradi) {
+				$brytr++;
+				if($brytr >= 4) {
+					fwrite($handlarm," \r\n");
+					$brytr = 1;
+				}
+				fwrite($handlarm,$lrmradi." \r\n");
+				$larmant++;
+			}
+		}
+		$larm = " ";
+		fwrite($handlarm,$larm."\r\n");
+		$larm = "* * * Dessa punkter i Check-listan bör kollas och vid behov åtgärdas";
+		fwrite($handlarm,$larm."\r\n");
+		fclose($handlarm);
+	}
+//
+//	Varningslista ologiskt placerad för att få rätt sekvens vid utskrift
+	if($larmv > 0)
+	{
+//	Larm
+		$brytr = 0;
+		$filelarm=$directory . "Check_lista.txt";
+		$handlarm=fopen($filelarm,"a");
+		if($larmrub9 == 1) {
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			fwrite($handlarm,$larm."\r\n");
+			$larm = "*** V A R N I N G  (IX) Text";
+			fwrite($handlarm,$larm."\r\n");
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			$larmrub9++;
 		}
 		if($larmv > 0) {
 			$lrmlistv=array_unique($lrmv);
