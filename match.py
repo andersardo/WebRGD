@@ -5,7 +5,7 @@ import common
 
 from collections import defaultdict
 import argparse, time, sys, os, logging
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
         format = '%(levelname)s %(module)s:%(funcName)s:%(lineno)s - %(message)s')
 
 parser = argparse.ArgumentParser()
@@ -66,7 +66,8 @@ for p in person_list.find(timeout=False):
         #FIX EVT: lägg in mönster (autoOK, autoCheck -> EjOK) (multimatch Resolve) här
         matches.insert(matchdata)
         ant += 1
-        if matchdata['status'] in common.statEjOK: break
+#se mail 'Stickprov' Juni 5 2015
+#        if matchdata['status'] in common.statEjOK: break
         if  matchdata['status'] in common.statOK.union(common.statManuell):
             dubltmp[p['_id']].append(candidate['_id'])
             dbltmpNs[p['_id'], candidate['_id']] = matchdata['nodesim']
@@ -127,7 +128,7 @@ for mt in matches.find({'status': {'$in': list(common.statOK)}}, {'_id': 1, 'wor
     for check in matches.find({'status': {'$in': list(common.statManuell)}, 'workid': mt['workid'],
                                'nodesim': {'$lte': 0.0}, 'svmscore': {'$lt': 0.5}
                                }):
-        logging.debug('Set person %s status=rEjOK',check['refId'])
+        logging.debug('Set persons %s %s status=rEjOK',check['pwork']['refId'],check['pmatch']['refId'])
         matches.update({'_id': check['_id']}, {'$set': {'status': 'rEjOK'}})
         ant += 1
 logging.info('%d Individer med status Manuell => rEjOK fixade', ant)
