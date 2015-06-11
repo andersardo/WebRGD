@@ -128,6 +128,8 @@ Databas
 <h2>4. Maskinell Matchning - <a href="#Match1">Läs mera</a></h2>
 Matchning av två databaser innebär att programmet försöker
 att identifiera personer, som finns i båda databaserna.
+<br>
+(Fintrimmning av matchningsfunktionen återstår att göra.)
 <p><br>
 <form action="/runProg/match" method="GET">
 Databas
@@ -191,6 +193,7 @@ att matchas mot
 <p><input type="submit" value="DoManualMatch" />
 -->
 </form>
+
 </td>
 <td style="float: right;"><img src="/img/wfOP_5.png" width="397"
 onmouseover="this.width='794'; this.style='position: absolute;right: 0px;'"

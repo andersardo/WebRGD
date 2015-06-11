@@ -21,7 +21,7 @@
   </div>
 <div class="info">
 <p>&nbsp;
-<b>openRGD version 0.5 för tester!</b><p>&nbsp;<br>
+<b>openRGD version 1.0</b><p>&nbsp;<br>
 Detta är openRGDs Web-tjänster - logga in som "guest" utan lösenord för att prova
   systemet.
 OBS filer för "guest" sparas inte mellan sessioner.
@@ -36,10 +36,15 @@ Files for guests are not saved.
 <br style="clear: left;" />
 <h4>Nyheter/Händelser/Meddelanden</h4>
 <ul>
-  <li> 2015-04-23: Arbetet med att flytta openRGD Web-tjänster till en
-  DIS-server har påbörjats. Inga databaser kommer att flyttas med
-    automatiskt. Servern rgd.eit.lth.se:8085 kommer att
-  stängas av senast 2015-06-01.
+  <li> 2015-05-21: Resultatet av det avslutade delprojektet openRGD är
+        nu tillgängligt - <a href="/static/openRGD.pdf">Informationsbroschyr</a>.
+  <li> 2015-05-21: Matchnings-delen är nu tillgänglig igen (viss fintrimmning återstår)
+  <li> 2015-05-13: Matchnings-delen är avstängd tills vidare medan vi undersöker ett problem.
+  <li> 2015-05-12: Nu borde allt gå att använda som vanligt - kom ihåg
+ att inga databaser har flyttats med från den tidigare test-servern -
+ ni får ladda upp de GEDCOM-filer som ni vill använda på nytt.
+  <li> 2015-05-12: Systemunderhåll hela dagen - vilket medför en ostabil service!
+  <li> 2015-05-05: Du använder nu DIS RGD-server. 
   <li> 2015-04-23: Artikel "Släkttrim Trimma din släktforskning", Rolf Carlsson, i
   Diskulogen nr 108, 2015-04, sid 36 -- 38.
 <li> 2015-03-15: Programkoden tillgänglig som OpenSource via GitHub <a
@@ -57,6 +62,9 @@ GEDCOM-filerna finnas med. (<b>OBS</b> för att detta ska fungera måste
 </ul>
 
 <h4>Funktionalitet</h4>
+Servicen ska fortfarande ses som ett ej färdigt system under utveckling.
+Erfarenheterna från arbetet tar vi med oss till den fortsatta
+utvecklingen med RGD med Släkttrim.
 <ul>
 <li>Indatavalidering / egenkontroll av GEDCOM-filer
 <ul>
@@ -73,14 +81,9 @@ Två matchade GEDCOM filer kan sammanföras till en gemensam fil utan dubbletter
 <li>Skapa GEDCOM fil av sammanslaget släktforskningsdata<br>
 Resultatet från sammanslagningen kan laddas in i ett släktforskningsprogram
 </ul>
-GEDCOM-filerna, som bearbetas i alpha- och beta-versionerna kommer inte att kopieras
+GEDCOM-filerna som bearbetas kommer inte att kopieras
 och användas i något annat syfte, varken DIS, RGDs produktions-version
 eller i något kommersiellt sammanhang.<br>
-<b>Däremot kan de GEDCOM-filer som bearbetas i version 0.5 komma att
-  användas för interna tester av programvaran (som t.ex. sammanslagning med andra
-  filer) under utvecklingstiden fram till version 1.0.  Filer som
-  skapas av eller används under dessa tester sparas inte.
-</b>
 
 <p><b><a href="/static/Lathund.pdf">Lathund för användare</a></b>
 (utkast Rolf Carlsson)</p>
