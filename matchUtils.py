@@ -6,6 +6,7 @@ from matchtext import matchtext
 
 from svmutil import *
 svmModel = svm_load_model('conf/person.model')
+_cache = {}
 
 def cos(l1,l2):
     """ Similarity between two vectors = cosine for the angle between the vectors:
@@ -106,6 +107,10 @@ def nodeSim(p1,p2):
         returns a value between -1 (unequal) and 1 (equal) """
     if (not (p1 and p2)): return 0.0  #?? OK??
 ##?# Cache results?
+    global _cache
+    key = '%s;%s' % (p1['_id'], p2['_id'])
+    if key in _cache: return _cache[key]
+##?
     sim=0.0
     n=0
 #    if (p1['sex'] and p2['sex']):    #sex har vikt 4
@@ -133,14 +138,25 @@ def nodeSim(p1,p2):
             (esim, en) = eventSim(p1[ev], p2[ev])
             sim += esim
             n += en
-    if (n>0): return sim/n
-    else: return 0.0
+    if (n>0):
+        _cache[key] = sim/n
+        return sim/n
+    else:
+        _cache[key] = 0.0
+        return 0.0
 
 def familySim(pFam, person_list, rgdFam, match_person):
     """compares 2 families using nodeSim for each person in base-family
        father, mother, and all siblings plus compare family-event marriage
        returns a value between -1 (unequal) and 1 (equal) """
     if not (pFam and rgdFam): return 0.0
+##?# Cache results?
+    global _cache
+    key = '%s;%s' % (pFam['_id'], rgdFam['_id'])
+    if key in _cache:
+#        print 'famSim using cached'
+        return _cache[key]
+##?
     gfSc = 0.0
     n = 0
 
@@ -181,6 +197,7 @@ def familySim(pFam, person_list, rgdFam, match_person):
     fSc = 0.0
     if n>0: fSc = gfSc/n
     #print '    FS', fSc, 'N', n
+    _cache[key] = fSc
     return fSc
 
 def compValEq(v1, v2):
