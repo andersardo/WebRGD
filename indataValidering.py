@@ -92,11 +92,11 @@ if dubl:
 if os.path.isfile('./Info.txt'):
     print '<b><a href="/getFile?fil='+rootdir+'/Info.txt" target="_blank">Info.txt</a> - </b>Informationslista med saknade relationskopplingar <br>'
 if namn and os.path.isfile('./RGDN.txt'):
-    print '<b><a href="/getFile?fil='+rootdir+u'/RGDN.txt" target="_blank">RGDN.txt</a> - Namnfel eller namn som saknas i namndatabasen, men finns med avvikande kön</b><br>'
+    print '<b><a href="/getFile?fil='+rootdir+u'/RGDN.txt" target="_blank">RGDN.txt</a> - Namnfel eller namn som saknas i namndatabasen, men finns med avvikande k&ouml;n</b><br>'
 if ort and os.path.isfile('./RGDO.txt'):
-    print '<b><a href="/getFile?fil='+rootdir+u'/RGDO.txt" target="_blank">RGDO.txt</a> - Ortnamn / Platser som ej kunnat identifieras som församlingar i GEDCOM filen</b><br>'
+    print '<b><a href="/getFile?fil='+rootdir+u'/RGDO.txt" target="_blank">RGDO.txt</a> - Ortnamn / Platser som ej kunnat identifieras som f&ouml;rsamlingar i GEDCOM filen</b><br>'
 if dubl and os.path.isfile('./RGDD.txt'):
-    print '<b><a href="/getFile?fil='+rootdir+u'/RGDD.txt" target="_blank">RGDD.txt</a> - Dubblett sökning</b><br>'
+    print '<b><a href="/getFile?fil='+rootdir+u'/RGDD.txt" target="_blank">RGDD.txt</a> - Dubblett s&ouml;kning</b><br>'
 
 os.system('echo "ALLT KLART\n" >> Log')
 try:

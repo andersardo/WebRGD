@@ -172,7 +172,7 @@ args = parser.parse_args()
 user = args.user
 fn = args.fn
 if not os.path.isfile(fn):
-    loggin.error('<h1>Validerade Gedcom-filen %s saknas</h1>', fn)
+    logging.error('<h1>Validerade Gedcom-filen %s saknas</h1>', fn)
     sys.exit()
 
 #use username and first part of filename as databasename
