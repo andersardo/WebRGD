@@ -464,6 +464,7 @@ $filein=$directory . "RGDV.GED";
 $fileut=$directory . "RGDT.GED";
 $filesou=$directory . "sour.dat";
 //
+$soucnt = 0;
 $akt = 'NEJ';
 //
 if(file_exists($filein))
@@ -536,6 +537,7 @@ if(file_exists($filein))
 					$soulen=strlen($textin);
 					$souut=substr($textin,7,$soulen);
 					$sou[$souorg]=$souut;
+					$soucnt++;
 				}
 				else
 				{
@@ -544,6 +546,7 @@ if(file_exists($filein))
 					fwrite($handut,$str."\r\n");
 //	Array 
 					$sou[$souorg]=$souorg;
+					$soucnt++;
 				}
 //				
 			}
@@ -554,6 +557,7 @@ if(file_exists($filein))
 				fwrite($handut,$str."\r\n");
 //	Array 
 				$sou[$souorg]=$souorg;
+				$soucnt++;
 			}
 		}
 		else
@@ -564,8 +568,15 @@ if(file_exists($filein))
 	fclose($handin);
 	fclose($handut);
 //	Array start
-	fwrite($handsou,json_encode($sou)."\r\n");
-	fclose($handsou);
+	if($soucnt > 0) {
+		fwrite($handsou,json_encode($sou)."\r\n");
+		fclose($handsou);
+	}
+	else {
+		fwrite($handsou,"{}\r\n");
+		fclose($handsou);
+		echo "Källinformation saknas. <br/>";
+	}	
 //	Array slut
 //			
 	echo "Program konvtabu avslutad <br/>";
@@ -2522,6 +2533,7 @@ Ladda array med kända värden.
 //	
 		$len=0;
 		$stop=0;
+		$datcnt=0;
 		$llen = '';
 		$lnamn = '';
 		$akt = 'NEJ';
@@ -2807,6 +2819,7 @@ Ladda array med kända värden.
 //	Array 
 								$datut = $taar.$tman.$tdag;
 								$dat[$datorg]=$datut;
+								$datcnt++;
 							}	
 						}
 						else
@@ -2881,14 +2894,21 @@ Ladda array med kända värden.
 			echo "OBS! informera användaren om de identifierade felaktigheterna. <br/>";
 			echo "<br/>";
 		}	
-		echo "Program kompdate avslutad <br/>";
-		echo "<br/>";
 		fclose($handin);
 		fclose($handut);
 //	Array start
-		fwrite($handdat,json_encode($dat)."\r\n");
-		fclose($handdat);
+		if($datcnt > 0) {
+			fwrite($handdat,json_encode($dat)."\r\n");
+			fclose($handdat);
+		}
+		else {
+			fwrite($handdat,"{}\r\n");
+			fclose($handdat);
+			echo "Datuminformation saknas. <br/>";
+		}	
 //	Array slut
+		echo "Program kompdate avslutad <br/>";
+		echo "<br/>";
 	}
 	else
 	{
@@ -3725,6 +3745,7 @@ else
 		$handut=fopen($fileut,"w");
 		$handpla=fopen($filepla,"w");
 //
+		$placnt = 0;
 		$platxt = '';
 		$plaorg = '';
 //	Läs in indatafilen				
@@ -3761,6 +3782,7 @@ else
 						$plaorg = substr($str,7,($len-7));
 //	Array 
 						$pla[$plaorg]=$platxt;
+						$placnt++;
 //
 						$platxt = '';
 						$plaorg = '';
@@ -3780,13 +3802,22 @@ else
 		}
 		fclose($handin);
 		fclose($handut);
+//
+//	Array start
+		if($placnt > 0) {
+			fwrite($handpla,json_encode($pla)."\r\n");
+			fclose($handpla);
+		}
+		else {
+			fwrite($handpla,"{}\r\n");
+			fclose($handpla);
+			echo "Församlingsinformation saknas. <br/>";
+		}	
+//	Array slut
+//			
 		echo "Program kompfnor avslutad <br/n>";
 		echo "<br/n>";
 		echo "Filen ".$fileut." har skapats <br/n>";
-//	Array start
-		fwrite($handpla,json_encode($pla)."\r\n");
-		fclose($handpla);
-//	Array slut
 	}
 }	
 ?>
