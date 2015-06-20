@@ -4,7 +4,8 @@
 import argparse, sys, os, shutil, tempfile, subprocess, codecs, locale
 import conf.config
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8') 
-sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
+#sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
+sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 
 """
 useremail = {
@@ -105,7 +106,7 @@ try:
     larm = codecs.open('Check_lista.txt', "r", "utf-8")
     print '<b><a href="/getFile?fil='+rootdir+'/Check_lista.txt" target="_blank">Checklista</a></b><br>'
     print "<h1>Checklista</h1>\n"
-    print '<pre>' + larm.read() + '</pre>'
+    print '<pre>' + unicode(larm.read()) + '</pre>'
     larm.close()
 except:
     pass
