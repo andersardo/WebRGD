@@ -19,11 +19,11 @@ dbName  = os.path.basename(workDB).split('.')[0]  #No '.' or '/' in databasename
 
 t0 = time.time()
 print 'Utvidgad dubblettlista', dbName
-os.chdir(workdir+'/'+dbName.split('_')[1])
+os.chdir(workdir+'/'+dbName.split('_', 1)[1])
 try:
     retcode = subprocess.call("php ../../../PHP/dubbtestx.php >> Log", shell=True)
     os.system('echo "dubbtstx retcode= '+str(retcode)+'\n" > UtvidgadDubblett.txt') 
 except OSError as e:
     os.system('echo "dubbtstx OSError= '+str(e)+'\n" > UtvidgadDubblett.txt')
 print 'Time:',time.time() - t0
-print 'Resultat i <a href="/getFile?fil='+workdir+'/'+dbName.split('_')[1]+u'/RGDXL.txt" target="_blank">RGDXL.txt</a>'
+print 'Resultat i <a href="/getFile?fil='+workdir+'/'+dbName.split('_', 1)[1]+u'/RGDXL.txt" target="_blank">RGDXL.txt</a>'

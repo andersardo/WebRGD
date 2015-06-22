@@ -39,7 +39,7 @@ maxks = 0
 """
 import traceback
 try:
-    xl = codecs.open(workdir+'/'+dbName.split('_')[1]+'/RGDXL.txt', "r", "utf-8")
+    xl = codecs.open(workdir+'/'+dbName.split('_',1)[1]+'/RGDXL.txt', "r", "utf-8")
     for l in xl.readlines():
         l = l.rstrip()
         if i == 1: (ks,t) = l.split(':')
@@ -65,14 +65,14 @@ except Exception, e:
 #    traceback.print_exception(exc_type, exc_value, exc_traceback)
     maxks = 1
     minks = 0
-    print 'Cant find the file', dbName.split('_')[1]+'/RGDXL.txt'
+    print 'Cant find the file', dbName.split('_',1)[1]+'/RGDXL.txt'
 ##    sys.exit()
 """
 #New structureded list
 import json, traceback
 try:
-    print 'trying', workdir+'/'+dbName.split('_')[1]+'/dbxl.dat'
-    kdublTmp = json.load(open(workdir+'/'+dbName.split('_')[1]+'/dbxl.dat'))
+    print 'trying', workdir+'/'+dbName.split('_',1)[1]+'/dbxl.dat'
+    kdublTmp = json.load(open(workdir+'/'+dbName.split('_',1)[1]+'/dbxl.dat'))
     #while testing - FIX so that kdublTmp is not needed.
     for (key, val) in kdublTmp.iteritems():
         (id1,id2) = key.split(';')        
@@ -88,7 +88,7 @@ except Exception, e:
 #    traceback.print_exception(exc_type, exc_value, exc_traceback)
     maxks = 1 
     minks = 0
-    print 'Cant find the file', dbName.split('_')[1]+'/dbxl.dat'
+    print 'Cant find the file', dbName.split('_',1)[1]+'/dbxl.dat'
 #
 
 #KOLLA imports
