@@ -445,12 +445,12 @@ def listdublexp():
     tit = 'Lista från alternativ dubblettkontroll'
 #    sorting =  [('alg1', -1)]
 #    sortalt = {'sortDubl': '', 'kscore': '', 'alg1': '', 'alg2': '', 'alg3': ''}
-    sorting =  [('Snitt', -1)]
+    sorting =  [('Match', -1)]
     sortalt = {'Match': '', 'XL': '', 'Snitt': ''}
     for m in bottle.request.params.getall('sorting'):
         sortalt[m]='checked'
         sorting = [(m, -1)]
-    if sorting == [('Snitt', -1)]: sortalt['Snitt']='checked'
+    if sorting == [('Match', -1)]: sortalt['Match']='checked'
     page = int(bottle.request.params.pageNo or '1')
     prevnext = bottle.request.params.page or ''
     if prevnext == 'prev': page += -1
