@@ -36,6 +36,11 @@ Files for guests are not saved.
 <br style="clear: left;" />
 <h4>Nyheter/Händelser/Meddelanden</h4>
 <ul>
+  <li> 2015-06-22: Optimeringar och ny funktionalitet:
+    <ul>
+     <li> Tiden för maskinell matchning har minskats
+     <li> Nya funktioner för dublettkontrol har tillförts (Dubblettkontroll XL respektive Alternativ dubblettkontroll)
+    </ul>
   <li> 2015-05-21: Resultatet av det avslutade delprojektet openRGD är
         nu tillgängligt - <a href="/static/openRGD.pdf">Informationsbroschyr</a>.
   <li> 2015-05-21: Matchnings-delen är nu tillgänglig igen (viss fintrimmning återstår)
