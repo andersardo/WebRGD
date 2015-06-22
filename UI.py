@@ -40,6 +40,7 @@ app = SessionMiddleware(app, session_opts)
 
 @bottle.route('/static/<filepath:path>')
 def server_static(filepath):
+#    return bottle.static_file(filepath, root='/home/anders/SVNprojects/staff.it-aar.RGDmongo/static')
     return bottle.static_file(filepath, root='static')
 
 @bottle.route('/img/<filepath:path>')
@@ -221,13 +222,16 @@ def runprog(prog):
     elif prog == 'match':
         #check parameters FIX
         if bottle.request.query.workDB == bottle.request.query.matchDB:
-            cmd = ['python', 'matchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB]
+#            cmd = ['python', 'matchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB]
+            cmd = ['python', 'testMatchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB, bottle.request.session['directory']]
         else:
             cmd = ['python', 'match.py', bottle.request.query.workDB, bottle.request.query.matchDB]
 #            if bottle.request.session['activeUser'] == 'tester':
 #                cmd = ['python', 'matchFam.py', bottle.request.query.workDB, bottle.request.query.matchDB]
     elif prog == 'matchDublExp':
         cmd = ['python', 'testMatchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB, bottle.request.session['directory']]
+    elif prog == 'xldubl':
+        cmd = ['python', 'runDubbtestx.py', bottle.request.query.workDB, bottle.request.session['directory']]
     elif prog == 'sanity':
         #check parameters FIX
         cmd = ['python', 'sanityCheck.py', bottle.request.query.workDB, bottle.request.query.matchDB]
@@ -431,26 +435,30 @@ def listdublexp():
         #if not run match
         return runprog('matchDublExp')
     #else show list
-    import json
-    f = open('DublStat.json', 'rw')
-    dublStat = json.loads(f.read())
-    f.close()
+#Bort
+#    import json
+#    f = open('DublStat.json', 'rw')
+#    dublStat = json.loads(f.read())
+#    f.close()
 
     from uiUtils import persDisp
     tit = 'Lista från alternativ dubblettkontroll'
-    sorting =  [('alg1', -1)]
-    sortalt = {'sortDubl': '', 'kscore': '', 'alg1': '', 'alg2': '', 'alg3': ''}
+#    sorting =  [('alg1', -1)]
+#    sortalt = {'sortDubl': '', 'kscore': '', 'alg1': '', 'alg2': '', 'alg3': ''}
+    sorting =  [('Snitt', -1)]
+    sortalt = {'Match': '', 'XL': '', 'Snitt': ''}
     for m in bottle.request.params.getall('sorting'):
         sortalt[m]='checked'
         sorting = [(m, -1)]
-    if sorting == [('alg1', -1)]: sortalt['alg1']='checked'
+    if sorting == [('Snitt', -1)]: sortalt['Snitt']='checked'
     page = int(bottle.request.params.pageNo or '1')
     prevnext = bottle.request.params.page or ''
     if prevnext == 'prev': page += -1
     elif prevnext == 'next': page += 1
     else: page = 1
     if page <= 0: page = 1
-    rows = [['#','stat',u'Namn/refId', u'Född', u'Död','Scores', u'Namn/refId', u'Född', u'Död','Visa']]
+#    rows = [['#','stat',u'Namn/refId', u'Född', u'Död','Scores', u'Namn/refId', u'Född', u'Död','Visa']]
+    rows = [['#',u'Namn/refId', u'Född', u'Död','Scores', u'Namn/refId', u'Född', u'Död','Visa']]
     i = (page-1)*10
     args = {'where': 'visa', 'what': '/view/persons', 'buttons': 'No'}
 #    for mt in common.config['matches'].find({'nodesim': {'$gt': 0.3}}).sort([('nodesim', -1),('sortDubl', -1)]).limit( 50 ):
@@ -459,14 +467,17 @@ def listdublexp():
         #print mt['pwork']['name'],mt['pmatch']['name'], mt['sortDubl'], mt['nodesim']
         i += 1
         key = mt['pwork']['refId']+';'+mt['pmatch']['refId']
+#bort
         #print key
-        if key in dublStat: status = dublStat[key]
-        else: status = 'xx'
-        row = [str(i),status]
+#        if key in dublStat: status = dublStat[key]
+#        else: status = 'xx'
+#        row = [str(i),status]
+        row = [str(i)]
         row.extend(persDisp(mt['pwork']))
         r = ''
         for m in sortalt.keys():
-            r += m + '=' + str(round(mt[m],3)) + '<br>'
+            if mt[m] > 0.001:
+                r += m + '=' + str(round(mt[m],3)) + '<br>'
 #        row.append(str(mt['sortDubl'])+'<br>'+str(mt['nodesim']))
         row.append(r)
         row.extend(persDisp(mt['pmatch']))

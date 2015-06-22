@@ -79,13 +79,11 @@ När bearbetningen är klar indikeras detta och resultat-listan/listorna
 blir tillgängliga.<br>
 Samtidigt skickas dessa till dig, per email, om du har indikerat så ovan.
 
-<table style="width: 100%"><tr><td style="vertical-align: top;">
-<h3>2A Alternativ dubblettkontrol - <a href="#Dubblett2">Läs mera</a></h3>
-Ytterligare dubblettkontroll, som
-använder matchningsteknik (en matchning av databasen mot sig själv)
-för att finna likheter i indidivernas uppgifter.
-<p/><br/>
-<form action="/listDubl" method="GET" name="listDubl style="vertical-align: middle;"">
+<h3>2 Dubblettkontroll XL - <a href="#Dubblettxl">Läs mera</a></h3>
+En utökad kontroll som ger fler dubblettkandidater
+men tyvärr också fler falsklarm.
+<br/>
+<form action="/runProg/xldubl" method="GET" name="xlDubl" style="vertical-align: middle;">
 Databas 
 <select name="workDB">
 <option value="">Välj databas I</option>
@@ -95,10 +93,33 @@ Databas
 %end
 
 </select>
-<p><input type="submit" value="Alternativ dubblettkontrol" />
-<div id="db2listDubl"></div>
-
+<p><input type="submit" value="Utökad dubblettkontroll" />
 </form>
+
+<table style="width: 100%"><tr><td style="vertical-align: top;">
+<h3>2A Alternativ dubblettkontroll - <a href="#Dubblett2">Läs mera</a></h3>
+Ytterligare dubblettkontroll, som
+använder matchningsteknik (en matchning av databasen mot sig själv)
+för att finna likheter i indidivernas uppgifter. Kombineras med resultatet från
+dublettkontroll XL (2) om den är körd.
+<p/>
+Ger en mycket lång lista som kan sorteras efter olika kriterier. Ju längre ner
+ i listan du kommer desto större är sannolikheten att det är ett falsklarm.
+
+<p/><br/>
+<form action="/listDublExp" method="GET" name="listDubl" style="vertical-align: middle;">
+Databas 
+<select name="workDB">
+<option value="">Välj databas I</option>
+
+%for db in dbs:
+    <option>{{db}}</option>'
+%end
+
+</select>
+<p><input type="submit" value="Alternativ (+ Utökad) dubblettkontroll" />
+</form>
+
 </td>
 <td style="float: right;">
 <img src="/img/wfOP_2A.png" width="397"
@@ -106,11 +127,14 @@ onmouseover="this.width='794'; this.style='position: absolute;right: 0px;'"
 onmouseout="this.width='397'; this.style='position: relative;right: 0px;'" />
 </td></tr>
 </table>
+<!--
+<h3>2B Utökad + Alternativ dubblettkontroll - experimentel</h3>
+Kör både Utökad dublettkontroll (2) och Alternativ
+dublettkontroll (2A) och lägger samman listorna.
+<br/>
+<b>Långsam!</b>
 
-%if role == 'editor' or role == 'admin':
-<h3>2B Alternativ sammanslagen dubblettkontrol - experimentel</h3>
-
-<form action="/listDublExp" method="GET" name="listDublExp style="vertical-align: middle;"">
+<form action="/listDublExp" method="GET" name="listDublExp" style="vertical-align: middle;">
 Databas 
 <select name="workDB">
 <option value="">Välj databas I</option>
@@ -120,16 +144,13 @@ Databas
 %end
 
 </select>
-<p><input type="submit" value="Alternativ sammanslagen dubblettkontrol" />
+<p><input type="submit" value="Utökad + Alternativ dubblettkontroll" />
 </form>
-%end
-
+-->
 <table style="width: 100%"><tr><td style="vertical-align: top;">
 <h2>4. Maskinell Matchning - <a href="#Match1">Läs mera</a></h2>
 Matchning av två databaser innebär att programmet försöker
 att identifiera personer, som finns i båda databaserna.
-<br>
-(Fintrimmning av matchningsfunktionen återstår att göra.)
 <p><br>
 <form action="/runProg/match" method="GET">
 Databas
@@ -193,7 +214,6 @@ att matchas mot
 <p><input type="submit" value="DoManualMatch" />
 -->
 </form>
-
 </td>
 <td style="float: right;"><img src="/img/wfOP_5.png" width="397"
 onmouseover="this.width='794'; this.style='position: absolute;right: 0px;'"
@@ -459,35 +479,69 @@ vigd.
 		</TD>
 	</TR>
 
-	<TR VALIGN=TOP>
-		<TD WIDTH=72 HEIGHT=18>
-			<P><BR><a name=Dubblett2><strong>Dubblett2</a></strong></P>
-		</TD>
-		<TD WIDTH=400>
-			<P><BR><FONT SIZE=4><B>Alternativ Dubblettkontroll</B></FONT>
-			<BR><BR>Ytterligare dubblettkontroll, som använder matchningsteknik
-			för att finna likheter i indidivernas uppgifter.</P>
-			<BR><BR><B>Viktigt:</B> Att eliminera dubbletter i släktforskningsdata	är
-			en viktig och kvalitetshöjande åtgärd som bör prioriteras högt.</P>
-		</TD>
-		<TD WIDTH=400>
-			<P><BR>Programmet jämför matchningsresultatet från en intern matchning
-			av en databas, för att söka efter möjliga dubbletter i databasen.
-			<BR>Förutom en annan teknik än den föregående, är den även mera
-detaljerad.<BR>
-			<BR>De personer, som har liknande uppgifter listas parvis.<BR>
-			<BR><B>Tips:</B>
-			<BR>Om man avser att upprepa dubblettesterna vid senare tillfälle,
-			kan det vara bra att spara uppgiften om vilka par som inte var
-			dubbletter.<BR> När programmet körs nästa gång återkommer samma
-			kandidater igen, då kan det vara praktiskt att kunna jämföra med
-			den tidigare listan.
-			</P>
-		</TD>
-		<TD WIDTH=72>
-			<P><BR><B></B></P>
-		</TD>
-	</TR>
+
+<tr valign=top>
+  <TD WIDTH=72 HEIGHT=18>
+<P><BR><a name=Dubblettxl><strong>Dubblettxl</a></strong></P>
+  </TD>
+  <TD WIDTH=400>
+<P><BR><FONT SIZE=4><B>Dubblettkontroll XL</B></FONT>
+
+<p><BR>Dubblettkontroll XL ger fler dubblettkandidater.
+
+<BR><BR><B>Viktigt:</b> Att eliminera dubbletter i släktforskningsdata är en viktig och kvalitetshöjande åtgärd som bör prioriteras högt.
+
+  </TD>
+  <TD WIDTH=400>
+<p><br>Programmet jämför alla personer i GEDCOM filen på samma sätt som ordinarie dubblettsökningsprogrammet men är inte lika begränsat utan ger fler dubblettkandidater.
+Personer med liknande uppgifter listas parvis.
+<p>
+<b>Tips:</b><br>
+Man har stor nytta av att ha sparat tidigare dubblettlista, dels för att falsklarmen givetvis kommer ut i bägge listorna och dels har man troligen inte heller kört om GEDCOM filen, så samma dubbletter finns också i båda listorna.
+Spara även listorna till nästa gång man bearbetar samma GEDCOM fil. 
+  </TD>
+  <TD WIDTH=72>
+<p><br><b>RGDXL</b></p>
+  </TD>
+</tr>
+
+  <TR VALIGN=TOP>
+    <TD WIDTH=72 HEIGHT=18>
+      <P><BR><a name=Dubblett2><strong>Dubblett2</a></strong></P>
+    </TD>
+    <TD WIDTH=400>
+      <P><BR><FONT SIZE=4><B>Alternativ Dubblettkontroll</B></FONT>
+      <BR><BR>Ytterligare dubblettkontroll, som använder matchningsteknik
+      för att finna likheter i indidivernas uppgifter. Kombineras med
+      resultatet från dublettkontroll XL (2) om den är körd.</P>
+      <BR><BR><B>Viktigt:</B> Att eliminera dubbletter i släktforskningsdata  är
+      en viktig och kvalitetshöjande åtgärd som bör prioriteras högt.</P>
+    </TD>
+    <TD WIDTH=400>
+      <P><BR>Programmet jämför matchningsresultatet från en intern matchning
+      av en databas, för att söka efter möjliga dubbletter i databasen.
+      <BR>Förutom en annan teknik än den föregående, är den även mera detaljerad.<BR>
+      <BR>De personer, som har liknande uppgifter listas parvis.<BR>
+      Ger en mycket lång lista som kan sorteras efter olika kriterier. Ju längre ner i
+      listan du kommer desto större är sannolikheten att det är ett falsklarm.<br>
+      Sorteringskriterier:
+      <ul>
+	<li><b>Match</b> Sorteras efter matchnings-score från Alternativ Dubblettkontroll
+        <li><b>XL</b> Sorteras efter scrore från Dubblettkontroll XL
+        <li><b>Snitt</b> Sorteras efter medelvärdet av de bägge tidigare algoritmerna
+      </ul>
+      <BR><B>Tips:</B>
+      <BR>Om man avser att upprepa dubblettesterna vid senare tillfälle,
+      kan det vara bra att spara uppgiften om vilka par som inte var
+      dubbletter.<BR> När programmet körs nästa gång återkommer samma
+      kandidater igen, då kan det vara praktiskt att kunna jämföra med
+      den tidigare listan.
+      </P>
+    </TD>
+    <TD WIDTH=72>
+      <P><BR><B></B></P>
+    </TD>
+  </TR>
 
 	<TR VALIGN=TOP>
 		<TD WIDTH=72 HEIGHT=18>

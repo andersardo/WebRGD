@@ -2,7 +2,8 @@
 /*
 Variant för test med gemensam dubblettlista.
 Avsedd att ge längre lista och därmed också fler falsklarm.
-Därför ej lämplig till manuell felkontroll.
+Därför ej lämplig till manuell felkontroll. 
+Manuella XL-listan avgränsas vi ett bestämt värde.
 
 Programmet skall genomsöka GEDCOM filen efter individer med lika
 eller snarlika uppgifter för att hitta eventuella dubbletter eller
@@ -22,6 +23,7 @@ require 'initbas.php';
 $filename=$directory . "RGD9.GED";
 //
 $fileut=$directory . "RGDXL.txt";
+$filedub=$directory . "dbxl.dat";
 //
 if(file_exists($fileut))
 {
@@ -40,11 +42,11 @@ else
 //
 		echo "Program startar ".date('Y-m-d')." / ".date('H:i:s')."<br/>";
 //		echo "<br/>";
-////		fwrite($handut,"Dubblett Sökning \r\n");
-////		fwrite($handut," \r\n");
-////		fwrite($handut,"Individer med lika eller snarlika uppgifter, ");
-////		fwrite($handut,"som bör kollas genom en rimlighetsbedömning .  \r\n");
-////		fwrite($handut," \r\n");
+		fwrite($handut,"Dubblett Sökning XL-version 2 \r\n");
+		fwrite($handut," \r\n");
+		fwrite($handut,"Individer med lika eller snarlika uppgifter, ");
+		fwrite($handut,"som bör kollas genom en rimlighetsbedömning .  \r\n");
+		fwrite($handut," \r\n");
 //	
 		$n1 = 0;
 		$min = 0;
@@ -279,8 +281,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 1 \r\n");
 //		echo $n1." individer inlästa för bearbetning efter block 1.<br/>";
 //		echo "<br/>";
 //	
@@ -840,6 +840,12 @@ else
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1].":"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
+						}
+						else {
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
 						}
 					}	
 				}
@@ -1079,8 +1085,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 2 \r\n");
 //		echo $n1." individer inlästa för bearbetning efter block 2.<br/>";
 //		echo "<br/>";
 //
@@ -1640,6 +1644,12 @@ else
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1].":"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
+						}
+						else {
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
 						}
 					}	
 				}
@@ -1879,8 +1889,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 3 \r\n");
 //		echo $n1." individer inlästa för bearbetning efter block 3.<br/>";
 //		echo "<br/>";
 //
@@ -2440,6 +2448,12 @@ else
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1].":"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
+						}
+						else {
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
 						}
 					}	
 				}
@@ -2679,8 +2693,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 4 \r\n");
 //		echo $n1." individer inlästa för bearbetning efter block 4.<br/>";
 //		echo "<br/>";
 //
@@ -3240,6 +3252,12 @@ else
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1].":"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
+						}
+						else {
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
 						}
 					}	
 				}
@@ -3480,8 +3498,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 1 \r\n");
 //		echo $n1." individer inlästa för bearbetning efter block 1.<br/>";
 //		echo "<br/>";
 //	
@@ -4040,6 +4056,12 @@ else
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1].":"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
+						}
+						else {
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
 						}
 					}	
 				}
@@ -4279,8 +4301,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 2 \r\n");
 //		echo $n1." individer inlästa för bearbetning efter block 2.<br/>";
 //		echo "<br/>";
 //
@@ -4840,6 +4860,12 @@ else
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1].":"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
+						}
+						else {
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
 						}
 					}	
 				}
@@ -5079,8 +5105,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 3 \r\n");
 //		echo $n1." individer inlästa för bearbetning efter block 3.<br/>";
 //		echo "<br/>";
 //
@@ -5640,6 +5664,12 @@ else
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1].":"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
+						}
+						else {
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
 						}
 					}	
 				}
@@ -5879,8 +5909,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 4 \r\n");
 //		echo $n1." individer inlästa för bearbetning efter block 4.<br/>";
 //		echo "<br/>";
 //
@@ -6440,6 +6468,12 @@ else
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1].":"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
+						}
+						else {
+							$nyckel = $num[$n1].';'.$num[$n2];
+							$dublData[$nyckel] = $totp;
 						}
 					}	
 				}
@@ -6450,6 +6484,12 @@ else
 		}
 //	
 //	steg 4F avslutat	
+//
+		$handdub=fopen($filedub,"w");
+//	Array start
+		fwrite($handdub,json_encode($dublData)."\r\n");
+		fclose($handdub);
+//	Array slut
 //
 		if($kant > 0) {
 //
@@ -6488,16 +6528,16 @@ else
 				echo "Bearbetningen sökte fram ".$kant." dubblettkandidat <br/>";
 			}	
 			echo "Ta hand om den skapade filen RGDXL.txt<br/>";
-////			fwrite($handut," \r\n");
-////			fwrite($handut,"Bearbetningen sökte fram ".$kant." dubblettkandidater. \r\n");
+			fwrite($handut," \r\n");
+			fwrite($handut,"Bearbetningen sökte fram ".$kant." dubblettkandidater. \r\n");
 //		
 		}
 		else {
 			echo "<br/>";
 			echo "Inga kandidater hittade, sökningen avslutad. <br/>";
 			echo "Filen RGDXL.txt skapad men innehåller bara rubriken.<br/>";
-////			fwrite($handut," \r\n");
-////			fwrite($handut,"Inga kandidater hittade, sökningen avslutad. \r\n");
+			fwrite($handut," \r\n");
+			fwrite($handut,"Inga kandidater hittade, sökningen avslutad. \r\n");
 		}
 	fclose($handut);
 //

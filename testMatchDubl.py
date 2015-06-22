@@ -27,43 +27,69 @@ t0 = time.time()
 print 'Letar efter dubbletter i databas', dbName
 
 #Read Kalles long file 
-try:
-    xl = codecs.open(workdir+'/'+dbName.split('_')[1]+'/RGDXL.txt', "r", "utf-8")
-except:
-    print 'Cant find the file', dbName.split('_')[1]+'/RGDXL.txt'
-    sys.exit()
-
 kdubl  = {}
 dubl = []
 ks = 0
-i = 1
+i = 0
 ant = 0
 antboth = 0
 minks = 1000000
 maxks = 0
 
-for l in xl.readlines():
-    l = l.rstrip()
-#    print l
-#    print l.split(':')
-    if i == 1: (ks,t) = l.split(':')
-    if i == 2:
-        (id1,n1) = l.split(',', 1) 
-    if i == 3:
-        (id2,n2) = l.split(',', 1) 
-    if i == 4:
-        if l.rstrip(): print 'Out of sync', l
-        #print int(ks), id1, id2
-        minks = int(ks)
-        if int(ks)>maxks: maxks = int(ks)
-        i = 0
-        ant += 1
-        kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = {'kscore': int(ks), 'gedId1': id1, 'gedId2': id2,
-                     'namn1': n1, 'namn2': n2}
-        #kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = int(ks)
-    i += 1
-
-print 'Hittat', ant, 'kandidater i RGDXL.txt', 'len=', len(kdubl)
+"""
+import traceback
+try:
+    xl = codecs.open(workdir+'/'+dbName.split('_')[1]+'/RGDXL.txt', "r", "utf-8")
+    for l in xl.readlines():
+        l = l.rstrip()
+        if i == 1: (ks,t) = l.split(':')
+        if i == 2:
+            (id1,n1) = l.split(',', 1) 
+        if i == 3:
+            (id2,n2) = l.split(',', 1) 
+        if i == 4:
+            if l.rstrip(): print 'Out of sync', l
+            minks = int(ks)
+            if int(ks)>maxks: maxks = int(ks)
+            i = 0
+            ant += 1
+            kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = {'XL': int(ks), 'gedId1': id1, 'gedId2': id2,
+                         'namn1': n1, 'namn2': n2}
+            #kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = int(ks)
+        i += 1
+    print 'Hittat', len(kdubl), 'kandidater i RGDXL.txt'
+    if maxks == 0: maxks = 1
+except Exception, e:
+#    print '<h1>Fatalt fel</h1>'
+#    exc_type, exc_value, exc_traceback = sys.exc_info()
+#    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    maxks = 1
+    minks = 0
+    print 'Cant find the file', dbName.split('_')[1]+'/RGDXL.txt'
+##    sys.exit()
+"""
+#New structureded list
+import json, traceback
+try:
+    print 'trying', workdir+'/'+dbName.split('_')[1]+'/dbxl.dat'
+    kdublTmp = json.load(open(workdir+'/'+dbName.split('_')[1]+'/dbxl.dat'))
+    #while testing - FIX so that kdublTmp is not needed.
+    for (key, val) in kdublTmp.iteritems():
+        (id1,id2) = key.split(';')        
+        kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = {}
+        kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])]['XL'] = val
+    maxks = max(kdublTmp.values())
+    if maxks == 0: maxks = 1
+    minks = min(kdublTmp.values())
+    print 'Hittat', len(kdubl), 'kandidater i dbxl.dat'    
+except Exception, e:                                                                            
+#    logging.error('<h1>Fatalt fel vid import av Gedcom</h1>')
+#    exc_type, exc_value, exc_traceback = sys.exc_info()
+#    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    maxks = 1 
+    minks = 0
+    print 'Cant find the file', dbName.split('_')[1]+'/dbxl.dat'
+#
 
 #KOLLA imports
 import common
@@ -96,7 +122,7 @@ def nodeSimQ(p1,p2):
     """ Compare 2 nodes (p1 new, p2 master(rgd))
         returns a value between -1 (unequal) and 1 (equal) """
     if (not (p1 and p2)): return (0, 0.0)  #?? OK??
-##?# Cache results?
+
     sim=0.0
     n=0
 #    if (p1['sex'] and p2['sex']):    #sex har vikt 4
@@ -124,8 +150,10 @@ def nodeSimQ(p1,p2):
             (esim, en) = eventSim(p1[ev], p2[ev])
             sim += esim
             n += en
-    if (n>0): return (n, sim/n)
-    else: return (0, 0.0)
+    if (n>0): 
+        return (n, sim/n)
+    else:
+        return (0, 0.0)
 
 def haveChild(pid):
     if fam_list.find({'children': pid}).count() > 0: return True
@@ -238,20 +266,20 @@ for p in person_list.find().batch_size(50):
         matchdata['pmatch'] = candidate
         matchdata['score'] = score
         matchdata['nodesim'] = nodeScore
-        matchdata['sortDubl'] = sortV
+        matchdata['Match'] = sortV
         if ';'.join([p['refId'], candidate['refId']]) in kdubl:
-            matchdata['kscore'] = float(kdubl[ ';'.join([p['refId'], candidate['refId']]) ]['kscore']) / maxks
+            matchdata['XL'] = float(kdubl[ ';'.join([p['refId'], candidate['refId']]) ]['XL']) / maxks
             del kdubl[ ';'.join([p['refId'], candidate['refId']]) ]
             kant += 1
         elif ';'.join([candidate['refId'], p['refId']]) in kdubl:
-            matchdata['kscore'] = float(kdubl[ ';'.join([candidate['refId'], p['refId']]) ]['kscore']) / maxks
+            matchdata['XL'] = float(kdubl[ ';'.join([candidate['refId'], p['refId']]) ]['XL']) / maxks
             del kdubl[ ';'.join([candidate['refId'], p['refId']]) ]
             kant += 1
-        else:  matchdata['kscore'] = (float(minks)/2.0) / maxks
+        else:  matchdata['XL'] = (float(minks)/2.0) / maxks
         matches.insert(matchdata)
         ant += 1
 print 'Totalt', pant, 'personer i databasen'
-print matchant,'personpar testade;',ant, u'personpar sparade. Överlapp:', kant
+#print matchant,'personpar testade;',ant, u'personpar sparade. Överlapp:', kant
 #Save the rest of RGDXL-list
 ant = 0
 antnf = 0
@@ -293,28 +321,34 @@ for (key,val) in kdubl.iteritems():
     matchdata['pmatch'] = candidate
     matchdata['score'] = minScore
     matchdata['nodesim'] = nodeScore
-    matchdata['sortDubl'] = sortV
-    matchdata['kscore'] = val['kscore'] / maxks
+    matchdata['Match'] = sortV
+    matchdata['XL'] = val['XL'] / maxks
     matches.insert(matchdata)
     ant += 1
-print 'Adderade', ant, u'ej överlapp från RGDXL'
-print u'Utrensade från databasen, men i RGDXL', antnf
+print 'Adderade', ant, u'endast i RGDXL'
+print u'Utrensade ur databasen, men i RGDXL', antnf
 #Normalize SortVal
 ant = 0
 for mt in matches.find({'status': 'dubl'}):
-    sortV = mt['sortDubl'] / maxSortVal
-    matches.update({'_id': mt['_id']}, {'$set': {'sortDubl': sortV}})
+    sortV = mt['Match'] / maxSortVal
+##    matches.update({'_id': mt['_id']}, {'$set': {'Match': sortV}})
+    matches.update({'_id': mt['_id']}, {'$set': {'Match': sortV}})
     ant += 1
 print 'Normalized', ant, 'records'
 #sort algorithms
 for mt in matches.find({'status': 'dubl'}):
-    #mean of kscore, sortDubl
-    alg1 = (mt['kscore'] + mt['sortDubl']) / 2.0
-    #multiply kscore, sortDubl
-    alg2 = mt['kscore'] * mt['sortDubl']
+    #mean of XL, Match
+#    alg1 = (mt['XL'] + mt['Match']) / 2.0
+##    #multiply XL, Match
+##    alg2 = mt['XL'] * mt['Match']
+# Harmonic mean
+    try:
+        alg2 = 2.0 * mt['XL'] * mt['Match'] / (mt['XL'] + mt['Match'])
+    except:
+        alg2 = 0.0
     # sqrt(x2 + y2)
-    alg3 = math.sqrt( mt['kscore']* mt['kscore'] + mt['sortDubl']*mt['sortDubl'])
-    matches.update({'_id': mt['_id']}, {'$set': {'alg1': alg1, 'alg2': alg2, 'alg3': alg3}})
+#    alg3 = math.sqrt( mt['XL']* mt['XL'] + mt['Match']*mt['Match'])
+    matches.update({'_id': mt['_id']}, {'$set': {'Snitt': alg2}})
 print 'Time:',time.time() - t0
 print 'Klart'
 print
