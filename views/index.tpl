@@ -516,6 +516,9 @@ Spara även listorna till nästa gång man bearbetar samma GEDCOM fil.
       resultatet från dublettkontroll XL (2) om den är körd.</P>
       <BR><BR><B>Viktigt:</B> Att eliminera dubbletter i släktforskningsdata  är
       en viktig och kvalitetshöjande åtgärd som bör prioriteras högt.</P>
+      Dessa funktioner kan ses som ett paket. Det skall stegvis och ur olika
+      synvinklar hjälpa till att hitta dubbletter som enskilda
+      dubblettsökningsprogram ibland missar.
     </TD>
     <TD WIDTH=400>
       <P><BR>Programmet jämför matchningsresultatet från en intern matchning
@@ -523,7 +526,10 @@ Spara även listorna till nästa gång man bearbetar samma GEDCOM fil.
       <BR>Förutom en annan teknik än den föregående, är den även mera detaljerad.<BR>
       <BR>De personer, som har liknande uppgifter listas parvis.<BR>
       Ger en mycket lång lista som kan sorteras efter olika kriterier. Ju längre ner i
-      listan du kommer desto större är sannolikheten att det är ett falsklarm.<br>
+      listan du kommer desto större är sannolikheten att det är ett falsklarm.
+      Att växla mellan de olika sorteringskriterier underlättar att få ögonen på kandidatpar
+      som känns relevanta att kontrollera vidare.
+      <br>
       Sorteringskriterier:
       <ul>
 	<li><b>Match</b> Sorteras efter matchnings-score från Alternativ Dubblettkontroll

@@ -39,7 +39,15 @@ Files for guests are not saved.
   <li> 2015-06-22: Optimeringar och ny funktionalitet:
     <ul>
      <li> Tiden för maskinell matchning har minskats
-     <li> Nya funktioner för dublettkontrol har tillförts (Dubblettkontroll XL respektive Alternativ dubblettkontroll)
+     <li> Nya funktioner för dublettkontrol har tillförts (Dubblettkontroll XL
+          respektive Alternativ dubblettkontroll)<br>
+          Den största utmaningen för ett kommande RGD är kravet att databasen inte
+          skall innehålla dubbletter, samma person skall bara finnas en gång. Att
+          minimera dubbletter blir därmed en kvalitetsstämpel. Därför har mycket av
+          kontrollfunktionerna i Släkttrim koncentrerats just till att söka dubbletter.<br>
+          <i>Om du har kört "2A Alternativ dubblettkontroll" tidigare måste du ladda in
+          GEDCOM-filen på nytt och köra om dubblettkontrollen</i> 
+
     </ul>
   <li> 2015-05-21: Resultatet av det avslutade delprojektet openRGD är
         nu tillgängligt - <a href="/static/openRGD.pdf">Informationsbroschyr</a>.
