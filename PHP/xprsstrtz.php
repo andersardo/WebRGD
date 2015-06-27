@@ -17,6 +17,7 @@ $larmrub6 = 1;
 $larmrub7 = 1;
 $larmrub8 = 1;
 $larmrub9 = 1;
+$larmrub10 = 1;
 //			
 $fileix=$directory . "RGD1.GED";
 //
@@ -2529,7 +2530,6 @@ Ladda array med kända värden.
 		$tst[]="AFT";
 		$tst[]="BEF";
 		$tst[]="BET";
-		$tst[]="AND";
 //	
 		$len=0;
 		$stop=0;
@@ -2539,6 +2539,7 @@ Ladda array med kända värden.
 		$akt = 'NEJ';
 		$head= 'ON';
 		$kant=0;
+		$larmd=0;
 //	Läs in indatafilen				
 		$lines = file($filein,FILE_IGNORE_NEW_LINES);
 		foreach($lines as $radnummer => $str)
@@ -2631,23 +2632,31 @@ Ladda array med kända värden.
 					$ndag=0;
 					$nman=0;
 					$naar=0;
-					$ber='JA';
-					$cal='NEJ';
 					$temp='';
 					$tkn='';
 					$imax=7;
 					$fant=0;
 					$len=strlen($str);
 					$test = substr($str,7,3);
+					$x = 20;
 					for($i=0;$i<count($tst);$i++)
 					{
-						$x = 20;
 						if(($tst[$i]) == $test) {
 //	Raden börjar inte med datum eller årtal utan någon text
 							$x = $i;
 						}
 					}
-					if(($ber == 'JA') || ($test == 'CAL'))
+					if($x == 20)
+					{
+						$tkn = substr($str,7,1);
+						if(($tkn < '0') || ($tkn > '9')) {
+							$x = 21;
+						}
+					}
+					$tkn = '';
+//	Skall CAL godkännas eller inte?
+//					if((($x == 20) && ($fant == 0)) || (($x >= 0) && ($x <= 11)))
+					if((($x == 20) && ($fant == 0)) || (($x >= 0) && ($x <= 12)))
 					{
 						while($imax <= $len)
 						{
@@ -2713,22 +2722,25 @@ Ladda array med kända värden.
 								}
 								elseif(strlen($temp) == 3)
 								{
-									if($x == 20) {
-										for($i=0;$i<count($tst);$i++) {
-											if(($tst[$i]) == $temp)	{
-												$nman = ($i+1);
-												$tman = $nman; 	}
-											if(($nman < 1) || ($nman > 12)) {
-												$nman = 0;
-												$tman = ''; }	
-											if(($nman == 2) && ($ndag > 28)) {
+									for($i=0;$i<count($tst);$i++) {
+										if(($tst[$i]) == $temp)	{
+											$nman = ($i+1);
+											$tman = $nman; 	}
+										if(($nman < 1) || ($nman > 12)) {
+											$nman = 0;
+											$tman = ''; }	
+										if(($nman == 2) && ($ndag > 28)) {
+											$fant++; }
+										if(($nman==4) || ($nman==6) || ($nman==9) || ($nman==11)) {
+											if($ndag > 30){
 												$fant++; }
-											if(($nman==4) || ($nman==6) || ($nman==9) || ($nman==11)) {
-												if($ndag > 30){
-													$fant++; }
-											}
 										}
-									}	
+									}
+//	Skall CAL godkännas eller inte?
+//									if($nman == 0) {
+									if(($nman == 0) && ($temp != 'CAL')) {
+										$fant++;
+									}
 									$temp='';
 								}
 								elseif(strlen($temp) == 4)
@@ -2825,7 +2837,10 @@ Ladda array med kända värden.
 						else
 						{
 // konverteringen tar bara exakt / kalkulerat årtal / exakt datum, övriga återskrivs oförändrade
-							$ungant++;
+							if($fant == 0) {
+								$fant++;
+								$kant++;
+							}	
 						}
 						if($fant > 0)
 						{
@@ -2865,11 +2880,54 @@ Ladda array med kända värden.
 					}
 					else
 					{
-						$ungant++;
+//	Skall CAL godkännas eller inte?
+//						if(($x >= 12) && ($x <= 18))
+						if(($x >= 13) && ($x <= 18))
+						{
+// Larm och beskrivande feltext
+							$esttxt = "Ej definitiv tidsangivelse  ".$str;
+							$larmd++;
+							$lrmd[] = $esttxt." - Id => ".$znum." - ".$lnamn;
+//
+						}
+						else
+						{
+							$kant++;
+							echo "<br/>";
+							echo " *  *  *  *  *  Ej datumformat ".$str.
+							" . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
+//	Larm
+							$larmant++;
+							$filelarm=$directory . "Check_lista.txt";
+							$handlarm=fopen($filelarm,"a");
+							if($larmrub6 == 1) {
+								$larm = " ";
+								fwrite($handlarm,$larm."\r\n");
+								fwrite($handlarm,$larm."\r\n");
+								$larm = "*** F E L  L I S T A  (VI) Datum, ej godkända";
+								fwrite($handlarm,$larm."\r\n");
+								$larm = " ";
+								fwrite($handlarm,$larm."\r\n");
+								$larmrub6++;
+								$brytr = 0;
+							}
+// sätt om möjligt id och namn
+							$larmid = $znum;
+							$larmnamn = $lnamn;
+							$brytr++;
+							if($brytr >= 4) {
+								fwrite($handlarm," \r\n");
+								$brytr = 1;
+							}	
+// och beskrivande feltext
+							$larm = "Ej datumformat ".$str.
+							" - Id => ".$larmid." - ".$larmnamn;
+							fwrite($handlarm,$larm."\r\n");
+							fclose($handlarm);
+//
+						}	
 					}
 				}	
-				$ber='JA';
-				$cal='NEJ';
 			}
 			fwrite($handut,$str."\r\n");
 		}
@@ -2896,6 +2954,7 @@ Ladda array med kända värden.
 		}	
 		fclose($handin);
 		fclose($handut);
+//		
 //	Array start
 		if($datcnt > 0) {
 			fwrite($handdat,json_encode($dat)."\r\n");
@@ -3986,21 +4045,57 @@ if(file_exists($filename))
 	}
 //
 //	Varningslista ologiskt placerad för att få rätt sekvens vid utskrift
+		if($larmd > 0)
+		{
+//	Larm
+			$brytr = 0;
+			$filelarm=$directory . "Check_lista.txt";
+			$handlarm=fopen($filelarm,"a");
+			if($larmrub9 == 1) {
+				$larm = " ";
+				fwrite($handlarm,$larm."\r\n");
+				fwrite($handlarm,$larm."\r\n");
+				$larm = "*** I N F O R M A T I O N  (IX) Datum, opreciserat";
+				fwrite($handlarm,$larm."\r\n");
+				$larm = " ";
+				fwrite($handlarm,$larm."\r\n");
+				$larmrub9++;
+			}
+			if($larmd > 0) {
+				$lrmlistd=array_unique($lrmd);
+				foreach($lrmlistd as $lrmradd) {
+					$brytr++;
+					if($brytr >= 4) {
+						fwrite($handlarm," \r\n");
+						$brytr = 1;
+					}
+					fwrite($handlarm,$lrmradd." \r\n");
+					$larmant++;
+				}
+			}
+			$larm = " ";
+			fwrite($handlarm,$larm."\r\n");
+			$larm = "* * * Datum som bör justeras till exakt tidsangivelse, om möjlighet finns.";
+			fwrite($handlarm,$larm."\r\n");
+			fclose($handlarm);
+		}
+//	
+//	Varningslista ologiskt placerad för att få rätt sekvens vid utskrift
 	if($larmv > 0)
 	{
 //	Larm
 		$brytr = 0;
 		$filelarm=$directory . "Check_lista.txt";
 		$handlarm=fopen($filelarm,"a");
-		if($larmrub9 == 1) {
+		if($larmrub10 == 1) {
 			$larm = " ";
 			fwrite($handlarm,$larm."\r\n");
 			fwrite($handlarm,$larm."\r\n");
-			$larm = "*** V A R N I N G  (IX) Text";
+			$larm = "*** V A R N I N G  (X) Text";
 			fwrite($handlarm,$larm."\r\n");
 			$larm = " ";
 			fwrite($handlarm,$larm."\r\n");
-			$larmrub9++;
+			$larmrub10++;
 		}
 		if($larmv > 0) {
 			$lrmlistv=array_unique($lrmv);

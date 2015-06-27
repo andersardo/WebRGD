@@ -25,7 +25,7 @@ require 'initbas.php';
 //
 $brytr = 0;
 $larmant = 0;
-$larmrub9 = 1;
+$larmrub11 = 1;
 //
 $fileut=$directory . "RGD9.GED";
 $fileux=$directory . "RGDN.txt";
@@ -51,39 +51,37 @@ else
 		$handnam=fopen($filenam,"w");
 //	
 //	Beräkna checksum
-	$namndbFil='fsndata.txt';
-	$dbl=file_get_contents($namndbFil);
-	$checksum=md5($dbl);
+		$namndbFil='fsndata.txt';
+		$dbl=file_get_contents($namndbFil);
+		$checksum=md5($dbl);
 //	Anropa disnamnREST
-	ini_set('default_socket_timeout',60);
-//      Moved to dis4/rgd
-//	$url = "http://dev.dis.se/disnamnREST.php?download=1&md5=".$checksum;
-	$url = "https://rgd.dis.se/disnamnREST.php?download=1&md5=".$checksum;
-	$db = file_get_contents($url);
+		ini_set('default_socket_timeout',60);
+		$url = "https://rgd.dis.se/disnamnREST.php?download=1&md5=".$checksum;
+		$dbx = file_get_contents($url);
 //	Alternativ
-	if(($db===FALSE)||($db=='NoChanges')) {
-		echo 'Använder lokal namntabell';
-//		Avkoda lokala data		
-		$resp=json_decode($dbl,true);
-//		var_dump($http_response_header);
-		}else{
-//		Lagra data		
-		$fp=fopen($namndbFil,'w');
-		fwrite($fp,$db);
-		fclose($fp);
-		echo 'Hämtat nytt data från DISNAMN';
-//		Avkoda data
-		$resp = json_decode($db,true);
-	}	
+		if(($dbx===FALSE)||($dbx=='NoChanges')) {
+			echo 'Använder lokal namntabell';
+//			Avkoda lokala data		
+			$resp=json_decode($dbl,true);
+//			var_dump($http_response_header);
+			}else{
+//			Lagra data		
+			$fp=fopen($namndbFil,'w');
+			fwrite($fp,$dbx);
+			fclose($fp);
+			echo 'Hämtat nytt data från DISNAMN';
+//			Avkoda data
+			$resp = json_decode($dbx,true);
+		}	
 //
-	$text = "NAMNFEL ELLER NAMN SOM SAKNAS I NAMNDATABASEN, MEN FINNS MED AVVIKANDE KÖN:";
-	fwrite($handux,$text."\r\n");
-	$text = "";
-	fwrite($handux,$text."\r\n");
+		$text = "NAMNFEL ELLER NAMN SOM SAKNAS I NAMNDATABASEN, MEN FINNS MED AVVIKANDE KÖN:";
+		fwrite($handux,$text."\r\n");
+		$text = "";
+		fwrite($handux,$text."\r\n");
 //		
-	$fn = $resp['fn'];
-	$sn = $resp['sn'];
-	echo "<br/>";
+		$fn = $resp['fn'];
+		$sn = $resp['sn'];
+		echo "<br/>";
 //
 		$trec=0;
 		$treh=0;
@@ -268,15 +266,15 @@ else
 								$larmant++;
 								$filelarm=$directory . "Check_lista.txt";
 								$handlarm=fopen($filelarm,"a");
-								if($larmrub9 == 1) {
+								if($larmrub11 == 1) {
 									$larm = " ";
 									fwrite($handlarm,$larm."\r\n");
 									fwrite($handlarm,$larm."\r\n");
-									$larm = "*** V A R N I N G  (IX)  Text";
+									$larm = "*** V A R N I N G  (XI)  Text";
 									fwrite($handlarm,$larm."\r\n");
 									$larm = " ";
 									fwrite($handlarm,$larm."\r\n");
-									$larmrub9++;
+									$larmrub11++;
 									$brytr = 0;
 								}
 // sätt om möjligt id och namn
@@ -325,15 +323,15 @@ else
 									$larmant++;
 									$filelarm=$directory . "Check_lista.txt";
 									$handlarm=fopen($filelarm,"a");
-									if($larmrub9 == 1) {
+									if($larmrub11 == 1) {
 										$larm = " ";
 										fwrite($handlarm,$larm."\r\n");
 										fwrite($handlarm,$larm."\r\n");
-										$larm = "*** V A R N I N G  (IX)  Text";
+										$larm = "*** V A R N I N G  (XI)  Text";
 										fwrite($handlarm,$larm."\r\n");
 										$larm = " ";
 										fwrite($handlarm,$larm."\r\n");
-										$larmrub9++;
+										$larmrub11++;
 										$brytr = 0;
 									}
 // sätt om möjligt id och namn
