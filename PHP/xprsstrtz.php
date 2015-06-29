@@ -2530,6 +2530,7 @@ Ladda array med kända värden.
 		$tst[]="AFT";
 		$tst[]="BEF";
 		$tst[]="BET";
+		$tst[]="AND";
 //	
 		$len=0;
 		$stop=0;
@@ -2628,35 +2629,30 @@ Ladda array med kända värden.
 					$date=$date."RGDD ";
 					$tdag='XX';
 					$tman='XXX';
+					$ttmp='XXX';
 					$taar='XXXX';
 					$ndag=0;
 					$nman=0;
+					$ntmp=0;
 					$naar=0;
+					$ber='JA';
+					$cal='NEJ';
 					$temp='';
 					$tkn='';
 					$imax=7;
 					$fant=0;
 					$len=strlen($str);
 					$test = substr($str,7,3);
-					$x = 20;
 					for($i=0;$i<count($tst);$i++)
 					{
+						$x = 20;
 						if(($tst[$i]) == $test) {
 //	Raden börjar inte med datum eller årtal utan någon text
 							$x = $i;
 						}
 					}
-					if($x == 20)
-					{
-						$tkn = substr($str,7,1);
-						if(($tkn < '0') || ($tkn > '9')) {
-							$x = 21;
-						}
-					}
-					$tkn = '';
-//	Skall CAL godkännas eller inte?
-//					if((($x == 20) && ($fant == 0)) || (($x >= 0) && ($x <= 11)))
-					if((($x == 20) && ($fant == 0)) || (($x >= 0) && ($x <= 12)))
+//	Beräkna alla poster och tolka ommöjligt årtal
+					if(($ber == 'JA') || ($test == 'CAL'))
 					{
 						while($imax <= $len)
 						{
@@ -2722,25 +2718,22 @@ Ladda array med kända värden.
 								}
 								elseif(strlen($temp) == 3)
 								{
-									for($i=0;$i<count($tst);$i++) {
-										if(($tst[$i]) == $temp)	{
-											$nman = ($i+1);
-											$tman = $nman; 	}
-										if(($nman < 1) || ($nman > 12)) {
-											$nman = 0;
-											$tman = ''; }	
-										if(($nman == 2) && ($ndag > 28)) {
-											$fant++; }
-										if(($nman==4) || ($nman==6) || ($nman==9) || ($nman==11)) {
-											if($ndag > 30){
+									if($x == 20) {
+										for($i=0;$i<count($tst);$i++) {
+											if(($tst[$i]) == $temp)	{
+												$nman = ($i+1);
+												$tman = $nman; 	}
+											if(($nman < 1) || ($nman > 12)) {
+												$nman = 0;
+												$tman = ''; }	
+											if(($nman == 2) && ($ndag > 28)) {
 												$fant++; }
+											if(($nman==4) || ($nman==6) || ($nman==9) || ($nman==11)) {
+												if($ndag > 30){
+													$fant++; }
+											}
 										}
-									}
-//	Skall CAL godkännas eller inte?
-//									if($nman == 0) {
-									if(($nman == 0) && ($temp != 'CAL')) {
-										$fant++;
-									}
+									}	
 									$temp='';
 								}
 								elseif(strlen($temp) == 4)
@@ -2783,10 +2776,6 @@ Ladda array med kända värden.
 							}
 							$imax++;
 						}
-						if($fant > 0)
-						{
-							$kant++;
-						}		
 						if((strlen($tman)) == 1)
 						{
 							$tman = '0'.$tman;
@@ -2837,97 +2826,69 @@ Ladda array med kända värden.
 						else
 						{
 // konverteringen tar bara exakt / kalkulerat årtal / exakt datum, övriga återskrivs oförändrade
-							if($fant == 0) {
-								$fant++;
-								$kant++;
-							}	
-						}
-						if($fant > 0)
-						{
-							echo "<br/>";
-							echo " *  *  *  *  *  Ej korrekt kalenderdatum ".$str.
-							" . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
-//	Larm
-							$larmant++;
-							$filelarm=$directory . "Check_lista.txt";
-							$handlarm=fopen($filelarm,"a");
-							if($larmrub6 == 1) {
-								$larm = " ";
-								fwrite($handlarm,$larm."\r\n");
-								fwrite($handlarm,$larm."\r\n");
-								$larm = "*** F E L  L I S T A  (VI) Datum, ej godkända";
-								fwrite($handlarm,$larm."\r\n");
-								$larm = " ";
-								fwrite($handlarm,$larm."\r\n");
-								$larmrub6++;
-								$brytr = 0;
-							}
-// sätt om möjligt id och namn
-							$larmid = $znum;
-							$larmnamn = $lnamn;
-							$brytr++;
-							if($brytr >= 4) {
-								fwrite($handlarm," \r\n");
-								$brytr = 1;
-							}	
-// och beskrivande feltext
-							$larm = "Ej korrekt kalenderdatum ".$str.
-							" - Id => ".$larmid." - ".$larmnamn;
-							fwrite($handlarm,$larm."\r\n");
-							fclose($handlarm);
-//
+							$ungant++;
+							$fant++;
 						}	
 					}
+//
+					for($i=0;$i<count($tst);$i++) {
+						if(($tst[$i]) == $test)	{
+							$ntmp = ($i+1);
+							$ttmp = $ntmp;
+						}
+					}		
+//	Särbehandling av ungefärliga tidpunkter
+					if(($ntmp >= 13) && ($nman <= 19)) {
+// Larm och beskrivande text
+						$esttxt = "Ej definitiv tidsangivelse  ".$str;	
+						$larmd++;
+						$lrmd[] = $esttxt." - Id => ".$znum." - ".$lnamn;
+						$fant = 0;
+					}
+//							
+					if($fant > 0)
+					{
+						$kant++;
+						echo "<br/>";
+						echo " *  *  *  *  *  Ej korrekt kalenderdatum ".$str.
+						" . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
+//	Larm
+						$larmant++;
+						$filelarm=$directory . "Check_lista.txt";
+						$handlarm=fopen($filelarm,"a");
+						if($larmrub6 == 1) {
+							$larm = " ";
+							fwrite($handlarm,$larm."\r\n");
+							fwrite($handlarm,$larm."\r\n");
+							$larm = "*** F E L  L I S T A  (VI) Datum, ej godkända";
+							fwrite($handlarm,$larm."\r\n");
+							$larm = " ";
+							fwrite($handlarm,$larm."\r\n");
+							$larmrub6++;
+							$brytr = 0;
+						}
+// sätt om möjligt id och namn
+						$larmid = $znum;
+						$larmnamn = $lnamn;
+						$brytr++;
+						if($brytr >= 4) {
+							fwrite($handlarm," \r\n");
+							$brytr = 1;
+						}	
+// och beskrivande feltext
+						$larm = "Ej korrekt kalenderdatum ".$str.
+						" - Id => ".$larmid." - ".$larmnamn;
+						fwrite($handlarm,$larm."\r\n");
+						fclose($handlarm);
+//
+					}			
 					else
 					{
-//	Skall CAL godkännas eller inte?
-//						if(($x >= 12) && ($x <= 18))
-						if(($x >= 13) && ($x <= 18))
-						{
-// Larm och beskrivande feltext
-							$esttxt = "Ej definitiv tidsangivelse  ".$str;
-							$larmd++;
-							$lrmd[] = $esttxt." - Id => ".$znum." - ".$lnamn;
-//
-						}
-						else
-						{
-							$kant++;
-							echo "<br/>";
-							echo " *  *  *  *  *  Ej datumformat ".$str.
-							" . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
-//	Larm
-							$larmant++;
-							$filelarm=$directory . "Check_lista.txt";
-							$handlarm=fopen($filelarm,"a");
-							if($larmrub6 == 1) {
-								$larm = " ";
-								fwrite($handlarm,$larm."\r\n");
-								fwrite($handlarm,$larm."\r\n");
-								$larm = "*** F E L  L I S T A  (VI) Datum, ej godkända";
-								fwrite($handlarm,$larm."\r\n");
-								$larm = " ";
-								fwrite($handlarm,$larm."\r\n");
-								$larmrub6++;
-								$brytr = 0;
-							}
-// sätt om möjligt id och namn
-							$larmid = $znum;
-							$larmnamn = $lnamn;
-							$brytr++;
-							if($brytr >= 4) {
-								fwrite($handlarm," \r\n");
-								$brytr = 1;
-							}	
-// och beskrivande feltext
-							$larm = "Ej datumformat ".$str.
-							" - Id => ".$larmid." - ".$larmnamn;
-							fwrite($handlarm,$larm."\r\n");
-							fclose($handlarm);
-//
-						}	
+						$ungant++;
 					}
 				}	
+				$ber='JA';
+				$cal='NEJ';
 			}
 			fwrite($handut,$str."\r\n");
 		}
@@ -2954,7 +2915,6 @@ Ladda array med kända värden.
 		}	
 		fclose($handin);
 		fclose($handut);
-//		
 //	Array start
 		if($datcnt > 0) {
 			fwrite($handdat,json_encode($dat)."\r\n");
