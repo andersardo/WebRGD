@@ -112,6 +112,7 @@ def combined():
     if bottle.request.forms.get('namn'): cmd.append('--namn')
     if bottle.request.forms.get('ort'): cmd.append('--ort')
     if bottle.request.forms.get('dubl'): cmd.append('--dubl')
+    if bottle.request.forms.get('sour'): cmd.append('--sour')
     import subprocess
     yield "\nAvvakta programmet:  " + cmd[1] + "<br>\n"
     from time import sleep
@@ -199,6 +200,17 @@ def getfile():
         bottle.response.headers.append("Content-Disposition:", 'attachment; filename=all.zip')
         bottle.response.headers.append("Content-Transfer-Encoding:", "binary");
 #        return bottle.static_file(fn, root='.')
+        f = codecs.open(fn, "r")
+        mess = f.read()
+        f.close()
+    elif fn.endswith('.CSV'):
+        bottle.response.headers.append("Expires:", "0")
+        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
+        bottle.response.headers.replace("Content-Type:", "application/force-download")
+        bottle.response.headers.append("Content-Type:", "application/octet-stream")
+        bottle.response.headers.append("Content-Type:", "application/download")
+        bottle.response.headers.append("Content-Disposition:", 'attachment; filename=RGDK.CSV')
+        bottle.response.headers.append("Content-Transfer-Encoding:", "binary");
         f = codecs.open(fn, "r")
         mess = f.read()
         f.close()

@@ -62,7 +62,12 @@ Kryssa i om du vill ha ortlista (Församlingskontroll)
 Kryssa i om du vill ha dubblettlista (Dubblettkontroll)
 <input type="checkbox" name="dubl" checked >
 </p>
-
+<p>
+Kryssa i för önskad lista över saknade källor:
+  <input type="checkbox" name="sour"><BR>
+Ger en csv lista som kan hämtas hem för vidare bearbetning i ett
+matrisprogram.
+</p>
 <p>
 
 Därefter klicka på <input type="submit" value="Starta bearbetning" />

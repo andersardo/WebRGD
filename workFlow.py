@@ -104,7 +104,7 @@ def listOldLogs( user, database ):
     utf8U = db + '.GED_UTF8'
     zipf = zipfile.ZipFile('./files/'+user+'/'+db+'/Logs.zip', 'w')
     for fil in ('Log', 'Info.txt', 'Check_lista.txt', 'RGDN.txt', 'RGDO.txt',
-                'RGDD.txt', 'RGDXL.txt', utf8, utf8U):
+                'RGDD.txt', 'RGDK.CSV', 'RGDXL.txt', utf8, utf8U):
         filepath = './files/'+user+'/'+db+'/'+fil
         if os.path.isfile(filepath):
             mess += '<a href="/getFile?fil='+filepath+'">'+fil+'</a><br>'

@@ -7,25 +7,6 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 #sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
 sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 
-"""
-useremail = {
-  'anders'   : 'anders.ardo@gmail.com',
-  'kalle'    : 'carl-johan.gustafsson@telia.com',
-  'rolf'     : 'hjalmo114@hotmail.com',
-  'christer' : 'christer@dis.se',
-  'kjell'    : 'kjell.crone@home.se',
-  'hans'     : 'hansnyman@telia.com',
-  'annelie'  : 'petared@gmail.com',
-  'annika'   : 'annika.nygren@telia.com',
-  'arne'     : 'arne@sorlov.com',
-  'bernth'   : 'bernth.lindfors@telia.com',
-  'lars'     : 'ekblom5@telia.com',
-  'runar'    : 'runar.hortlund@telia.com',
-  'ulf'      : 'ulf.456@hotmail.com',
-  'BSF'      : 'hjalmo114@hotmail.com'
-}
-"""
-
 parser = argparse.ArgumentParser()
 parser.add_argument("workdir", help="Working directory" )
 parser.add_argument("fn", help="Gedcom filnamn" )
@@ -33,6 +14,7 @@ parser.add_argument("--email", help="User email (for result-lists)" )
 parser.add_argument("--namn", help="Kontrollista namn", action='store_true' )
 parser.add_argument("--ort", help="Testa orter", action='store_true' )
 parser.add_argument("--dubl", help="Testa dubletter", action='store_true' )
+parser.add_argument("--sour", help="Saknade källor", action='store_true' )
 args = parser.parse_args()
 workdir = args.workdir
 fn = args.fn
@@ -40,10 +22,7 @@ email = args.email
 namn = args.namn
 ort = args.ort
 dubl = args.dubl
-
-#In first approx email is username
-#if email in useremail: email = useremail[email]
-#else: email = None
+sour = args.sour
 
 # strip leading path from file name to avoid directory traversal attacks
 #fn = os.path.basename(fileitem.filename)
@@ -62,8 +41,6 @@ print 'Resultat'
 if not email: print 'Ingen email - endast resultat via denna sida'
 print u'Resultatl&auml;nkar:</pre>'
 print '<b><a href="/getFile?fil='+rootdir+'/Log" target="_blank">Log av indatavalidering</a></b><br>'
-#print rootdir+'/Log<br>'
-
 #Alltid:konvutf8x och xprsstrt.
 os.system('php ../../../PHP/konvutf8z.php >> Log')
 os.system('php ../../../PHP/xprsstrtz.php >> Log')
@@ -75,6 +52,9 @@ filLista.append('RGDN.txt')
 if ort:
     os.system('php ../../../PHP/listrgdox.php >> Log')
     filLista.append('RGDO.txt')
+if sour:
+    os.system('php ../../../PHP/kallkollx.php >> Log')
+    filLista.append('RGDK.CSV')
 #För RGDD listan. även dubbtest
 if dubl:
     import subprocess
@@ -98,6 +78,8 @@ if ort and os.path.isfile('./RGDO.txt'):
     print '<b><a href="/getFile?fil='+rootdir+u'/RGDO.txt" target="_blank">RGDO.txt</a> - Ortnamn / Platser som ej kunnat identifieras som f&ouml;rsamlingar i GEDCOM filen</b><br>'
 if dubl and os.path.isfile('./RGDD.txt'):
     print '<b><a href="/getFile?fil='+rootdir+u'/RGDD.txt" target="_blank">RGDD.txt</a> - Dubblett s&ouml;kning</b><br>'
+if sour and os.path.isfile('./RGDK.CSV'):
+    print '<b><a href="/getFile?fil='+rootdir+u'/RGDK.CSV" target="_blank">RGDK.CSV</a> - Saknade k&auml;llor</b><br>'
 
 os.system('echo "ALLT KLART\n" >> Log')
 try:
