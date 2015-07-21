@@ -40,7 +40,9 @@ Ger som resultat valideringslistor (textfiler - per mail om så önskas).
 <ul>
 <li>Lista oregistrerade namn - <a href="#Namn">Läs mera</a></li>
 <li>Ortlista med oidentifierade församlingar  - <a href="#Församling">Läs mera</a></li>
-<li>Lista möjliga dubblettindivider  - <a href="#Dubblett1">Läs mera</a></li>
+<li>Lista möjliga dubblettindivider  - <a href="#Dubblett1">Läs
+    mera</a></li>
+<li>Lista över saknade källor (måste väljas nedan) - <a href="#Källa">Läs mera</a></li>
 </ul>
 <li> Skapa temporär databas för matchning
 </ol>
@@ -54,19 +56,19 @@ Ange om resultat-listan/listorna skall skickas med email
 <input type="checkbox" name="resmail" />
 </P>
 
-<P>
-Kryssa i om du vill ha lista oregistrerade namn (Namnkontroll)
+<P><b>
+Kryssa i om du vill ha lista med oregistrerade namn (Namnkontroll):
  <input type="checkbox" name="namn" checked ><BR>
-Kryssa i om du vill ha ortlista (Församlingskontroll)
+Kryssa i om du vill ha ortlista (Församlingskontroll):
  <input type="checkbox" name="ort" checked ><BR>
-Kryssa i om du vill ha dubblettlista (Dubblettkontroll)
+Kryssa i om du vill ha dubblettlista (Dubblettkontroll):
 <input type="checkbox" name="dubl" checked >
-</p>
+</b></p>
 <p>
-Kryssa i för önskad lista över saknade källor:
-  <input type="checkbox" name="sour"><BR>
-Ger en csv lista som kan hämtas hem för vidare bearbetning i ett
-matrisprogram.
+<b>Kryssa i om lista över saknade källor önskas:
+  <input type="checkbox" name="sour"></b><BR>
+(Ger en CSV lista som kan hämtas hem för vidare bearbetning i ett
+matrisprogram.)
 </p>
 <p>
 
@@ -77,7 +79,7 @@ Därefter klicka på <input type="submit" value="Starta bearbetning" />
 <P>
 Bearbetningen kan ta olika lång tid beroende på 
 	filens storlek och andra parallella bearbetningar.<br>
-(Vissa browsers (Firefox, Chrome, m.fl.) visar att bearbetning pågår.)
+(Vissa browsers - Firefox, Chrome, m.fl. - visar att bearbetning pågår.)
  </P>
 <!--Under tiden bearbetningen pågår kommer log-filen att löpande visas.<br>-->
 När bearbetningen är klar indikeras detta och resultat-listan/listorna
@@ -484,6 +486,31 @@ vigd.
 		</TD>
 	</TR>
 
+<tr valign="TOP">
+		<td width="72" height="18">
+			<p><br><a name=Källa><strong>Källa</strong></a></p>
+		</td>
+		<td width="400">
+			<p><br><font size="4"><b>CSV fil med saknade källor.</b></font>
+			<br><br>Skapar utfil med händelser som saknar angiven källa.</p>
+		</td>
+		<td width="400">
+			<p><br>Filen visar de händelser som saknar angiven källa.<br>
+			Det är mycket praktiskt att kunna gå tillbaka till källan för att
+			verifiera en uppgift. Det är inte så viktigt vad det är för källa, 
+			huvudsaken är att man själv vet var man kan hitta den.<br>
+			Hittar man senare en &quot;bättre&quot; källa, byter man ut den tidigare.<br>
+			<b>Bedöm olika källor, förstahandskällor är bättre än avskrifter.<br></b>
+			<br><b>Tips:</b>
+			<br>CSV filen kan normalt läsas in i alla
+			matrisprogram, t.ex. Excel, OpenOffice eller LibreOffice.<br>
+			<br>Där kan man sortera och bearbeta data i etapper.<br>
+			</p>
+		</td>
+		<td width="72">
+			<p><br><b>RGDK</b></p>
+		</td>
+</tr>
 
 <tr valign=top>
   <TD WIDTH=72 HEIGHT=18>
