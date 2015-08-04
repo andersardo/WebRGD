@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This Python file uses the following encoding: utf-8
 from collections import OrderedDict
-import codecs, time, logging
+import codecs, time, logging, os.path
 
 from uiUtils import listPersons, listFamilies, personView, familyView
 from uiUtils import listPersonSkillnad, listFamiljeSkillnad, getFlags, addFlag
@@ -186,11 +186,10 @@ def download():
 @bottle.route('/getFile')
 @authorize()
 def getfile():
-    #FIX validate filename!
     fn = bottle.request.query.fil
-    if not fn.startswith(bottle.request.session['directory']):
-        return 'File not found: ' + fn
-    if '..' in fn: return 'File not found: ' + fn
+    if ( ( not fn.startswith(bottle.request.session['directory']) ) or
+         ( not os.path.isfile(fn) ) or  ( '..' in fn ) ):
+        return 'File not found: ' + os.path.basename(fn)
     if fn.endswith('.zip'):
         bottle.response.headers.append("Expires:", "0")
         bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
@@ -199,7 +198,6 @@ def getfile():
         bottle.response.headers.append("Content-Type:", "application/download")
         bottle.response.headers.append("Content-Disposition:", 'attachment; filename=all.zip')
         bottle.response.headers.append("Content-Transfer-Encoding:", "binary");
-#        return bottle.static_file(fn, root='.')
         f = codecs.open(fn, "r")
         mess = f.read()
         f.close()
