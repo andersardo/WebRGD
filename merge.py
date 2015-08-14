@@ -32,6 +32,9 @@ errCnt = 0
 t0 = time.time()
 
 print 'Doing sanity checks'
+if config['match_originalData'].find_one({'type': 'admin', 'mergedWith': dbName}):
+    print mDBname, 'already merged with', dbName, '-- Exiting'
+    sys.exit()
 
 #sanity check - en person kan bara var barn i 1 familj
 for p in config['persons'].find():
