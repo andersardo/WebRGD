@@ -561,6 +561,7 @@ def dbfind(db, q):
     query = {mapQ[q.field]: q.val}
     resTxt = ''
     for res in common.admClient[db][q.coll].find(query):
-        resTxt += pprint.pformat(res)
-    
+        resTxt += pprint.pformat(res) + "\n\n"
+    if not resTxt:
+        resTxt = 'No hits'
     return '<pre>' + resTxt + '</pre>'
