@@ -93,8 +93,10 @@ try:
 except:
     pass
 os.system('mv RGD1.GED '+os.path.basename(fn)+'_UTF8')
-#Remove temporary workfiles
+#Remove temporary workfiles but keep RGD9
+os.system('mv RGD9.GED saveRGD9.GED')
 os.system('rm RGD?.GED')
+os.system('mv saveRGD9.GED RGD9.GED')
 #
 if not email: sys.exit()
 os.system('echo "Email= '+email+'\n" >> Log')
