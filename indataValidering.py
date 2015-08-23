@@ -30,8 +30,11 @@ sour = args.sour
 rootdir = workdir + '/' + os.path.basename(fn).split('.')[0]
 #remove old files from catalogue
 for file in os.listdir(rootdir):
-    if file != os.path.basename(fn):
-        os.unlink(os.path.join(rootdir, file))
+    if os.path.isfile(os.path.join(rootdir, file)):
+        if file != os.path.basename(fn):
+            os.unlink(os.path.join(rootdir, file))
+    else:
+        shutil.rmtree(os.path.join(rootdir, file))
 os.chdir(rootdir)
 os.rename(os.path.basename(fn), '_'+os.path.basename(fn))
 shutil.copy2('_'+os.path.basename(fn), 'RGD1.GED')
