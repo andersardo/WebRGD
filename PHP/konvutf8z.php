@@ -22,7 +22,7 @@ $larmrub1 = 1;
 $larmrub2 = 1;
 $larmrub3 = 1;
 /*
-Programmet skall läsa alla racer för taggen CHIL, uppdatera 
+Programmet skall läsa alla rader för taggen CHIL, uppdatera 
 dom i en tabell för att säkerställa att inga dubbletter skapas.
 
 Troligen ett mycket sällsynt fel, men allvarligt om det förekommer.
@@ -31,6 +31,141 @@ Dessutom testas rader som saknar egen tagg, förhoppningsvis bara
 från noteringar.
 
 */
+//
+$larmx = 0;
+//	Formell kontroll av IND/FAM och referenser
+$filein=$directory . "RGD1.GED";
+$handin=fopen($filein,"r");
+$head = 'ON';	
+//	Läs in indatafilen				
+$lines = file($filein,FILE_IGNORE_NEW_LINES);
+foreach($lines as $radnummer => $str)
+{
+//	Huvud börjar - läs tills första individ/relation
+	if($head == 'ON') {
+		$ztag = substr($str,0,3);
+		if($ztag == '0 @') {
+			$zlen = strlen($str);
+			$zmax = 3;
+			while($zmax <= $zlen) {
+				$ztal = substr($str,$zmax,1);
+				if($ztal == '@')  {
+					if((substr($str,$zmax,5) == '@ IND') || (substr($str,$zmax,5) == '@ FAM')) {
+						$head = 'OFF';
+					}
+					$zmax = $zlen; 
+				}	
+				$zmax++;
+			}
+		}	
+	}
+//	Första individ/relation börjar	
+	if($head == 'OFF')
+	{
+//	hitta idnummer för individ/relation
+		$ztag = substr($str,0,3);
+		if($ztag == '0 @') {
+			$ptyp = '';
+			$isex = '';
+			$fref = '';
+//			
+			$znum = '';
+			$zlen = strlen($str);
+			$zmax = 3;
+			while($zmax <= $zlen) {
+				$ztal = substr($str,$zmax,1);
+				if($ztal != '@') {
+					$znum = $znum.$ztal;
+				}
+				else {
+					$ptyp = substr($str,($zmax+2),3);
+					$zmax = $zlen;
+					$zmax++;
+				}
+				$zmax++;
+			}
+		}
+		$tagk = substr($str,0,5);
+		$tagg = substr($str,0,6);
+		$rlen = strlen($str);
+		if($tagk == '1 SEX') {
+			$isex = substr($str,6,1);
+		}	
+		if($tagg == '1 FAMS') {
+			$fref = substr($str,7,$rlen);
+			if($isex == 'F') {
+				$irad[] = '1 WIFE @'.$znum.'@'.$fref;
+			}
+			if($isex == 'M') {
+				$irad[] = '1 HUSB @'.$znum.'@'.$fref;
+			}
+		}	
+		if($tagg == '1 FAMC') {
+			$fref = substr($str,7,$rlen);
+			$irad[] = '1 CHIL @'.$znum.'@'.$fref;
+		}	
+		if($tagg == '1 HUSB') {
+			$frad[] = $str.'@'.$znum.'@';
+		}	
+		if($tagg == '1 WIFE') {
+			$frad[] = $str.'@'.$znum.'@';
+		}	
+		if($tagg == '1 CHIL') {
+			$frad[] = $str.'@'.$znum.'@';
+		}	
+	}
+}	
+fclose($handin);
+//	
+$anti = count($irad);
+$antf = count($frad);
+if($anti != $antf) {
+	echo '<br/>';
+	echo 'OBS! Felaktig GEDCOM fil, kan ej bearbetas korrekt <br/>';
+	if($antf > $anti) {
+		echo 'Individ(er) saknas för referens(er) <br/>';
+	}
+	else {
+		echo 'Referens(er) saknas för individ(er) <br/>';
+	}
+}
+sort($irad);
+sort($frad);
+$s1 = 0;
+$s2 = 0;
+$ok = 'OK';
+while($s1 < $anti && $s2 < $antf)
+{
+	if($irad[$s1] != $frad[$s2]) {
+		if($antf > $anti) {
+//	stoppa ej		$typtest = 'EJ';
+			$larmx++;
+			$lrmx[] =  'Formellt fel i GEDCOM filen: Referens saknas/felaktig, berörda identiteter '.substr($frad[$s2],6,strlen($frad[$s2]));
+			echo 'Berörda identiteter  -  -  -  '.substr($frad[$s2],6,strlen($frad[$s2])).' <br/>';
+			$s1--;
+		}
+		if($anti > $antf) {
+			$larmx++;
+			$lrmx[] =  'Formellt fel i GEDCOM filen: Referens saknas/felaktig, berörda identiteter '.substr($frad[$s1],6,strlen($frad[$s1]));
+			echo 'Berörda identiteter  -  -  -  '.substr($frad[$s1],6,strlen($frad[$s1])).' <br/>';
+			$s2--;
+		}
+		if($anti == $antf) {
+			if($ok = 'OK') {
+				echo '<br/>';
+				echo 'OBS! Felaktig GEDCOM fil, kan ej bearbetas korrekt <br/>';
+			}	
+			$larmx++;
+			$lrmx[] =  'Formellt fel i GEDCOM filen: Referens saknas/felaktig, berörda identiteter '
+			.substr($frad[$s1],6,strlen($frad[$s1])).' och/eller '.substr($frad[$s2],6,strlen($frad[$s2]));
+			echo 'Berörda identiteter  -  -  -  '.substr($frad[$s1],6,strlen($frad[$s1])).' och/eller '
+			.substr($frad[$s2],6,strlen($frad[$s2])).' <br/>';
+		}
+		$ok = 'FEL';
+	}
+	$s1++;
+	$s2++;
+}
 //
 $fileut=$directory . "RGD1.GED";
 //
@@ -45,7 +180,6 @@ if($result == false) {
 $typ = '';
 $typx = '';
 $typtest = '';
-$larmx = 0;
 if(file_exists($filein)) {
 	$handin=fopen($filein,"r");
 	$handut=fopen($fileut,"w");
@@ -89,13 +223,23 @@ if(file_exists($filein)) {
 //	Testa NAME						
 		$tagg = substr($str,0,6);
 		if($tagg == '1 NAME') {
+//			$zlen = strlen($str);
+//			$zant = 0;
+//			$sant = 0;
+//			while($zant < $zlen) {
+//				$ztkn = substr($str,$zant,1);
+//				if($ztkn == '/') {
+//					$sant++;
+//				}
+//				$zant++;
+//			}
 			$sant = 0;
 			$zant = count_chars($str,0);
-			$sant = $zant[ord('/')]; //hur många '/'?
-//	Rätta formellt felaktiga						
-//	Alltid en ' ' för första '/'
+			$sant = $zant[ord('/')];
 			$str = preg_replace('/\//', ' /', $str, 1);
 			$str = preg_replace('/  \//', ' /', $str, 1);
+//			print "$str antal / =$sant\n";
+//	Rätta formellt felaktiga						
 			if($sant == 0) {
 				$str = $str." //";
 			}	
@@ -824,7 +968,7 @@ if(file_exists($filename))
 		}
 		$larm = " ";
 		fwrite($handlarm,$larm."\r\n");
-		$larm = "* * * Endast en av referenserna kan representera biologisk koppling.";
+		$larm = "* * * GEDCOM filen skall inte användas innan formella felaktigheter är korrigerade.";
 		fwrite($handlarm,$larm."\r\n");
 		$larm = " ";
 		fwrite($handlarm,$larm."\r\n");
