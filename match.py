@@ -407,7 +407,7 @@ from SVMfeatures import famSVMfeatures
 from uiUtils import nameDiff, eventDiff
 from utils import updateFamMatch
 svmFamModel = svm_load_model('conf/family.model')
-for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}):
+for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
     #Why use refID and not _id?
     work = config['families'].find_one({'refId': fmatch['workRefId']})
     match = config['match_families'].find_one({'refId': fmatch['matchRefId']})

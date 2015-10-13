@@ -150,9 +150,12 @@ def listFamilies(filters, multi, page=1, limit=10):
                                     'marriage': {'$first': '$marriage'},
                                     'status': {'$first': '$status'}}})
         aggrPipe.append({'$match': {'count': {'$gt': 1}}})
+    #fix to avoid to big bson objects
     #calc tot
-
-    tot = len(fam_matches.aggregate(aggrPipe)['result'])
+    try:
+        tot = len(fam_matches.aggregate(aggrPipe)['result'])
+    except:
+        tot = '??'
     #SORT BY count, refId
     aggrPipe.append({'$sort': {'count': -1, '_id': 1}})
     aggrPipe.append({'$skip': start})
@@ -292,7 +295,10 @@ def listPersons(filters, multi, page=1, limit=10):
                                     'namn': {'$first': '$namn'}, 'mid': {'$first': '$mid'},
                                     'status': {'$first': '$status'}}})
         aggrPipe.append({'$match': {'count': {'$gt': 1}}})
-    tot = len(matches.aggregate(aggrPipe)['result'])
+    try:
+        tot = len(matches.aggregate(aggrPipe)['result'])
+    except:
+        tot = '??'
     #SORT BY count, refId
     aggrPipe.append({'$sort': {'count': -1, '_id': 1}})
     aggrPipe.append({'$skip': start})
