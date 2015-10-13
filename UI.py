@@ -218,6 +218,12 @@ def getfile():
         f.close()
     return mess
 
+@bottle.route('/importBidrag')
+@authorize()
+def importidrag():
+    #dir = bottle.request.query.dir
+    return runprog('bidrag')
+
 @bottle.route('/runProg/<prog>')
 @authorize()
 def runprog(prog):
@@ -229,6 +235,21 @@ def runprog(prog):
     if prog == 'import':
         cmd = ['python', 'importGedcom.py', bottle.request.session['activeUser'],
                bottle.request.session['directory']+'/'+bottle.request.query.file]
+    elif prog == 'bidrag':
+       #Function to import RGD real contributions
+       # strip leading path from file name to avoid directory traversal attacks
+       fndir = os.path.basename(bottle.request.query.dir)
+       fdir = bottle.request.session['directory'] + '/' + fndir
+       if os.path.isdir(fdir):
+           import shutil
+           shutil.rmtree(fdir)
+       try:
+           os.mkdir(fdir)
+       except Exception, e:
+           message += str(e)
+       bottle.request.query.workDB = bottle.request.session['activeUser']+'_'+fndir
+       cmd = ['python', 'importBidrag.py', bottle.request.session['activeUser'],
+               bottle.request.session['directory'], bottle.request.query.dir ]
     elif prog == 'match':
         #check parameters FIX
         if bottle.request.query.workDB == bottle.request.query.matchDB:

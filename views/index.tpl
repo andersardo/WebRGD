@@ -24,6 +24,18 @@ function load(url, where) {
 %end
 <h1>Startsida - arbetsflöde</h1>
 <a href="/logout">Logga ut</a>
+%if (role == 'admin') or (role == 'editor'):
+  <hr>
+  <h4><a href="https://rgd.dis.se/RGDbidrag/test.phtml" target='_blank'>RGD Bidragshantering</a></h4>
+  <hr>
+  <h4>Importera färdigbehandlade RGD-bidrag</h4>
+  %import glob, os.path
+  %for f in glob.glob("/home/RGD/RGDbidrag/tmp/*/data.dat"):
+    <a href="/importBidrag?dir={{os.path.dirname(f)}}">{{os.path.basename(os.path.dirname(f))}}</a><br>
+  %end
+  <hr>
+%end
+
 <h2>1-3 Ladda upp - indatavalidering/egenkontroll - import</h2>
 <div style="float: right; padding: 0ex; margin: 0px 0px 0px 0px;">
 <img src="/img/wfOP_1_3.png" width="397"
