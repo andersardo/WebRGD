@@ -2322,7 +2322,7 @@ else
 						$land = $txty;
 //				
 						$isoland="";
-						$SQL="SELECT isoland,noid FROM land WHERE iso2='$land'";
+						$SQL="SELECT isoland,noid FROM lande WHERE iso2='$land'";
 						$result=mysql_query($SQL);
 						if(!$result)
 						{
@@ -2371,7 +2371,7 @@ else
 //				
 							$noid="";
 							$isoland="";
-							$SQL="SELECT isoland,noid FROM land WHERE land='$ltxt'";
+							$SQL="SELECT isoland,noid FROM lande WHERE land='$ltxt'";
 							$result=mysql_query($SQL);
 							if(!$result)
 							{
@@ -2384,11 +2384,29 @@ else
 								$isoland=$row['isoland'];
 								$noid=$row['noid'];
 							}	
-//							Nytt försök med land2							
+//	Nytt försök med land2							
 							if($noid == "")
 							{
 								$isoland="";
-								$SQL="SELECT isoland,noid FROM land WHERE land2='$ltxt'";
+								$SQL="SELECT isoland,noid FROM lande WHERE land2='$ltxt'";
+								$result=mysql_query($SQL);
+								if(!$result)
+								{
+									echo $SQL." - fungerande inte".mysql_error();
+									
+								}
+								else
+								{
+									$row=mysql_fetch_assoc($result);
+									$isoland=$row['isoland'];
+									$noid=$row['noid'];
+								}	
+							}
+//	Nytt försök med land3							
+							if($noid == "")
+							{
+								$isoland="";
+								$SQL="SELECT isoland,noid FROM lande WHERE land3='$ltxt'";
 								$result=mysql_query($SQL);
 								if(!$result)
 								{
@@ -2420,7 +2438,7 @@ else
 							$ltxtx = $txty;
 //				
 							$isoland="";
-							$SQL="SELECT isoland,noid FROM land WHERE land2='$ltxtx'";
+							$SQL="SELECT isoland,noid FROM lande WHERE land='$ltxtx'";
 							$result=mysql_query($SQL);
 							if(!$result)
 							{
@@ -2433,11 +2451,28 @@ else
 								$noid=$row['noid'];
 							}	
 						}
-//						Nytt försök med ltxtx och land2							
+//	Nytt försök med ltxtx och land2							
 						if($noid == "")
 						{
 							$isoland="";
-							$SQL="SELECT isoland,noid FROM land WHERE land2='$ltxtx'";
+							$SQL="SELECT isoland,noid FROM lande WHERE land2='$ltxtx'";
+							$result=mysql_query($SQL);
+							if(!$result)
+							{
+								echo $SQL." - fungerande inte".mysql_error();
+							}
+							else
+							{
+								$row=mysql_fetch_assoc($result);
+								$isoland=$row['isoland'];
+								$noid=$row['noid'];
+							}	
+						}
+//	Nytt försök med ltxtx och land3							
+						if($noid == "")
+						{
+							$isoland="";
+							$SQL="SELECT isoland,noid FROM lande WHERE land3='$ltxtx'";
 							$result=mysql_query($SQL);
 							if(!$result)
 							{
