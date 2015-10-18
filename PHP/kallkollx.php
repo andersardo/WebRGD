@@ -197,6 +197,8 @@ else
 							if($test == ' FAM')
 							{
 								$namn = 'Familj';
+								$fnamn = 'Familj';
+								$enamn = 'Familj';
 								$radf++;
 							}
 						}
