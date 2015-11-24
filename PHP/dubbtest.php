@@ -69,16 +69,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -113,21 +103,18 @@ else
 				if($ztag == '0 @') {
 //	Ny post, ladda upp tidigare data
 					$aar = 0;
-					$aar = (int)substr($ifdx,0,4);
-					if(($znum != '') && ($ind == 'J') && ($aar <= 1799)) {
+					$faar = 0;
+					$daar = 0;
+					$faar = (int)substr($ifdx,0,4);
+					$daar = (int)substr($iddx,0,4);
+					if(($faar >= 1000) && ($faar <= 1799)) {
+						$aar = $faar;
+					}
+					if(($daar >= 1000) && ($daar <= 1799)) {
+						$aar = $daar;
+					}
+					if(($znum != '') && ($ind == 'J') && ($aar >= 1000) && ($aar <= 1799)) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -274,12 +261,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 1 \r\n");
-//		echo $n1." individer inlästa för bearbetning efter block 1.<br/>";
-//		echo "<br/>";
-//	
-//////////////////////////////////
 		$max = $n1;
 		$n1 = $min + 1;
 //
@@ -399,13 +380,12 @@ else
 			$n1++;
 		}			
 //
-///////////////////////////
 //	Loop 1		
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -812,18 +792,6 @@ else
 							else {
 								$tots = $totp - 7;
 							}
-/*							echo "Total poäng = ".$tots." (".$plus.")  Bonus = ".$bon." Träff "
-							.$pos." av ".$ant." och ".$neg." avvikande, vilket ger en faktor på "
-							.$tmp."  . . . Raderna => ".$n1." + ".$n2." <br/>";
-							echo "-  -  -  -  > Fn / En ".$ifn[$n1]." / ".$ien[$n1]." Fd ".$ifd[$n1]."/".$ifp[$n1].
-							" Dd ".$idd[$n1]."/".$idp[$n1]." Famc ".$fmc[$n1]." . . . . . . . . IND => ".$num[$n1]." <br/>";
-							echo "-  -  -  -  > Fn / En ".$ifn[$n2]." / ".$ien[$n2]." Fd ".$ifd[$n2]."/".$ifp[$n2].
-							" Dd ".$idd[$n2]."/".$idp[$n2]." Famc ".$fmc[$n2]." . . . . . . . . IND => ".$num[$n2]." <br/>";
-							echo "<br/>";*/
-//							fwrite($handut," \r\n");
-//							fwrite($handut,"Poäng = ".$tots."(".$plus.") Jämför ".$num[$n1]." med ".$num[$n2]." \r\n");
-//							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför ".$num[$n1]." - ".$nrad[$n1]
-//							.", ".$prad[$n1]." med ".$num[$n2]." - ".$nrad[$n2].", ".$prad[$n2];
 //
 							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför:"
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1]." med:"
@@ -832,18 +800,6 @@ else
 						}
 					}	
 				}
-//
-/*				if((($num[$n1] == '20-23225') && ($num[$n2] == '20-13734')) || 
-					(($num[$n2] == '20-23225') && ($num[$n1] == '20-13734'))){
-					echo "***** Plus = (".$plus.")  Bonus = ".$bon." Träff "
-					.$pos." av ".$ant." och ".$neg." avvikande på raderna => ".$n1." + ".$n2." <br/>";
-					echo "-  -  -  -  > Fn / En ".$ifn[$n1]." / ".$ien[$n1]." Fd ".$ifd[$n1]."/".$ifp[$n1].
-					" Dd ".$idd[$n1]."/".$idp[$n1]." Famc ".$fmc[$n1]." . . . . . . . . IND => ".$num[$n1]." <br/>";
-					echo "-  -  -  -  > Fn / En ".$ifn[$n2]." / ".$ien[$n2]." Fd ".$ifd[$n2]."/".$ifp[$n2].
-					" Dd ".$idd[$n2]."/".$idp[$n2]." Famc ".$fmc[$n2]." . . . . . . . . IND => ".$num[$n2]." <br/>";
-					echo "<br/>";
-				}*/
-//			
 				$n2++;
 			}
 			$n1++;
@@ -873,16 +829,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -917,21 +863,18 @@ else
 				if($ztag == '0 @') {
 //	Ny post, ladda upp tidigare data
 					$aar = 0;
-					$aar = (int)substr($ifdx,0,4);
+					$faar = 0;
+					$daar = 0;
+					$faar = (int)substr($ifdx,0,4);
+					$daar = (int)substr($iddx,0,4);
+					if(($faar >= 1800) && ($faar <= 1849)) {
+						$aar = $faar;
+					}
+					if(($daar >= 1800) && ($daar <= 1849)) {
+						$aar = $daar;
+					}
 					if(($znum != '') && ($ind == 'J') && ($aar >= 1800) && ($aar <= 1849)) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -1078,13 +1021,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 2 \r\n");
-//		echo $n1." individer inlästa för bearbetning efter block 2.<br/>";
-//		echo "<br/>";
-//
-	
-//////////////////////////////////
 		$max = $n1;
 		$n1 = $min + 1;
 //
@@ -1204,13 +1140,12 @@ else
 			$n1++;
 		}			
 //
-///////////////////////////
 //	Loop 1		
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -1616,18 +1551,6 @@ else
 							else {
 								$tots = $totp - 7;
 							}
-/*							echo "Total poäng = ".$tots." (".$plus.")  Bonus = ".$bon." Träff "
-							.$pos." av ".$ant." och ".$neg." avvikande, vilket ger en faktor på "
-							.$tmp."  . . . Raderna => ".$n1." + ".$n2." <br/>";
-							echo "-  -  -  -  > Fn / En ".$ifn[$n1]." / ".$ien[$n1]." Fd ".$ifd[$n1]."/".$ifp[$n1].
-							" Dd ".$idd[$n1]."/".$idp[$n1]." Famc ".$fmc[$n1]." . . . . . . . . IND => ".$num[$n1]." <br/>";
-							echo "-  -  -  -  > Fn / En ".$ifn[$n2]." / ".$ien[$n2]." Fd ".$ifd[$n2]."/".$ifp[$n2].
-							" Dd ".$idd[$n2]."/".$idp[$n2]." Famc ".$fmc[$n2]." . . . . . . . . IND => ".$num[$n2]." <br/>";
-							echo "<br/>";*/
-//							fwrite($handut," \r\n");
-//							fwrite($handut,"Poäng = ".$tots."(".$plus.") Jämför ".$num[$n1]." med ".$num[$n2]." \r\n");
-//							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför ".$num[$n1]." - ".$nrad[$n1]
-//							.", ".$prad[$n1]." med ".$num[$n2]." - ".$nrad[$n2].", ".$prad[$n2];
 //
 							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför:"
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1]." med:"
@@ -1636,18 +1559,6 @@ else
 						}
 					}	
 				}
-//
-/*				if((($num[$n1] == '2-16578') && ($num[$n2] == '2-20369')) || 
-					(($num[$n2] == '2-20369') && ($num[$n1] == '2-16578'))){
-					echo "***** Plus = (".$plus.")  Bonus = ".$bon." Träff "
-					.$pos." av ".$ant." och ".$neg." avvikande på raderna => ".$n1." + ".$n2." <br/>";
-					echo "-  -  -  -  > Fn / En ".$ifn[$n1]." / ".$ien[$n1]." Fd ".$ifd[$n1]."/".$ifp[$n1].
-					" Dd ".$idd[$n1]."/".$idp[$n1]." Famc ".$fmc[$n1]." . . . . . . . . IND => ".$num[$n1]." <br/>";
-					echo "-  -  -  -  > Fn / En ".$ifn[$n2]." / ".$ien[$n2]." Fd ".$ifd[$n2]."/".$ifp[$n2].
-					" Dd ".$idd[$n2]."/".$idp[$n2]." Famc ".$fmc[$n2]." . . . . . . . . IND => ".$num[$n2]." <br/>";
-					echo "<br/>";
-				}*/
-//			
 				$n2++;
 			}
 			$n1++;
@@ -1677,16 +1588,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -1721,21 +1622,18 @@ else
 				if($ztag == '0 @') {
 //	Ny post, ladda upp tidigare data
 					$aar = 0;
-					$aar = (int)substr($ifdx,0,4);
+					$faar = 0;
+					$daar = 0;
+					$faar = (int)substr($ifdx,0,4);
+					$daar = (int)substr($iddx,0,4);
+					if(($faar >= 1850) && ($faar <= 1899)) {
+						$aar = $faar;
+					}
+					if(($daar >= 1850) && ($daar <= 1899)) {
+						$aar = $daar;
+					}
 					if(($znum != '') && ($ind == 'J') && ($aar >= 1850) && ($aar <= 1899)) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -1882,13 +1780,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 3 \r\n");
-//		echo $n1." individer inlästa för bearbetning efter block 3.<br/>";
-//		echo "<br/>";
-//
-	
-//////////////////////////////////
 		$max = $n1;
 		$n1 = $min + 1;
 //
@@ -2008,13 +1899,12 @@ else
 			$n1++;
 		}			
 //
-///////////////////////////
 //	Loop 1		
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -2420,18 +2310,6 @@ else
 							else {
 								$tots = $totp - 7;
 							}
-/*							echo "Total poäng = ".$tots." (".$plus.")  Bonus = ".$bon." Träff "
-							.$pos." av ".$ant." och ".$neg." avvikande, vilket ger en faktor på "
-							.$tmp."  . . . Raderna => ".$n1." + ".$n2." <br/>";
-							echo "-  -  -  -  > Fn / En ".$ifn[$n1]." / ".$ien[$n1]." Fd ".$ifd[$n1]."/".$ifp[$n1].
-							" Dd ".$idd[$n1]."/".$idp[$n1]." Famc ".$fmc[$n1]." . . . . . . . . IND => ".$num[$n1]." <br/>";
-							echo "-  -  -  -  > Fn / En ".$ifn[$n2]." / ".$ien[$n2]." Fd ".$ifd[$n2]."/".$ifp[$n2].
-							" Dd ".$idd[$n2]."/".$idp[$n2]." Famc ".$fmc[$n2]." . . . . . . . . IND => ".$num[$n2]." <br/>";
-							echo "<br/>";*/
-//							fwrite($handut," \r\n");
-//							fwrite($handut,"Poäng = ".$tots."(".$plus.") Jämför ".$num[$n1]." med ".$num[$n2]." \r\n");
-//							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför ".$num[$n1]." - ".$nrad[$n1]
-//							.", ".$prad[$n1]." med ".$num[$n2]." - ".$nrad[$n2].", ".$prad[$n2];
 //
 							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför:"
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1]." med:"
@@ -2440,18 +2318,6 @@ else
 						}
 					}	
 				}
-//
-/*				if((($num[$n1] == '25-3964') && ($num[$n2] == '25-28535')) || 
-					(($num[$n2] == '25-3964') && ($num[$n1] == '25-28535'))){
-					echo "***** Plus = (".$plus.")  Bonus = ".$bon." Träff "
-					.$pos." av ".$ant." och ".$neg." avvikande på raderna => ".$n1." + ".$n2." <br/>";
-					echo "-  -  -  -  > Fn / En ".$ifn[$n1]." / ".$ien[$n1]." Fd ".$ifd[$n1]."/".$ifp[$n1].
-					" Dd ".$idd[$n1]."/".$idp[$n1]." Famc ".$fmc[$n1]." . . . . . . . . IND => ".$num[$n1]." <br/>";
-					echo "-  -  -  -  > Fn / En ".$ifn[$n2]." / ".$ien[$n2]." Fd ".$ifd[$n2]."/".$ifp[$n2].
-					" Dd ".$idd[$n2]."/".$idp[$n2]." Famc ".$fmc[$n2]." . . . . . . . . IND => ".$num[$n2]." <br/>";
-					echo "<br/>";
-				}*/
-//			
 				$n2++;
 			}
 			$n1++;
@@ -2481,16 +2347,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -2525,21 +2381,18 @@ else
 				if($ztag == '0 @') {
 //	Ny post, ladda upp tidigare data
 					$aar = 0;
-					$aar = (int)substr($ifdx,0,4);
+					$faar = 0;
+					$daar = 0;
+					$faar = (int)substr($ifdx,0,4);
+					$daar = (int)substr($iddx,0,4);
+					if($faar >= 1900) {
+						$aar = $faar;
+					}
+					if($daar >= 1900) {
+						$aar = $daar;
+					}
 					if(($znum != '') && ($ind == 'J') && ($aar >= 1900)) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -2686,13 +2539,6 @@ else
 		}
 		fclose($handle);
 //
-//		fwrite($handut," \r\n");
-//		fwrite($handut,$n1." individer inlästa för bearbetning efter block 4 \r\n");
-//		echo $n1." individer inlästa för bearbetning efter block 4.<br/>";
-//		echo "<br/>";
-//
-	
-//////////////////////////////////
 		$max = $n1;
 		$n1 = $min + 1;
 //
@@ -2812,13 +2658,12 @@ else
 			$n1++;
 		}			
 //
-///////////////////////////
 //	Loop 1		
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -3224,18 +3069,6 @@ else
 							else {
 								$tots = $totp - 7;
 							}
-/*							echo "Total poäng = ".$tots." (".$plus.")  Bonus = ".$bon." Träff "
-							.$pos." av ".$ant." och ".$neg." avvikande, vilket ger en faktor på "
-							.$tmp."  . . . Raderna => ".$n1." + ".$n2." <br/>";
-							echo "-  -  -  -  > Fn / En ".$ifn[$n1]." / ".$ien[$n1]." Fd ".$ifd[$n1]."/".$ifp[$n1].
-							" Dd ".$idd[$n1]."/".$idp[$n1]." Famc ".$fmc[$n1]." . . . . . . . . IND => ".$num[$n1]." <br/>";
-							echo "-  -  -  -  > Fn / En ".$ifn[$n2]." / ".$ien[$n2]." Fd ".$ifd[$n2]."/".$ifp[$n2].
-							" Dd ".$idd[$n2]."/".$idp[$n2]." Famc ".$fmc[$n2]." . . . . . . . . IND => ".$num[$n2]." <br/>";
-							echo "<br/>";*/
-//							fwrite($handut," \r\n");
-//							fwrite($handut,"Poäng = ".$tots."(".$plus.") Jämför".$num[$n1]." med ".$num[$n2]." \r\n");
-//							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför ".$num[$n1]." - ".$nrad[$n1]
-//							.", ".$prad[$n1]." med ".$num[$n2]." - ".$nrad[$n2].", ".$prad[$n2];
 //
 							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför:"
 							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1]." med:"
@@ -3244,18 +3077,6 @@ else
 						}
 					}	
 				}
-//
-/*				if((($num[$n1] == '20-23225') && ($num[$n2] == '20-13734')) || 
-					(($num[$n2] == '20-23225') && ($num[$n1] == '20-13734'))){
-					echo "***** Plus = (".$plus.")  Bonus = ".$bon." Träff "
-					.$pos." av ".$ant." och ".$neg." avvikande på raderna => ".$n1." + ".$n2." <br/>";
-					echo "-  -  -  -  > Fn / En ".$ifn[$n1]." / ".$ien[$n1]." Fd ".$ifd[$n1]."/".$ifp[$n1].
-					" Dd ".$idd[$n1]."/".$idp[$n1]." Famc ".$fmc[$n1]." . . . . . . . . IND => ".$num[$n1]." <br/>";
-					echo "-  -  -  -  > Fn / En ".$ifn[$n2]." / ".$ien[$n2]." Fd ".$ifd[$n2]."/".$ifp[$n2].
-					" Dd ".$idd[$n2]."/".$idp[$n2]." Famc ".$fmc[$n2]." . . . . . . . . IND => ".$num[$n2]." <br/>";
-					echo "<br/>";
-				}*/
-//			
 				$n2++;
 			}
 			$n1++;
@@ -3265,10 +3086,12 @@ else
 //
 		if($kant > 0) {
 //
+			$fellista=array_unique($fellista);
 			rsort($fellista);
-//			echo "<br/>";
+			$kant = 0;
 			fwrite($handut," \r\n");
 			foreach($fellista as $felrad) {
+				$kant++;
 				$xlen = 0;
 				$xant = 0;
 				$xblock = '';

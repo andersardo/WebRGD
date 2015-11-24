@@ -42,7 +42,7 @@ else
 //
 		echo "Program startar ".date('Y-m-d')." / ".date('H:i:s')."<br/>";
 //		echo "<br/>";
-		fwrite($handut,"Dubblett Sökning XL-version 2 \r\n");
+		fwrite($handut,"Dubblett Sökning XL-version  \r\n");
 		fwrite($handut," \r\n");
 		fwrite($handut,"Individer med lika eller snarlika uppgifter, ");
 		fwrite($handut,"som bör kollas genom en rimlighetsbedömning .  \r\n");
@@ -75,16 +75,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -123,18 +113,6 @@ else
 					if(($znum != '') && ($ind == 'J') && 
 					($aar <= 1799) && ($sexx == 'M')) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -409,8 +387,8 @@ else
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -879,16 +857,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -927,18 +895,6 @@ else
 					if(($znum != '') && ($ind == 'J') && 
 					($aar >= 1800) && ($aar <= 1849) && ($sexx == 'M')) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -1214,8 +1170,8 @@ else
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -1683,16 +1639,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -1731,18 +1677,6 @@ else
 					if(($znum != '') && ($ind == 'J') && 
 					($aar >= 1850) && ($aar <= 1899) && ($sexx == 'M')) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -2018,8 +1952,8 @@ else
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -2487,16 +2421,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -2535,18 +2459,6 @@ else
 					if(($znum != '') && ($ind == 'J') && 
 					($aar >= 1900) && ($sexx == 'M')) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -2822,8 +2734,8 @@ else
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -3292,16 +3204,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -3340,18 +3242,6 @@ else
 					if(($znum != '') && ($ind == 'J') && 
 					($aar <= 1799) && ($sexx == 'F')) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -3626,8 +3516,8 @@ else
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -4095,16 +3985,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -4143,18 +4023,6 @@ else
 					if(($znum != '') && ($ind == 'J') && 
 					($aar >= 1800) && ($aar <= 1849) && ($sexx == 'F')) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -4430,8 +4298,8 @@ else
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -4899,16 +4767,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -4947,18 +4805,6 @@ else
 					if(($znum != '') && ($ind == 'J') && 
 					($aar >= 1850) && ($aar <= 1899) && ($sexx == 'F')) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -5234,8 +5080,8 @@ else
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	
@@ -5703,16 +5549,6 @@ else
 		$pradx = '';
 		$dpref = '';
 		$sexx = '';
-		$ifn[] = '';
-		$ien[] = '';
-		$ifd[] = '';
-		$ifp[] = '';
-		$idd[] = '';
-		$idp[] = '';
-		$fmc[] = '';
-		$nrad[] = '';
-		$prad[] = '';
-		$isex[] = '';
 		$fam = ''; 
 		$ind = '';
 		$head = 'ON';	
@@ -5751,18 +5587,6 @@ else
 					if(($znum != '') && ($ind == 'J') && 
 					($aar >= 1900) && ($sexx == 'F')) {
 						$n1++;
-						$num[$n1]='';
-						$ifn[$n1]='';
-						$ien[$n1]='';
-						$ifd[$n1]='';
-						$ifp[$n1]='';
-						$idd[$n1]='';
-						$idp[$n1]='';
-						$fmc[$n1]='';
-						$nrad[$n1]='';
-						$drad[$n1]='';
-						$prad[$n1]='';
-						$isex[$n1]='';
 						$num[$n1]=$znum;
 						$ifn[$n1]=$ifnx;
 						$ien[$n1]=$ienx;
@@ -6038,8 +5862,8 @@ else
 		$n1 = $min + 1;
 		$min = $max;
 		$nsist = $max - 1;
-		while($n1 < $nsist) {
-//		Loop 2	
+		while($n1 <= $nsist) {
+//	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
 //	

@@ -28,7 +28,7 @@ $typtest = '';
 $larmi = 0;
 $larmv = 0;
 if(file_exists($fileix)) {
-	echo "Program xprsstrtz startat * * * * * <br/>";
+	echo "Program xprsstrtz startad * * * * * <br/>";
 	echo "<br/n>";
 	echo $fileix." finns<br/>";
 	$handix=fopen($fileix,"r");
@@ -1653,7 +1653,7 @@ echo "Program konvlkod startad <br/>";
 		fclose($handin);
 		fclose($handut);
 //		
-		echo "Program konvlkod klart <br/>";
+		echo "Program konvlkod avslutad <br/>";
 		echo "<br/>";
 	}
 	else
@@ -1932,7 +1932,7 @@ else
 		fclose($handin);
 		fclose($handut);
 //		
-		echo "Program konvpsls klart <br/>";
+		echo "Program konvpsls avslutad <br/>";
 		echo "<br/>";
 //
 //
@@ -3007,7 +3007,7 @@ $feltxt="";
 if(file_exists($filename))
 {
 	echo "<br/>";
-	echo "Program testdate startar <br/>";
+	echo "Program testdate startad <br/>";
 	$handle=fopen($filename,"r");
 //	Läs in indatafilen				
 	$lines = file($filename,FILE_IGNORE_NEW_LINES);
@@ -3484,7 +3484,7 @@ if(file_exists($filename))
 		fclose($handlarm);
 	}
 //
-	echo "Program testdate klart <br/>";
+	echo "Program testdate avslutad <br/>";
 	echo " <br/>";
 }                                               
 else
@@ -4160,9 +4160,9 @@ if(file_exists($filename))
 		echo '* * * Lista Info.txt med okomplett data har skapats. <br/>';
 	}	
 //
-	echo 'Program testantr körd <br/>';
+	echo 'Program testantr avslutad <br/>';
 	echo '<br/>';
-	echo "Program xprsstrtz klart * * * * * <br/>";
+	echo "Program xprsstrtz avslutad * * * * * <br/>";
 	echo "<br/n>";
 //
 }
