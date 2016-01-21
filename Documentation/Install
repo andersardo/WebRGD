@@ -3,9 +3,13 @@
 # Verifierad 2015-09.28
 # Kalle Lundberg k@llelundberg.se
 
-# Installera MongoDB
+# Installera MongoDB 3.0
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
 echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+##OR MongoDB 3.2
+##sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+##echo "deb http://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+#
 sudo apt-get update
 sudo apt-get install -y mongodb-org
 
@@ -14,7 +18,7 @@ sudo apt-get install libsvm-dev libsvm-tools python-libsvm python-pip python-set
 
 # För indatavalideringsprogrammetn används PHP och MySQL
 # Sätt MySQL-root-lösenordet till "rgd".
-sudo apt-get install mysql-servermysql-client mysql-workbench
+sudo apt-get install mysql-server mysql-client mysql-workbench
 sudo apt-get install php5-cli php5-mysql 
 
 # PyLucene
@@ -50,7 +54,6 @@ sudo pip install cherrypy
 sudo pip install https://github.com/FedericoCeratto/bottle-cork/archive/0.11.1.zip
 
 
-
 # Hämta och installera själva RGD.
 
 # Hämta getMerge-repositoriet och Gedcom-parsern
@@ -68,10 +71,10 @@ cp ../simplepyged/simplepyged/* gedcom
 mkdir conf
 cp -r conf.example/* conf/
 
-# Redigera conf/config.py och sätt portnummer om port 8080.
+# Redigera conf/config.py och sätt portnummer till port 8080.
 nano conf/config.py
 
-# Kopiera ????-filen till PHP-katalogen
+# Kopiera data-filen fsndata.txt till PHP-katalogen
 cp conf.example/fsndata.txt PHP/
 
 # Skapa MySQL databas som används av PHP-programmet för 
