@@ -1,5 +1,5 @@
 import shutil
-from pymongo import MongoClient
+from pymongo import MongoClient, TEXT
 
 config = None
 statOK = frozenset(['Match', 'OK', 'rOK'])
@@ -75,15 +75,16 @@ def init(workDBName, dropWorkDB=False, matchDBName = None, dropMatchDB=False,
     db = client[workDBName]
     cmn['workDB'] = workDBName
     cmn['persons'] = db.persons
-#    cmn['persons'].ensure_index({...})
     cmn['families'] = db.families
     cmn['originalData'] = db.originalData
     if indexes:
-       cmn['families'].ensure_index('children')
-       cmn['families'].ensure_index('husb')
-       cmn['families'].ensure_index('wife')
-       cmn['originalData'].ensure_index('recordId')
-       cmn['originalData'].ensure_index('type')
+       cmn['persons'].create_index([('matchtext', TEXT)], background=True)
+       cmn['families'].create_index([('matchtext', TEXT)], background=True)
+       cmn['families'].create_index('children')
+       cmn['families'].create_index('husb')
+       cmn['families'].create_index('wife')
+       cmn['originalData'].create_index('recordId')
+       cmn['originalData'].create_index('type')
     if matchDBName:
         cmn['matchDB'] = matchDBName
         cmn['matches'] = db['matches_' + matchDBName]
@@ -102,19 +103,19 @@ def init(workDBName, dropWorkDB=False, matchDBName = None, dropMatchDB=False,
         cmn['match_families'] = matchDB.families
         cmn['match_originalData'] = matchDB.originalData
         if indexes:
-           cmn['matches'].ensure_index('workid')
-           cmn['matches'].ensure_index('matchid')
-           cmn['matches'].ensure_index('children')
-           cmn['matches'].ensure_index('status')
-           cmn['fam_matches'].ensure_index('workid')
-           cmn['fam_matches'].ensure_index('matchid')
-           cmn['fam_matches'].ensure_index('children.workid')
-           cmn['fam_matches'].ensure_index('status')
-           cmn['match_families'].ensure_index('children')
-           cmn['match_families'].ensure_index('husb')
-           cmn['match_families'].ensure_index('wife')
-           cmn['match_originalData'].ensure_index('recordId')
-           cmn['match_originalData'].ensure_index('type')
+           cmn['matches'].create_index('workid')
+           cmn['matches'].create_index('matchid')
+           cmn['matches'].create_index('children')
+           cmn['matches'].create_index('status')
+           cmn['fam_matches'].create_index('workid')
+           cmn['fam_matches'].create_index('matchid')
+           cmn['fam_matches'].create_index('children.workid')
+           cmn['fam_matches'].create_index('status')
+           cmn['match_families'].create_index('children')
+           cmn['match_families'].create_index('husb')
+           cmn['match_families'].create_index('wife')
+           cmn['match_originalData'].create_index('recordId')
+           cmn['match_originalData'].create_index('type')
     return cmn
 
 def checkStatusUpdate(fromStat, toStat):

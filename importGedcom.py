@@ -327,7 +327,7 @@ for s in d.values():
           config['originalData'].update({'recordId': fdubl[0]},
                                         {'$push': {'data': 
                                                    {'contributionId': contributionId,
-                                                    'record': p1 }}}, safe=True)
+                                                    'record': p1 }}})
           families.remove(fd)
           config['originalData'].remove({'recordId': fd})
       families.update({'_id': fdubl[0]},
@@ -351,8 +351,14 @@ logging.info('Time %s',time.time() - t0)
 #    config['originalData'].remove({'recordId': p['_id']})
 #print 'Time',time.time() - t0
 
+###Replace with mongodb text indexes
 logging.info('Indexing %s in Lucene', dbName)
 from luceneUtils import setupDir, index
 setupDir(dbName)
 index(config['persons'],config['families'])
+###
+logging.info('Indexing %s in Mongo', dbName)
+from mongoTextIndex import index
+index(config['persons'],config['families'])
+
 logging.info('Time %s',time.time() - t0)
