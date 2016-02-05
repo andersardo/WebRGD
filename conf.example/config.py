@@ -9,7 +9,7 @@ wsgiserver = 'cherrypy'
 host = 'localhost'
 
 #Which port to use
-port = 80
+port = 8085
 
 #which mailserver to use
 mailserver = 'localhost'
