@@ -352,10 +352,10 @@ logging.info('Time %s',time.time() - t0)
 #print 'Time',time.time() - t0
 
 ###Replace with mongodb text indexes
-logging.info('Indexing %s in Lucene', dbName)
-from luceneUtils import setupDir, index
-setupDir(dbName)
-index(config['persons'],config['families'])
+#logging.info('Indexing %s in Lucene', dbName)
+#from luceneUtils import setupDir, index
+#setupDir(dbName)
+#index(config['persons'],config['families'])
 ###
 logging.info('Indexing %s in Mongo', dbName)
 from mongoTextIndex import index

@@ -73,30 +73,17 @@ for p in person_list.find():
     if not matchtxt:
         logging.error('No matchtextdata for %s, %s',p['_id'],p['refId'])
         continue       ##########FIX!!!!!!!!!!
-#    print 'Testing', p['_id']
-    candidates = search(matchtxt, p['sex'], 3) #Lucene search
-    mhits = msearch(match_person, matchtxt, p['sex'], 5) #mongo search
-#    cmps(candidates, mhits)
-    m = {}
-    for (id,sc) in mhits: m[str(id)] = sc
-    
+    candidates = msearch(match_person, matchtxt, p['sex'], 5) #mongo search
     sc = 0
     for (kid,score) in candidates:
-#    for candidate in match_person.find({ 'sex': p['sex'], '$text': { '$search': matchtxt } },
-#                                      { 'score': { '$meta': "textScore" } }
-#                                  ).sort([('score', {'$meta': 'textScore'})]).limit(ant):
-#        score = candidate['score']
         if (score> sc): sc = score
         candidate = match_person.find_one({'_id': ObjectId(kid)})
-#OLD        matchdata = matchPers(p, candidate, config, score/8.0) #?? range of Lucene scores?
         matchdata = matchPers(p, candidate, config, score)
         #FIX EVT: lägg in mönster (autoOK, autoCheck -> EjOK) (multimatch Resolve) här
         matches.insert(matchdata)
         ant += 1
 #se mail 'Stickprov' Juni 5 2015
         if  matchdata['status'] in common.statOK.union(common.statManuell):
-            if kid in m:
-                print 'Status', matchdata['status'], 'in mongo res', kid, score, m[kid]
             dubltmp[p['_id']].append(candidate['_id'])
             dbltmpNs[p['_id'], candidate['_id']] = matchdata['nodesim']
         #break if score is less than 1/3 of max score

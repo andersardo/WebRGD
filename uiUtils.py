@@ -153,14 +153,14 @@ def listFamilies(filters, multi, page=1, limit=10):
     #fix to avoid to big bson objects
     #calc tot
     try:
-        tot = len(fam_matches.aggregate(aggrPipe)['result'])
+        tot = len(list(fam_matches.aggregate(aggrPipe)))
     except:
         tot = '??'
     #SORT BY count, refId
     aggrPipe.append({'$sort': {'count': -1, '_id': 1}})
     aggrPipe.append({'$skip': start})
     aggrPipe.append({'$limit': limit})
-    for match in fam_matches.aggregate(aggrPipe)['result']:
+    for match in fam_matches.aggregate(aggrPipe):
 #        tdd = '-'
         tfd = '-'
         if match['count'] == '1':
@@ -296,14 +296,14 @@ def listPersons(filters, multi, page=1, limit=10):
                                     'status': {'$first': '$status'}}})
         aggrPipe.append({'$match': {'count': {'$gt': 1}}})
     try:
-        tot = len(matches.aggregate(aggrPipe)['result'])
+        tot = len(list(matches.aggregate(aggrPipe)))
     except:
         tot = '??'
     #SORT BY count, refId
     aggrPipe.append({'$sort': {'count': -1, '_id': 1}})
     aggrPipe.append({'$skip': start})
     aggrPipe.append({'$limit': limit})
-    for match in matches.aggregate(aggrPipe)['result']:
+    for match in matches.aggregate(aggrPipe):
 #FIX id, refId, namn, sum, född. död, visa
         if match['count'] == '1':
             args['wid'] = str(match['wid'])

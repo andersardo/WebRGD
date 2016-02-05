@@ -3,21 +3,11 @@
 import re, sys, math
 from datetime import date
 from matchtext import matchtext
+mt_tmp = matchtext()
 
 from svmutil import *
 svmModel = svm_load_model('conf/person.model')
 _cache = {}
-
-def cos(l1,l2):
-    """ Similarity between two vectors = cosine for the angle between the vectors:
-	cosine  = ( V1 * V2 ) / ||V1|| x ||V2|| 
-	Vectors expressed as strings, split on blankspace, assume boolean weights  """
-    v1 = l1.split()
-    v2 = l2.split()
-    s=0
-    for w1 in v1:
-        if w1 in v2: s+=1
-    return s/(math.sqrt(len(v1))*math.sqrt(len(v2)))
 
 def compName(n1, n2):
     """ Compare names: n1 n2 strings, blankspace separated names
@@ -283,14 +273,6 @@ def svmfeatures(tmp,rgd):
 #Född/död församling finns inte           0,1
     return features
 
-def TESTsvmfeatures(tmp, rgd):
-    features = []
-#feature                            values
-##Kön olika/lika                       0,1
-    if (tmp['sex'] == rgd['sex']): features.append(1)
-    else: features.append(0)
-    return features
-
 def antFeaturesNorm(tmp,rgd):
     ant = 0
     maxAnt = 0
@@ -306,19 +288,6 @@ def antFeaturesNorm(tmp,rgd):
     #print 'antF', ant, 'max', maxAnt
     return float(ant)/maxAnt
 
-from matchtext import matchtext
-def SVMvect(features, label):
-    #print label,
-    n = 1
-    fstrList = [label]
-    for feat in features:
-        #print str(n)+':'+str(feat),
-        if not feat: feat = 0
-        fstrList.append(str(n)+':'+str(feat))
-        n += 1
-    #print
-    return ' '.join(fstrList)
-
 def txtFeatures(w1, w2):
     features = []
     v1 = set(w1.split())
@@ -331,42 +300,23 @@ def txtFeatures(w1, w2):
     features.append( len(v1 & v2) / 45.0 )
     return features
 
-def genSVMmin(wid, mid, config, normfact, okMatch):
-    work = config['persons'].find_one({'refId': wid})
-    match = config['match_persons'].find_one({'refId': mid})
-    worktxt = mt_tmp.matchtextPerson(work, config['persons'], config['families']).replace('/','')
-    matchtxt = mt_tmp.matchtextPerson(match, config['match_persons'], config['match_families']).replace('/','')
-
-    #minimal A
+def matchPers(p1, rgdP, conf, score=None):
+    global mt_tmp
+    worktxt = mt_tmp.matchtextPerson(p1, conf['persons'], conf['families']).replace('/','')
+    matchtxt = mt_tmp.matchtextPerson(rgdP, conf['match_persons'], conf['match_families']).replace('/','')
     features = txtFeatures(worktxt, matchtxt)
-
-    features.extend(svmfeatures(work, match))
-
-    #exit here for F
-    if okMatch: return SVMvect(features, '+1')
-    else: return SVMvect(features, '-1')
-
-#from SVMfeatures import SVMfeatures
-def matchPers(p1, rgdP, conf, score = None):
+    features.extend(svmfeatures(p1, rgdP))
     nodeScore = nodeSim(p1, rgdP)
-        #print '    NS',nodeScore,
-        #Only calculate famScore if NS and score above cut-off??
-        #Test with facit!
-#    print 'inMatchPers', p1['_id'], p1['refId'], rgdP['_id'], rgdP['refId']
-#    pFam = conf['families'].find_one({ 'children': p1['_id']}) #find fam if p in 'children'
-#    rgdFam = conf['match_families'].find_one({ 'children': rgdP['_id']})
-#    famScore = familySim(pFam, conf['persons'], rgdFam, conf['match_persons']) 
-#    feat = SVMfeatures(p1, rgdP, conf, score)
+    features.append(nodeScore)
 
 #    p_labels, p_acc, p_vals = svm_predict([0],[feat],svmModel,options="-b 1 -q")
-    p_labels, p_acc, p_vals = svm_predict([0],[feat],svmModel,options="-b 1")
+    p_labels, p_acc, p_vals = svm_predict([0],[features],svmModel,options="-b 1")
     svmstat = p_vals[0][0]
 
     # Use also score, NS, FS, and coscw? to determine status? See below!
     status = 'Manuell'
     if svmstat<0.1: status = 'EjMatch'
     if svmstat>0.9: status = 'Match'
-    #print i,':   ', p['_id'], kid, status, svmstat, score/5.0, nodeScore, famScore, featureScore
 #        if ((svmstat>0.5) or ((k['score']>25.0) and (nodeScore>0.75) and (famScore>0.75))):
 #            pass #or do something??
 
@@ -377,7 +327,6 @@ def matchPers(p1, rgdP, conf, score = None):
     matchdata['pmatch'] = rgdP
     matchdata['score'] = score
     matchdata['nodesim'] = nodeScore
-    #matchdata['familysim'] = famScore #används inte
     matchdata['svmscore'] = svmstat
     matchdata['status'] = status
     return matchdata
