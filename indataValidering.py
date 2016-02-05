@@ -38,7 +38,7 @@ for file in os.listdir(rootdir):
 os.chdir(rootdir)
 os.rename(os.path.basename(fn), '_'+os.path.basename(fn))
 shutil.copy2('_'+os.path.basename(fn), 'RGD1.GED')
-os.system('ln ../../../PHP/fsndata.txt')
+os.system('ln -s ../../../PHP/fsndata.txt')
 
 print 'Resultat'
 if not email: print 'Ingen email - endast resultat via denna sida'
