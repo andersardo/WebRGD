@@ -1,4 +1,5 @@
 #location dependent configuration
+import socket
 
 #which WSGI-server to use
 #The full list is available through server_names.
@@ -6,7 +7,7 @@
 wsgiserver = 'cherrypy'
 
 #Which IP to listen to
-host = 'localhost'
+host = socket.gethostname()
 
 #Which port to use
 port = 8085
