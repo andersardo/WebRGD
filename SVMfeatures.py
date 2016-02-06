@@ -5,7 +5,7 @@ from matchUtils import *
 import os, sys, logging
 from collections import defaultdict
 from matchtext import matchtext
-from luceneUtils import search, setupDir, index
+#from luceneUtils import search, setupDir, index
 mt_tmp = matchtext()
 
 #FIX! Normalization factor Lucene score

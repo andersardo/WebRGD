@@ -185,10 +185,10 @@ logging.info('Time %s',time.time() - t0)
 #Family rules to resolve manual status to EjMatch
 logging.info('Testing for NotOK families')
 ##copied from below
-#from SVMfeatures import famSVMfeatures
+from SVMfeatures import famSVMfeatures
 from uiUtils import nameDiff, eventDiff
 from utils import updateFamMatch
-#svmFamModel = svm_load_model('conf/family.model')
+svmFamModel = svm_load_model('conf/family.model')
 for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}):
     #Why use refID and not _id?
     work = config['families'].find_one({'refId': fmatch['workRefId']})
