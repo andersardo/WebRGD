@@ -32,7 +32,6 @@ t0 = time.time()
 logging.info('using db %s matching against %s', dbName, mDBname)
 config = common.init(dbName, matchDBName=mDBname, indexes=True)
 common.config = config
-setupDir(mDBname)
 
 person_list = config['persons']
 fam_list = config['families']
