@@ -23,7 +23,6 @@ mDBname = os.path.basename(matchDB).split('.')[0]
 from matchUtils import *
 from utils import matchFam, setFamOK, setEjOKfamily
 from matchtext import matchtext
-from luceneUtils import setupDir, search
 
 from bson.objectid import ObjectId
 

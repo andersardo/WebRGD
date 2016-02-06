@@ -841,7 +841,36 @@ try:
 except:
     logging.info('Using default port 8085')
     conf.config.port = 8085
+"""
+class SSLWebServer(bottle.ServerAdapter):
+    #"""
+    #CherryPy web server with SSL support.
+    #"""
 
+    def run(self, handler):
+        #"""
+        #Runs a CherryPy Server using the SSL certificate.
+        #"""
+        from cherrypy import wsgiserver
+        from cherrypy.wsgiserver.ssl_pyopenssl import pyOpenSSLAdapter
+
+        server = wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
+
+        server.ssl_adapter = pyOpenSSLAdapter(
+            certificate="conf/cert.pem",
+            private_key="conf/privkey.pem"
+        )
+
+        try:
+            server.start()
+        except:
+            server.stop()
+
+bottle.server_names['sslwebserver'] = SSLWebServer
+
+bottle.run(app, debug=True, host=conf.config.host, server='sslwebserver',
+           port=conf.config.port, reloader=True)
+"""
 bottle.run(app, debug=True, host=conf.config.host, server=conf.config.wsgiserver,
            port=conf.config.port, reloader=True)
 
