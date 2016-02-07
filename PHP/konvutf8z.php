@@ -4,16 +4,14 @@ Programmet sparas i UTF-8 !!!!!!!!!!!!!!
 
 Konverterar ANSEL, ANSI eller IBMPC teckenrepresentation till UTF-8.
 
-En ANSI fil kan med fördel konverteras med Notepad++
-
-Programmet ändrar /å/ä/ö/Å/Ä/Ö/á/à/é/É/è/È/ü/Ü/§/
-men inga andra specialtecken.
-
 För enkelhetens skull har även andra funktioner lagts till.
 
 */
 require 'initbas.php';
 require 'initdb.php';
+//
+include 'class_exchange_disbyt.php';
+include 'class_db_disbyt.php';
 //
 $brytr = 0;
 $larma = 0;
@@ -94,10 +92,12 @@ foreach($lines as $radnummer => $str)
 		if($tagg == '1 FAMS') {
 			$fref = substr($str,7,$rlen);
 			if($isex == 'F') {
-				$irad[] = '1 WIFE @'.$znum.'@'.$fref;
+//				$irad[] = '1 WIFE @'.$znum.'@'.$fref;
+				$irad[] = '1 MAKE @'.$znum.'@'.$fref;
 			}
-			if($isex == 'M') {
-				$irad[] = '1 HUSB @'.$znum.'@'.$fref;
+			else {
+//				$irad[] = '1 HUSB @'.$znum.'@'.$fref;
+				$irad[] = '1 MAKE @'.$znum.'@'.$fref;
 			}
 		}	
 		if($tagg == '1 FAMC') {
@@ -105,10 +105,14 @@ foreach($lines as $radnummer => $str)
 			$irad[] = '1 CHIL @'.$znum.'@'.$fref;
 		}	
 		if($tagg == '1 HUSB') {
-			$frad[] = $str.'@'.$znum.'@';
+//			$frad[] = $str.'@'.$znum.'@';
+			$trad = $str.'@'.$znum.'@';
+			$frad[] = '1 MAKE'.substr($trad,6,strlen($trad));
 		}	
 		if($tagg == '1 WIFE') {
-			$frad[] = $str.'@'.$znum.'@';
+//			$frad[] = $str.'@'.$znum.'@';
+			$trad = $str.'@'.$znum.'@';
+			$frad[] = '1 MAKE'.substr($trad,6,strlen($trad));
 		}	
 		if($tagg == '1 CHIL') {
 			$frad[] = $str.'@'.$znum.'@';
@@ -121,7 +125,7 @@ $anti = count($irad);
 $antf = count($frad);
 if($anti != $antf) {
 	echo '<br/>';
-	echo 'OBS! Felaktig GEDCOM fil, kan ej bearbetas korrekt <br/>';
+	echo 'OBS! Felaktig GEDCOM fil, kan ej bearbetas korrekt '.$anti.' i/f '.$antf.' <br/>';
 	if($antf > $anti) {
 		echo 'Individ(er) saknas för referens(er) <br/>';
 	}
@@ -137,8 +141,8 @@ $ok = 'OK';
 while($s1 < $anti && $s2 < $antf)
 {
 	if($irad[$s1] != $frad[$s2]) {
-		if($antf > $anti) {
 //	stoppa ej		$typtest = 'EJ';
+		if($antf > $anti) {
 			$larmx++;
 			$lrmx[] =  'Formellt fel i GEDCOM filen: Referens saknas/felaktig, berörda identiteter '.substr($frad[$s2],6,strlen($frad[$s2]));
 			echo 'Berörda identiteter  -  -  -  '.substr($frad[$s2],6,strlen($frad[$s2])).' <br/>';
@@ -146,8 +150,8 @@ while($s1 < $anti && $s2 < $antf)
 		}
 		if($anti > $antf) {
 			$larmx++;
-			$lrmx[] =  'Formellt fel i GEDCOM filen: Referens saknas/felaktig, berörda identiteter '.substr($frad[$s1],6,strlen($frad[$s1]));
-			echo 'Berörda identiteter  -  -  -  '.substr($frad[$s1],6,strlen($frad[$s1])).' <br/>';
+			$lrmx[] =  'Formellt fel i GEDCOM filen: Referens saknas/felaktig, berörda identiteter '.substr($irad[$s1],6,strlen($irad[$s1]));
+			echo 'Berörda identiteter  -  -  -  '.substr($irad[$s1],6,strlen($irad[$s1])).' <br/>';
 			$s2--;
 		}
 		if($anti == $antf) {
@@ -157,8 +161,8 @@ while($s1 < $anti && $s2 < $antf)
 			}	
 			$larmx++;
 			$lrmx[] =  'Formellt fel i GEDCOM filen: Referens saknas/felaktig, berörda identiteter '
-			.substr($frad[$s1],6,strlen($frad[$s1])).' och/eller '.substr($frad[$s2],6,strlen($frad[$s2]));
-			echo 'Berörda identiteter  -  -  -  '.substr($frad[$s1],6,strlen($frad[$s1])).' och/eller '
+			.substr($irad[$s1],6,strlen($irad[$s1])).' och/eller '.substr($frad[$s2],6,strlen($frad[$s2]));
+			echo 'Berörda identiteter  -  -  -  '.substr($irad[$s1],6,strlen($irad[$s1])).' och/eller '
 			.substr($frad[$s2],6,strlen($frad[$s2])).' <br/>';
 		}
 		$ok = 'FEL';
@@ -485,290 +489,88 @@ if($typtest == 'JA') {
 			foreach($lines as $radnummer => $str)
 			{
 //
-			if($utftest == '8') {
-//	skall kolla $str
-				mb_internal_encoding("UTF-8");
-				$text = $str;
-				if(mb_check_encoding($text,'UTF-8') == false) {
-					$text = '';
-					$imax=0;
-					$len=strlen($str);
-					while($imax <= $len)
-					{
-						$std=substr($str,$imax,1);
-//	kolla om $std är UTF-8
-						mb_internal_encoding("UTF-8");
-						If(mb_check_encoding($std,'UTF-8') == false) {
-							$std = '#';
-							$utfant++;
-						}	
+				if($utftest == '8') 
+				{
+					$text = $str;
+//	Kolla $str
+					mb_internal_encoding("UTF-8");
+					if(mb_check_encoding($str,'UTF-8') == false) {
+						$text = '';
+						$imax=0;
+						$len=strlen($str);
+						while($imax <= $len)
+						{
+							$std=substr($str,$imax,1);
+//	kolla om tecken är UTF-8
+							mb_internal_encoding("UTF-8");
+							If(mb_check_encoding($std,'UTF-8') == false) {
+								$std = '#';
+								$utfant++;
+							}	
 //					
-						$text=$text.$std;
-						$imax++;
-					}
+							$text=$text.$std;
+							$imax++;
+						}
 //					echo "Raden innehåller okända UTF-8 tecken, ersatta med # <br/>".$text." <br/>";
+					}
+					fwrite($handut,$text."\r\n");
+					$text="";
 				}
-				fwrite($handut,$text."\r\n");
-				$text="";
-			}
-			else {
+				else 
+				{
 //			
-				$char = substr($str,0,7);
-				if($char == '1 CHAR ')
-				{
-					$str = $char.'UTF-8';
-				}
-				$imax=0;
-				$len=strlen($str);
-				while($imax <= $len)
-				{
-					$spc=substr($str,$imax,2);
-					$std=substr($str,$imax,1);
-//	ö			
-					if($spc == '�o') {
-						$text=$text."ö";
-						$imax++;
-						$imax++;
+					$char = substr($str,0,7);
+					if($char == '1 CHAR ')
+					{
+						$str = $char.'UTF-8';
 					}
-					elseif($std == '�') {
-						$text=$text."ö";
-						$imax++;
+//	DISBYT konvertering
+					$byt = new exchange();
+					$cp=FALSE;
+//
+					if(($typ == 'IBMPC') || ($typ == 'IBM WINDOWS')) {
+						$cp='CP850';
 					}
-					elseif($std == '�') {
-						$text=$text."ö";
-						$imax++;
+					if($typ == 'ANSEL') {
+						$cp='ANSEL';
 					}
-//	Ö			
-					elseif($spc == '�O') {
-						$text=$text."Ö";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."Ö";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."Ö";
-						$imax++;
-					}
-//	ä
-					elseif($spc == '�a') {
-						$text=$text."ä";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."ä";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."ä";
-						$imax++;
-					}
-//	Ä
-					elseif($spc == '�A') {
-						$text=$text."Ä";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."Ä";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."Ä";
-						$imax++;
-					}
-//	å
-					elseif($spc == '�a') {
-						$text=$text."å";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."å";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."å";
-						$imax++;
-					}
-//	Å
-					elseif($spc == '�A') {
-						$text=$text."Å";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."Å";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."Å";
-						$imax++;
-					}
-//	á
-					elseif($spc == '�a') {
-						$text=$text."á";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."á";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."á";
-						$imax++;
-					}
-//	à
-					elseif($spc == '�a') {
-						$text=$text."á";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."á";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."á";
-						$imax++;
-					}
-//	é
-					elseif($spc == '�e') {
-						$text=$text."é";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."é";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."é";
-						$imax++;
-					}
-//	É
-					elseif($spc == '�E') {
-						$text=$text."É";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."É";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."É";
-						$imax++;
-					}
-//	è
-					elseif($spc == '�e') {
-						$text=$text."é";
-						$imax++;
-						$imax++;
-					}
-					elseif($spc == '�e') {
-						$text=$text."é";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."é";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."é";
-						$imax++;
-					}
-//	È
-					elseif($spc == '�E') {
-						$text=$text."É";
-						$imax++;
-						$imax++;
-					}
-					elseif($spc == '�E') {
-						$text=$text."É";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."É";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."É";
-						$imax++;
-					}
-//	ü
-					elseif($spc == '�u') {
-						$text=$text."ü";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."ü";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."ü";
-						$imax++;
-					}
-//	Ü
-					elseif($spc == '�U') {
-						$text=$text."Ü";
-						$imax++;
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."Ü";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."Ü";
-						$imax++;
-					}
-//	§
-//						elseif($spc ==  '') {
-//						$text=$text."§";
-//						$imax++;
-//						$imax++;
-//					}
-					elseif($std == '�') {
-						$text=$text."§";
-						$imax++;
-					}
-					elseif($std == '�') {
-						$text=$text."§";
-						$imax++;
-					}
-//	-
-//						elseif($spc == '') {
-//						$text=$text."-";
-//						$imax++;
-//						$imax++;
-//					}
-					elseif($std == '�') {
-						$text=$text."-";
-						$imax++;
-					}
-					else {
-//	kolla om $std är UTF-8
+//
+					$text = $str;
+//	Kolla $str
+					mb_internal_encoding("UTF-8");
+					if(mb_check_encoding($str,'UTF-8') == false) 
+					{
+						$temp = $byt->changeCP($str,$cp,$logg = FALSE);
+//	DISBYT konvertering
+//	Extra koll
+						$text = $temp;
+//	Kolla $temp
 						mb_internal_encoding("UTF-8");
-						If(mb_check_encoding($std,'UTF-8') == false) {
-							$std = '#';
-							$utfant++;
-						}	
+						if(mb_check_encoding($temp,'UTF-8') == false) {
+							$text = '';
+							$imax=0;
+							$len=strlen($temp);
+							while($imax <= $len)
+							{
+								$std=substr($temp,$imax,1);
+//	kolla om $std är UTF-8
+								mb_internal_encoding("UTF-8");
+								If(mb_check_encoding($std,'UTF-8') == false) {
+									$std = '#';
+									$utfant++;
+								}	
 //					
-						$text=$text.$std;
-						$imax++;
+								$text=$text.$std;
+								$imax++;
+							}
+							echo "Raden innehåller okända UTF-8 tecken, ersatta med # <br/>".$text." <br/>";
+						}
 					}
+//					
+					fwrite($handut,$text."\r\n");
+					$text="";
+//
 				}
-				fwrite($handut,$text."\r\n");
-				$text="";
-			}
 			}
 			fclose($handin);
 			fclose($handut);
