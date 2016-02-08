@@ -96,13 +96,11 @@ import common
 from matchUtils import *
 from utils import matchFam, setFamOK
 from matchtext import matchtext
-from luceneUtils import setupDir, search
 from bson.objectid import ObjectId
 
 mt_tmp = matchtext()
 
 config = common.init(dbName, matchDBName=mDBname, indexes = True)
-setupDir(mDBname)
 
 person_list = config['persons']
 fam_list = config['families']
@@ -191,6 +189,14 @@ def birthDateOK(p1, p2, limit):
         return True
     if abs(date1-date2) <= 10: return True
     else: return False
+    
+def msearch(coll, q, sex, ant=5, config = None):
+    hits = []
+    for hit in coll.find({ 'sex': sex, '$text': { '$search': q } },
+                                                   { 'score': { '$meta': "textScore" } }
+                                     ).sort([('score', {'$meta': 'textScore'})]).limit(ant):
+        hits.append([hit['_id'], hit['score']])
+    return hits
 
 ant = 0
 kant = 0
@@ -199,7 +205,7 @@ pant = 0
 matchant = 0
 maxSortVal = 0
 minScore = 100000
-for p in person_list.find().batch_size(50):
+for p in person_list.find():
     pant += 1
     ptid = (time.time() - t0)/pant
 #    print 'Time:',time.time() - t0, pant, ptid, p['refId'],p['name']
@@ -209,7 +215,7 @@ for p in person_list.find().batch_size(50):
     if not matchtxt:
         print 'No matchtextdata',p['_id'],p['refId']
         continue       ##########FIX!!!!!!!!!!
-    candidates = search(matchtxt, p['sex'], 10) #Lucene search
+    candidates = msearch(match_person, matchtxt, p['sex'], 10) #mongo search
 #    sc = 0
     for (candId,score) in candidates:
         candId = ObjectId(candId)

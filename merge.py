@@ -85,7 +85,7 @@ for person in config['persons'].find():
         matchid = Imap[person['_id']]
         for rec in workOrgData['data']:
             config['match_originalData'].update({'recordId': matchid},
-                                            {'$push': {'data': rec}}, safe=True)
+                                            {'$push': {'data': rec}})
             #generate merged record
             config['match_persons'].update({'_id': matchid}, 
                                     mergeOrgDataPers(matchid, config['match_persons'],
@@ -126,7 +126,7 @@ for family in config['families'].find():
         updcnt += 1
         for rec in workOrgData['data']:
             config['match_originalData'].update({'recordId': matchid},
-                                            {'$push': {'data': rec}}, safe=True)
+                                            {'$push': {'data': rec}})
     else:
 #        if family['_id'] in Fmap:  print 'Fmap error B'
         matchid = family['_id']
@@ -153,16 +153,15 @@ else:
 workOrgData = config['originalData'].find_one({'type': 'gedcomRecords'})
 for rec in workOrgData['data']:
     config['match_originalData'].update({'type': 'gedcomRecords'},
-                                        {'$push': {'data': rec}}, safe=True)
+                                        {'$push': {'data': rec}})
 
 ##FIX if errors restore mDBname med mongorestore
 
 print 'Indexing'
 #EVT only reindex affected persons, families
-from luceneUtils import setupDir, index
-setupDir(mDBname)
+from mongoTextIndex import index
 index(config['match_persons'],config['match_families'])
-print 'Indexed', mDBname, 'in Lucene'
+print 'Indexed', mDBname, 'in MongoDB'
 print 'Time:',time.time() - t0
 
 #UNLOCK 
