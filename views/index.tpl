@@ -43,12 +43,12 @@ onmouseover="this.width='794'"
 onmouseout="this.width='397'" />
 </div>
 En GEDCOM fil läses in, bearbetas (förbereds för matchning) och lämnar
-som resultat ett antal textfiler (kan skickas per mail).
+som resultat ett antal textfiler <!-- (kan skickas per mail) -->.
 Följande steg körs:
 <ol>
 <li> Ladda upp en GEDCOM fil
 <li> GEDCOM fil bearbetning: <br> (indatavalidering/egenkontroll).
-Ger som resultat valideringslistor (textfiler - per mail om så önskas).
+Ger som resultat valideringslistor (textfiler <!-- - per mail om så önskas-->).
 <ul>
 <li>Lista oregistrerade namn - <a href="#Namn">Läs mera</a></li>
 <li>Ortlista med oidentifierade församlingar  - <a href="#Församling">Läs mera</a></li>
@@ -62,11 +62,13 @@ Ger som resultat valideringslistor (textfiler - per mail om så önskas).
 Ange var GEDCOM filen finns genom att anväda bläddra-funktionen:
 <input name="gedcomfile" type="file" />
 
+<!--
 <P>
 Ange om resultat-listan/listorna skall skickas med email
 (OBS endast för registrerade användare!):
 <input type="checkbox" name="resmail" />
 </P>
+-->
 
 <P><b>
 Kryssa i om du vill ha lista med oregistrerade namn (Namnkontroll):
@@ -96,7 +98,7 @@ Bearbetningen kan ta olika lång tid beroende på
 <!--Under tiden bearbetningen pågår kommer log-filen att löpande visas.<br>-->
 När bearbetningen är klar indikeras detta och resultat-listan/listorna
 blir tillgängliga.<br>
-Samtidigt skickas dessa till dig, per email, om du har indikerat så ovan.
+<!-- Samtidigt skickas dessa till dig, per email, om du har indikerat så ovan.-->
 
 <h3>2 Dubblettkontroll XL - <a href="#Dubblettxl">Läs mera</a></h3>
 En utökad kontroll som ger fler dubblettkandidater
