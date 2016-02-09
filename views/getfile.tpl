@@ -15,8 +15,9 @@ l1-strict.dtd">
 </pre>
   <hr>
 %end
+<!--
 <p>
 <a href="/">Tillbaka till startsida</a>
-
+-->
 </body>
 </html>

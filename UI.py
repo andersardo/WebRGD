@@ -103,6 +103,9 @@ def upload():
 @authorize()
 def combined():
     (mess, fdir, fn) = doUpload(bottle.request.session['directory'], bottle.request.files.get('gedcomfile'))
+    yield '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />'
+    yield '<meta charset="UTF-8" />'
+
     yield '<pre>'+mess+"\n"
     fn = fdir + '/' + fn
     cmd = ['/usr/bin/python', 'indataValidering.py', bottle.request.session['directory'], fn]
