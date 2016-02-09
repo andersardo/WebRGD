@@ -1,5 +1,7 @@
 <html>
-<head>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset="UTF-8" />
  <script type="text/javascript">
 function load(url, where) {
 //Adopted from ex 20-2 p 486 Javascript book
