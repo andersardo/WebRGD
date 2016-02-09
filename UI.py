@@ -219,7 +219,7 @@ def getfile():
 #        mess = '<pre>' + f.read() + '</pre>'
         mess = f.read()
         f.close()
-    return bottle.template('getfile', file = fn, message = mess)
+    return bottle.template('getfile', file = ' '.join(fn.rsplit('/',2)[1:]), message = mess)
 
 @bottle.route('/importBidrag')
 @authorize()
