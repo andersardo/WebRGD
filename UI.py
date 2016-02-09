@@ -213,6 +213,8 @@ def getfile():
         mess = f.read()
         f.close()
     else:
+        response.content_type = 'text/html; charset=UTF-8'
+        #bottle.response.headers.append("Content-Transfer-Encoding:", "binary");
         f = codecs.open(fn, "r", "utf-8")
         mess = '<pre>' + f.read() + '</pre>'
         f.close()
