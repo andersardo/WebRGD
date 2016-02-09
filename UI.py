@@ -215,13 +215,11 @@ def getfile():
     else:
         bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")        
         bottle.response.content_type = 'text/html; charset=UTF-8'
-        bottle.response.headers.append("Content-Transfer-Encoding:", "binary");
-        #bottle.response.charset = 'utf-8'
         f = codecs.open(fn, "r", "utf-8")
-#        f = codecs.open(fn, "r")
-        mess = '<pre>' + f.read() + '</pre>'
+#        mess = '<pre>' + f.read() + '</pre>'
+        mess = f.read()
         f.close()
-    return mess
+    return bottle.template('getfile', file = fn, message = mess)
 
 @bottle.route('/importBidrag')
 @authorize()
