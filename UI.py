@@ -215,6 +215,7 @@ def getfile():
     else:
         bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")        
         bottle.response.content_type = 'text/html; charset=UTF-8'
+        bottle.response.headers.append("Content-Transfer-Encoding:", "binary");
         #bottle.response.charset = 'utf-8'
         f = codecs.open(fn, "r", "utf-8")
 #        f = codecs.open(fn, "r")
