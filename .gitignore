@@ -1,0 +1,6 @@
+*.pyc
+*~
+.svn
+files/*
+actions.log
+conf/*
