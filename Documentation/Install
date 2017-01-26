@@ -1,0 +1,93 @@
+
+# Installationsanvisning för RGD på Ubuntu 14.04.03 LTS
+# Verifierad 2015-09.28
+# Kalle Lundberg k@llelundberg.se
+
+# Installera MongoDB
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+
+# Några standardpaket
+sudo apt-get install libsvm-dev libsvm-tools python-libsvm python-pip python-setuptools python-dev openjdk-7-jdk ant g++ git graphviz
+
+# För indatavalideringsprogrammetn används PHP och MySQL
+# Sätt MySQL-root-lösenordet till "rgd".
+sudo apt-get install mysql-servermysql-client mysql-workbench
+sudo apt-get install php5-cli php5-mysql 
+
+# PyLucene
+wget http://apache.mirrors.spacedump.net/lucene/pylucene/pylucene-4.10.1-1-src.tar.gz
+tar zxvf pylucene-4.10.1-1-src.tar.gz 
+cd pylucene-4.10.1-1/
+
+# Kompilera och installera JCC
+cd jcc
+python setup.py build
+sudo python setup.py install
+cd ..
+
+# Kompilera och installera PyLucene. Börja med att redigera Make-filen.
+# Avkommentera sektionen som nämner Ubuntu 11.10 64-bit.
+nano Makefile 
+
+# Komplieren kommer att ta lång tid, minst en halvtimme.
+make
+sudo make install
+
+# Installera PIP - pakethanterare för Python
+wget https://bootstrap.pypa.io/get-pip.py
+sudo python get-pip.py
+
+# Installera några Python-paket
+sudo pip install pymongo
+sudo pip install bottle
+sudo pip install Beaker
+sudo pip install cherrypy
+
+# Python-paketet bottle-cork funkar inte i senaste versionen. Använd en äldre.
+sudo pip install https://github.com/FedericoCeratto/bottle-cork/archive/0.11.1.zip
+
+
+
+# Hämta och installera själva RGD.
+
+# Hämta getMerge-repositoriet och Gedcom-parsern
+# Ställ dig i en katalog där du vill ha repositoriet, här används hemkatalogen.
+cd ~
+git clone https://github.com/andersardo/gedMerge.git
+git clone https://github.com/andersardo/simplepyged.git
+cd gedMerge
+
+# Lägg till Gedcomparsern under getMerge
+mkdir gedcom
+cp ../simplepyged/simplepyged/* gedcom
+
+# Skapa en conf-katalog
+mkdir conf
+cp -r conf.example/* conf/
+
+# Redigera conf/config.py och sätt portnummer om port 8080.
+nano conf/config.py
+
+# Kopiera ????-filen till PHP-katalogen
+cp conf.example/fsndata.txt PHP/
+
+# Skapa MySQL databas som används av PHP-programmet för 
+# indatavalidering.
+mysql --user=root --password=rgd -e "CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_swedish_ci;"
+mysql --user=root --password=rgd -e "CREATE USER 'rgd'@'localhost' IDENTIFIED BY 'pilot';"
+mysql --user=root --password=rgd -e "GRANT ALL PRIVILEGES ON test.* TO 'rgd'@'localhost' WITH GRANT OPTION;"
+mysql --user=root --password=rgd test < PHP/testDump.sql
+
+# Skapa katalogen "files" där indata hanteras
+mkdir files
+
+# Start webserver
+python UI.py
+
+# Testa med browser: http://localhost:8080/
+# Logga in som admin/admin och prova.
+# Länken 'admin page' på mitten av sidan ger möjlighet att skapa användare
+

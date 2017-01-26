@@ -1,0 +1,120 @@
+# -*- coding: utf-8 -*-
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{multicol}
+\begin{document}
+
+% for family in stack:
+\label{${family.xref()}}
+\begin{multicols}{3}
+<%text>\noindent \\
+ Name: \\ 
+$\star$ \\
+ \\ 
++ \\ 
+\\</%text>
+\columnbreak
+
+<%text>\noindent Husband \\ </%text>
+% if family.husband() != None:
+${name(family.husband())}
+% if family.husband().parent_family() != None:
+$^{\pageref{${family.husband().parent_family().xref()}}}$ \\ 
+% endif
+% if family.husband().birth() != None:
+${family.husband().birth().date} \\ 
+${family.husband().birth().place} \\ 
+% endif
+% if family.husband().death() != None:
+${family.husband().death().date} \\ 
+${family.husband().death().place} \\ 
+% endif
+% endif
+\columnbreak
+
+<%text>\noindent Wife \\ </%text>
+% if family.wife() != None:
+${name(family.wife())}
+% if family.wife().parent_family() != None:
+$^{\pageref{${family.wife().parent_family().xref()}}}$ \\ 
+% endif
+% if family.wife().birth() != None:
+${family.wife().birth().date} \\ 
+${family.wife().birth().place} \\ 
+% endif
+% if family.wife().death() != None:
+${family.wife().death().date} \\ 
+${family.wife().death().place} \\ 
+% endif
+% endif
+\end{multicols}
+
+% if family.married():
+Married: ${family.marriage().dateplace()}
+% else:
+Married?
+% endif
+
+\begin{center}Children\end{center}
+% for child in family.children():
+\paragraph{}
+${name(child)}
+   % for f in child.families():
+$^{\pageref{${f.xref()}}}$ 
+   % endfor
+   % if ((child.birth() != None and child.birth().date != '') or (child.death() != None and child.death().date != '')):
+(
+      % if child.birth() != None and child.birth().date != '':
+${child.birth().date}
+      % else:
+?
+      % endif
+      % if  child.death() != None and child.death().date != '':
+ - ${child.death().date}
+      % endif
+)
+   % endif
+   % if len(child.children()) > 0:
+      % if len(child.children()) == 1:
+1 child
+      % else:
+${len(child.children())} children
+      % endif
+   % endif
+% endfor
+
+% if home_person is not None and home_person not in family.children():
+%     if home_person.is_relative(family.husband()):
+\let\thefootnote\relax\footnotetext{
+%         for [person, arrow] in home_person.path_to_relative(family.husband()):
+${name(person)}
+% if person.parent_family() != None:
+$^{\pageref{${person.parent_family().xref()}}}$
+% endif
+${fmt_arrow(arrow) | n} 
+%         endfor
+}
+%     endif
+%     if home_person.is_relative(family.wife()):
+\let\thefootnote\relax\footnotetext{
+%         for [person, arrow] in home_person.path_to_relative(family.wife()):
+${name(person)}
+% if person.parent_family() != None:
+$^{\pageref{${person.parent_family().xref()}}}$
+% endif
+${fmt_arrow(arrow) | n} 
+%         endfor
+} 
+%     endif
+% endif
+\newpage
+% endfor
+
+\begin{multicols}{2}
+% for individual in index:
+   % if (individual.given_name() != '' or individual.surname() != '') and (individual.given_name() != None or individual.surname() != None): 
+${individual.surname()}, ${individual.given_name()} \hfill ${', '.join(map(lambda x: '\pageref{' + x + '}', pages(individual))) | n} \\ 
+   % endif
+% endfor
+\end{multicols}
+\end{document}

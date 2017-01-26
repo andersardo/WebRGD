@@ -1,0 +1,8 @@
+php-programmen behöver
+MySQL
+  databas RGDindatavalid initialiserad från testDump.sql
+  användare 'rgd' passwd 'pilot' med access till databas RGDindatavalid (kan konfigureras i initdb.php)
+
+mysql> CREATE DATABASE RGDindatavalid CHARACTER SET utf8 COLLATE utf8_swedish_ci;
+mysql> CREATE USER 'rgd'@'localhost' IDENTIFIED BY 'pilot';
+mysql> GRANT ALL PRIVILEGES ON RGDindatavalid.* TO 'rgd'@'localhost' WITH GRANT OPTION;

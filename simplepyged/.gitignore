@@ -1,0 +1,7 @@
+*~
+*.pyc
+.coverage*
+t.sh
+htmlcov
+docs/_build
+docs/examples/simplepyged

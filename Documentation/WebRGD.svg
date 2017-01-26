@@ -1,0 +1,499 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: fig2dev Version 3.2 Patchlevel 5d -->
+<!-- CreationDate: Wed Oct 22 09:01:08 2014 -->
+<!-- Magnification: 1.050 -->
+<svg	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="4.9in" height="7.4in"
+	viewBox="3200 332 5839 8939">
+<g style="stroke-width:.025in; fill:none">
+<!-- Circle -->
+<circle cx="4519" cy="1417" r="56"
+ style="fill:#000000;stroke:#000000;stroke-width:8;"/>
+<!-- Circle -->
+<circle cx="4724" cy="1417" r="56"
+ style="fill:#000000;stroke:#000000;stroke-width:8;"/>
+<!-- Circle -->
+<circle cx="4951" cy="1417" r="56"
+ style="fill:#000000;stroke:#000000;stroke-width:8;"/>
+<!-- Ellipse -->
+<ellipse transform="translate(4677,3496) rotate(-0.00000000)" rx="1086" ry="377"
+ style="stroke:#000000;stroke-width:8;"/>
+<!-- Ellipse -->
+<ellipse transform="translate(4677,5669) rotate(-0.00000000)" rx="1086" ry="377"
+ style="stroke:#000000;stroke-width:8;"/>
+<!-- Line -->
+<polyline points="3590,3496
+3590,5763
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="5763,3496
+5763,5763
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="3212,472
+3212,1181
+4629,1181
+4629,472
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="3212,472
+3215,470
+3224,467
+3237,461
+3257,452
+3282,441
+3314,429
+3348,415
+3382,403
+3418,389
+3453,377
+3485,368
+3516,360
+3544,353
+3570,349
+3595,346
+3618,345
+3640,346
+3662,349
+3685,354
+3704,360
+3724,366
+3744,374
+3765,384
+3786,394
+3807,405
+3829,417
+3851,430
+3875,444
+3898,458
+3921,472
+3944,486
+3967,500
+3990,514
+4012,527
+4034,539
+4055,550
+4076,560
+4097,570
+4117,578
+4137,584
+4157,591
+4179,595
+4201,598
+4223,599
+4246,598
+4271,595
+4298,591
+4326,584
+4356,576
+4389,566
+4424,555
+4459,541
+4494,529
+4528,515
+4559,502
+4584,492
+4604,482
+4618,477
+4626,474
+4629,472
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:bevel; stroke-linecap:butt;
+"/>
+<!-- Line: box -->
+<rect x="3212" y="1700" width="1417" height="850" rx="0" 
+style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4818,472
+4818,1181
+6236,1181
+6236,472
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4818,472
+4822,470
+4830,467
+4844,461
+4864,452
+4889,441
+4920,429
+4954,415
+4988,403
+5024,389
+5059,377
+5091,368
+5122,360
+5150,353
+5176,349
+5202,346
+5225,345
+5247,346
+5269,349
+5291,354
+5311,360
+5331,366
+5351,374
+5372,384
+5393,394
+5414,405
+5436,417
+5458,430
+5481,444
+5504,458
+5527,472
+5550,486
+5573,500
+5596,514
+5618,527
+5640,539
+5661,550
+5682,560
+5703,570
+5723,578
+5743,584
+5763,591
+5785,595
+5807,598
+5829,599
+5853,598
+5878,595
+5904,591
+5932,584
+5963,576
+5995,566
+6030,555
+6066,541
+6100,529
+6134,515
+6165,502
+6191,492
+6211,482
+6224,477
+6233,474
+6236,472
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:bevel; stroke-linecap:butt;
+"/>
+<!-- Line: box -->
+<rect x="4818" y="1700" width="1417" height="850" rx="0" 
+style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4062,8551
+4062,9259
+5480,9259
+5480,8551
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4062,8551
+4066,8549
+4074,8545
+4088,8540
+4108,8531
+4133,8520
+4164,8508
+4198,8494
+4233,8481
+4268,8468
+4303,8456
+4335,8447
+4366,8438
+4394,8432
+4420,8428
+4446,8425
+4469,8424
+4491,8425
+4513,8428
+4535,8433
+4555,8438
+4575,8445
+4595,8453
+4616,8462
+4637,8473
+4658,8483
+4680,8496
+4702,8509
+4725,8522
+4748,8537
+4771,8551
+4794,8564
+4817,8579
+4840,8593
+4862,8605
+4885,8618
+4906,8628
+4927,8639
+4948,8648
+4967,8657
+4987,8663
+5007,8669
+5029,8674
+5051,8677
+5074,8678
+5097,8677
+5122,8674
+5148,8669
+5176,8663
+5207,8655
+5239,8645
+5274,8634
+5310,8620
+5344,8607
+5378,8594
+5409,8581
+5435,8571
+5455,8561
+5468,8556
+5477,8553
+5480,8551
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:bevel; stroke-linecap:butt;
+"/>
+<!-- Circle -->
+<circle cx="6614" cy="2008" r="330"
+ style="stroke:#000000;stroke-width:16;"/>
+<!-- Circle -->
+<circle cx="8721" cy="4062" r="302"
+ style="stroke:#000000;stroke-width:16;"/>
+<!-- Circle -->
+<circle cx="8598" cy="5291" r="236"
+ style="stroke:#000000;stroke-width:16;"/>
+<!-- Circle -->
+<circle cx="8598" cy="6755" r="236"
+ style="stroke:#000000;stroke-width:16;"/>
+<!-- Circle -->
+<circle cx="5952" cy="7511" r="236"
+ style="stroke:#000000;stroke-width:16;"/>
+<!-- Line: box -->
+<rect x="6614" y="3779" width="1700" height="850" rx="0" 
+style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="5921,4251
+6456,4251
+" style="stroke:#000000;stroke-width:32;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 5763 4251 - 6661 4251-->
+<polygon points="6429 4299
+6626 4251
+6429 4204
+6469 4251
+6429 4299
+
+" style="stroke:#000000;stroke-width:16;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Arrowhead on XXXpoint 6614 4251 - 5716 4251-->
+<polygon points="5947 4204
+5751 4251
+5947 4299
+5908 4251
+5947 4204
+
+" style="stroke:#000000;stroke-width:16;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Line -->
+<polyline points="5763,5385
+6456,5385
+" style="stroke:#000000;stroke-width:32;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 5763 5385 - 6661 5385-->
+<polygon points="6429 5433
+6626 5385
+6429 5338
+6469 5385
+6429 5433
+
+" style="stroke:#000000;stroke-width:16;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Line -->
+<polyline points="5506,5960
+6493,6795
+" style="stroke:#000000;stroke-width:32;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 5385 5858 - 6649 6928-->
+<polygon points="6441 6813
+6623 6904
+6502 6741
+6502 6803
+6441 6813
+
+" style="stroke:#000000;stroke-width:16;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Arrowhead on XXXpoint 6614 6897 - 5349 5826-->
+<polygon points="5555 5940
+5375 5849
+5495 6012
+5495 5950
+5555 5940
+
+" style="stroke:#000000;stroke-width:16;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Line: box -->
+<rect x="6614" y="5007" width="1700" height="850" rx="0" 
+style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line: box -->
+<rect x="6614" y="6425" width="1700" height="850" rx="0" 
+style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line: box -->
+<rect x="3968" y="7086" width="1700" height="850" rx="0" 
+style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4724,6047
+4724,7023
+" style="stroke:#000000;stroke-width:32;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 4724 6047 - 4724 7228-->
+<polygon points="4677 6996
+4724 7193
+4771 6996
+4724 7036
+4677 6996
+
+" style="stroke:#000000;stroke-width:16;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Line -->
+<polyline points="4771,7937
+4771,8472
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 4771 7937 - 4771 8614-->
+<polygon points="4740 8435
+4771 8593
+4803 8435
+4771 8467
+4740 8435
+
+" style="stroke:#000000;stroke-width:8;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Line -->
+<polyline points="4062,1133
+4062,1574
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 4062 1133 - 4062 1716-->
+<polygon points="4031 1538
+4062 1695
+4094 1538
+4062 1569
+4031 1538
+
+" style="stroke:#000000;stroke-width:8;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Line -->
+<polyline points="3968,2551
+3968,3275
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 3968 2551 - 3968 3417-->
+<polygon points="3937 3238
+3968 3396
+4000 3238
+3968 3270
+3937 3238
+
+" style="stroke:#000000;stroke-width:8;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Line -->
+<polyline points="5480,1133
+5480,1574
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 5480 1133 - 5480 1716-->
+<polygon points="5448 1538
+5480 1695
+5511 1538
+5480 1569
+5448 1538
+
+" style="stroke:#000000;stroke-width:8;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Line -->
+<polyline points="5385,2551
+5385,3275
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Arrowhead on XXXpoint 5385 2551 - 5385 3417-->
+<polygon points="5354 3238
+5385 3396
+5417 3238
+5385 3270
+5354 3238
+
+" style="stroke:#000000;stroke-width:8;stroke-miterlimit:8;
+fill:#000000;"/>
+<!-- Text -->
+<text xml:space="preserve" x="3496" y="850" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">GEDCOM</text>
+<!-- Text -->
+<text xml:space="preserve" x="3496" y="1165" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">fil</text>
+<!-- Text -->
+<text xml:space="preserve" x="3401" y="1984" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">Indata-</text>
+<!-- Text -->
+<text xml:space="preserve" x="3401" y="2299" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">validering</text>
+<!-- Text -->
+<text xml:space="preserve" x="5102" y="850" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">GEDCOM</text>
+<!-- Text -->
+<text xml:space="preserve" x="5102" y="1165" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">fil</text>
+<!-- Text -->
+<text xml:space="preserve" x="5007" y="1984" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">Indata-</text>
+<!-- Text -->
+<text xml:space="preserve" x="5007" y="2299" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">validering</text>
+<!-- Text -->
+<text xml:space="preserve" x="4251" y="8881" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">GEDCOM</text>
+<!-- Text -->
+<text xml:space="preserve" x="4251" y="9196" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">fil</text>
+<!-- Text -->
+<text xml:space="preserve" x="4110" y="7606" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">Export</text>
+<!-- Text -->
+<text xml:space="preserve" x="6755" y="4251" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">Matchning</text>
+<!-- Text -->
+<text xml:space="preserve" x="6803" y="5385" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">Skillnad</text>
+<!-- Text -->
+<text xml:space="preserve" x="6755" y="6803" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">Samman-</text>
+<!-- Text -->
+<text xml:space="preserve" x="6755" y="7118" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">slagning</text>
+<!-- Text -->
+<text xml:space="preserve" x="8503" y="6897" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="252" text-anchor="start">7</text>
+<!-- Text -->
+<text xml:space="preserve" x="8503" y="5433" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="252" text-anchor="start">6</text>
+<!-- Text -->
+<text xml:space="preserve" x="8503" y="4204" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="252" text-anchor="start">4,5</text>
+<!-- Text -->
+<text xml:space="preserve" x="6377" y="2125" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="252" text-anchor="start">1-3</text>
+<!-- Text -->
+<text xml:space="preserve" x="5858" y="7606" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="252" text-anchor="start">8</text>
+<!-- Text -->
+<text xml:space="preserve" x="3874" y="4724" fill="#000000"  font-family="Times" font-style="normal" font-weight="bold" font-size="177" text-anchor="start">Databaser</text>
+</g>
+</svg>
