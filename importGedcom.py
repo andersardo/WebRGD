@@ -96,6 +96,19 @@ def pers_dict(p):
 #         pers['birth']['source'] = p.birth().nsource
 #      elif (p.birth().source):
 #         pers['birth']['source'] = p.birth().source
+   else:
+       ###extend by using CHR event if no BIRT available
+       for ev in p.other_events:
+           if ev.tag == 'CHR':
+               pers['birth'] = {}
+               for cline in ev.line.children_lines():
+                   if cline.tag() == 'DATE':
+                       pers['birth']['date'] = datMap[cline.value()]
+                   elif cline.tag() == 'PLAC':
+                       pers['birth']['normPlaceUid'] = placMap[cline.value()]
+                       pers['birth']['place'] = cline.value()
+                   elif cline.tag() == 'SOUR':
+                       pers['birth']['source'] = sourMap[cline.value()]
    if p.death():
       pers['death']= {}
       try: pers['death']['date'] = datMap[p.death().date]
@@ -117,6 +130,19 @@ def pers_dict(p):
 #         pers['death']['source'] = p.death().nsource
 #      elif (p.death().source):
 #         pers['death']['source'] = p.death().source
+   else:
+       ###extend by using BURI event if no DEAT available
+       for ev in p.other_events:
+           if ev.tag == 'BURI':
+               pers['death'] = {}
+               for cline in ev.line.children_lines():
+                   if cline.tag() == 'DATE':
+                       pers['death']['date'] = datMap[cline.value()]
+                   elif cline.tag() == 'PLAC':
+                       pers['death']['normPlaceUid'] = placMap[cline.value()]
+                       pers['death']['place'] = cline.value()
+                   elif cline.tag() == 'SOUR':
+                       pers['death']['source'] = sourMap[cline.value()]
    return pers
 
 def fam_dict(fam):
