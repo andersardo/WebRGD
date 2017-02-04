@@ -100,13 +100,15 @@ def gedcomNoRGD(self):
     for e in self.children_lines():
         if e.tag() in ('RGDF', 'RGDE', 'RGDP', 'RGDD'): continue
         result += '\n' + e.gedcom()
-        #if e.tag() in ('SOUR'):
+        if e.tag() in ('SOUR'):
                 #use mapped or not?
-                #try:
-                        #t = sourMap[e.value()]
+                try:
+                        t = sourMap[e.value()]
+                        result += u'\n2 NOTE RGD källa: ' + sourMap[e.value()]
                         #print '1 NOTE openRGD', e.tag(), ':', e.value(),'=', sourMap[e.value()]
-                #except:
+                except:
                         #print '1 NOTE openRGD', e.tag(), ':', e.value(),'= NoMapping i sour.dat'
+                        pass
     return result
 
 mapGedcom = {'birth': 'BIRT', 'death': 'DEAT', 'marriage': 'MARR',

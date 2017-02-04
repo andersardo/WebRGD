@@ -6,12 +6,16 @@ Programmet lägger samman PLAC och SOUR för att få med församling i källan
 Årtal för händelsen tas också in för att kunna verifiera 1:sta hands källor korrekt.
 Annars läggs en ren kopia av SOUR in så att det alltid skall finnas en RGDS.
 
+*****
+***** Fixa kända olikheter Disgen-Källa
+*****
+
 */
 require 'initbas.php';
 require 'initdb.php';
 //
-$filein=$directory . "RGD9X.GED";
-$fileut=$directory . "RGD9Y.GED";
+$filein=$directory . "RGD9Y.GED";
+$fileut=$directory . "RGD9Z.GED";
 //
 $akt='NEJ';
 $typ='';
@@ -26,6 +30,8 @@ $xant=0;
 $zant=0;
 $sok2=0;
 $sok='';
+$spar='';
+$xyz = '';
 //
 if(file_exists($fileut))
 {
@@ -50,6 +56,8 @@ else
 			$tagl=substr($str,0,8);
  			if($pos1 == '0')
 			{
+				$spar=$str;
+//
 				$ptmp="";
 				$pmix="";
 				$smix="";
@@ -64,6 +72,8 @@ else
 			}	
  			if(($pos1 == '0') || ($pos1 == '1'))
 			{
+				$xyz = '';
+//
 				$akt = 'NEJ';
 				$typ = '';
 				$aar = '';
@@ -99,22 +109,164 @@ else
 			{
 				$pant++;
  				fwrite($handut,$str."\r\n");
-//	Spara enbart församlingsnamnet utan länsbokstav	
+//
+//	Expandera förkortningar
+					$len=strlen($str);
+					$strorg = substr($str,7,$len);
+					$strx = '';
+					$lxx = '';
+					$imax=7;
+					$fors="";
+					while($imax <= $len)
+					{
+						$tkn=substr($str,$imax,1);
+						$kfs=substr($str,($imax+1),3);
+						$kfs1=substr($str,($imax+4),1);
+						$kfl=substr($str,($imax+1),4);
+						$kfl1=substr($str,($imax+5),1);
+//	Fix för att rädda församlingar som är förkortade till "...förs" eller "lfs", "sfs" eller "dkf/s"				
+						if(($tkn == ' ') || ($tkn == '.') || (($imax+1) == $len))
+						{
+							if((substr($fors,($imax-12),5)) == 'förs')
+							{
+								if($tkn == '.') {
+									$fors = $fors.'amlin';
+									$tkn = 'g';
+								}
+								else {
+									$fors = $fors.'amling';
+								}
+							}
+						}
+						if($tkn == ' ')
+						{
+							if(($kfs == 'lfs') || ($kfs == 'LFS') || ($kfs == 'Lfs'))
+							{
+								$fors = $fors.' landsförsamling';
+								$imax++;
+								$imax++;
+								$imax++;
+								$imax++;
+								if($kfs1 == '.') {
+									$imax++;
+								}	
+							}
+						}
+						if($tkn == ' ')
+						{
+							if(($kfs == 'sfs') || ($kfs == 'SFS') || ($kfs == 'Sfs'))
+							{
+								$fors = $fors.' stadsförsamling';
+								$imax++;
+								$imax++;
+								$imax++;
+								$imax++;
+								if($kfs1 == '.') {
+									$imax++;
+								}	
+							}
+						}	
+						if($tkn == ' ')
+						{
+							if(($kfl == 'dkfs') || ($kfl == 'DKFS') || ($kfl == 'Dkfs')) 
+							{
+								$fors = $fors.' domkyrkoförsamling';
+								$imax++;
+								$imax++;
+								$imax++;
+								$imax++;
+								$imax++;
+								if($kfl1 == '.') {
+									$imax++;
+								}	
+							}
+							elseif(($kfs == 'dkf') || ($kfs == 'DKF') || ($kfs == 'Dkf')) 
+							{
+								$fors = $fors.' domkyrkoförsamling';
+								$imax++;
+								$imax++;
+								$imax++;
+								$imax++;
+								if($kfl1 == '.') {
+									$imax++;
+								}	
+							}
+						}
+						if($tkn == '(')
+						{
+							$lxx = '';
+						}
+						if($tkn == ')')
+						{
+							$lxx = $lxx.$tkn;
+							if($lxx == '(A)') {
+								$lxx = '(AB)';
+								$fors=$fors.'B';
+								$imax++;
+							}
+							$fors=$fors.$tkn;
+						}	
+						else
+						{
+							$fors=$fors.$tkn;
+							$lxx = $lxx.$tkn;
+						}
+						$imax++;
+					}
+//	Ta bort prefix
+					$pre2=substr($fors,0,2);
+					if(($pre2 == 'i ') || ($pre2 == 'I '))
+					{
+						$fors = substr($fors,2,(strlen($fors)-2));
+					}
+					$pre4=substr($fors,0,4);
+					if(($pre4 == 'på ') || ($pre4 == 'På '))
+					{
+						$fors = substr($fors,4,(strlen($fors)-3));
+					}
+//
+//	Spara enbart församlingsnamnet med/utan länsbokstav	
 				$plen=strlen($str);
 				$pmax=7;
-				$id="";
-				$ptmp="";
+//				$id="";
 				$pmix="";
 				while($pmax <= $plen)
 				{
 					$ptkn = substr($str,$pmax,1);
 					$ptk2 = substr($str,$pmax,2);
+//	Skippa inledande text
+					if($ptk2 == ", ") {
+						$pmix = "";
+						$ptkn = "";
+						$pmax++;
+					}
 					if($ptkn == ")") {
 						$id = $pmix.$ptkn;
 						$pmax = $plen;
 					}
+					$pmix = $pmix.$ptkn;
+					$pmax++;
+				}	
+//	***** Fixa kända olikheter Disgen-Källa
+				if($id == "Kalmar domkyrkoförsamling (H)") {
+					$id = "Kalmar stadsförsamling (H)";
+				}
+				if($id == 'Visby domkyrkoförsamling (I)') {
+					$id = 'Visby stadsförsamling (I)';
+				}
+//	*****		
+//	Skapa ptmp
+				$plen=strlen($id);
+				$pmax=0;
+				$ptmp="";
+				$pmix="";
+				while($pmax <= $plen)
+				{
+					$ptkn = substr($id,$pmax,1);
+					$ptk2 = substr($id,$pmax,2);
 					if($ptk2 == " (") {
 						$ptmp = $pmix;
+						$pmax = $plen;
 					}
 					$pmix = $pmix.$ptkn;
 					$pmax++;
@@ -137,6 +289,11 @@ else
  			elseif(($tagg=='2 RGDS') && ($akt == 'JA'))
 			{
 				$slen = strlen($str);
+//
+//if((substr($str,7,6) == 'Kalmar') || (substr($str,7,6) == 'Visby ')) {
+//	$xyz = 'JA';
+//}
+//
 				$otkn = '';
 				$strtmp = '';
 				$smax = 0;
@@ -173,6 +330,7 @@ else
 				$brst="";
 				$oldx="";
 				$sold="";
+				$old2="";
 				while($smax <= $slen)
 				{
 					$stkn = substr($str,$smax,1); 
@@ -182,6 +340,12 @@ else
 					{
 						if(($skol == '') && ($stkn == ' ')) {
 							$oldx = $sord;
+							if($old2 == '') {
+							$old2 = $sord;
+							}
+							else {
+							$old2 = $old2.' '.$sord;
+							}
 							$sord = '';
 						}
 						else {
@@ -275,17 +439,17 @@ else
 						$rtkn3 = substr($brst,$rmax,3);
 						$rtkn4 = substr($brst,$rmax,4);
 						$rtkn5 = substr($brst,$rmax,5);
-						if(($rtkn3 == ' s.') || ($rtkn3 == ' S.')){
+						if(($rtkn3 == ' s.') || ($rtkn3 == ' S.') | ($rtkn3 == ' p.') || ($rtkn3 == ' P.')){
 							$sida = 'JA';
 							$bild = '';
 							$xmax = $rmax;
 						}
-						if(($rtkn3 == ' s ') || ($rtkn3 == ' S ')){
+						if(($rtkn3 == ' s ') || ($rtkn3 == ' S ') || ($rtkn3 == ' p ') || ($rtkn3 == ' P ')){
 							$sida = 'JA';
 							$bild = '';
 							$xmax = $rmax;
 						}
-						if(($rtkn4 == ' sid') || ($rtkn4 == ' Sid')){
+						if(($rtkn4 == ' sid') || ($rtkn4 == ' Sid') || ($rtkn4 == ' pag') || ($rtkn4 == ' Pag')){
 							$sida = 'JA';
 							$bild = '';
 							$xmax = $rmax;
@@ -344,14 +508,40 @@ else
 						$fors = $bmix;
 					}	
 					$bmix = '';
-//				
-					$sbok = '';
-					if($fors == '') {
-						$sbok = $ptmp.' '.$book;
-						$fors = $ptmp;
+//	Alternativ test
+					$altx = strlen($book);
+					$alt1 = substr($book,0,1);
+					$alt2 = substr($book,1,1);
+					$altr = substr($book,1,$altx);
+					if($alt2 == ':') {
+						$balt = $alt1.'I'.$altr;
 					}
 					else {
-						$sbok = $fors.' '.$book;
+						$balt = $book;
+					}
+//			
+					$sbok = '';
+					if($fors == '') {
+						if($old2 == '') {
+							$sbok = $ptmp.' '.$book;
+							$salt = $ptmp.' '.$balt;
+							$fors = $ptmp;
+						}
+						else {
+							$sbok = $old2.' '.$book;
+							$salt = $old2.' '.$balt;
+							$fors = $ptmp;
+						}
+					}
+					else {
+						if($old2 == '') {
+							$sbok = $fors.' '.$book;
+							$salt = $fors.' '.$balt;
+						}
+						else {
+							$sbok = $old2.' '.$book;
+							$salt = $old2.' '.$balt;
+						}
 					}
 				}
 //	Select
@@ -386,6 +576,13 @@ else
 								if($sbok == $fbok) {
 									$sok2 = 3;
 								}
+								else {
+//	Testa alternativet
+									if($salt == $fbok) {
+										$book = $balt;
+										$sok2 = 3;
+									}
+								}
 							}
 							$rlop++;
 						}
@@ -402,7 +599,6 @@ else
 				{	
 					$zant++;
 				}
-//					
 				if($sida == 'JA') {
 					$sok2 = $sok2 - 2;
 				}
@@ -425,7 +621,11 @@ else
 				}
 				if($sok == '*') {
 					$sok = $sok.$sok2.' ';
-					if(($fors == '') && ($sold == '')) {
+					if($old2 == '') {
+						$old2 = $fors;
+					}
+					$stxt = $old2.' '.$book;
+/*					if(($fors == '') && ($sold == '')) {
 						$sold = $oldx;
 					}
 					if(($sold == '') || (($sok2 >= 1) && ($sok2 <= 3))){
@@ -433,7 +633,7 @@ else
 					}
 					else {
 						$stxt = $sold.' '.$book;
-					}	
+					}*/
 					$ssid = '';
 					if(($snum != '') && ($bild == 'JA')) {
 						$ssid = ', Bild '.$snum;
@@ -442,6 +642,19 @@ else
 						$ssid = ', Sidan '.$snum;
 					}	
 					fwrite($handut,"2 RGDS ".$sok.$stxt.$ssid." \r\n");
+/*
+if($sok == '*4 ') {
+	echo '* '.$sok.$stxt.$ssid.'-->'.$spar.'<br/>';
+}
+if($sok == '*5 ') {
+	echo '** '.$sok.$stxt.$ssid.'-->'.$spar.'<br/>';
+}
+if($sok == '*6 ') {
+	echo '*** '.$sok.$stxt.$ssid.'-->'.$spar.'<br/>';
+}
+//
+echo $spar.'*'.$id.'-'.$typ.$aar.'/'.$fbok.'/'.$sbok.'/'.$salt.'-?-'.$old2.'/ <br/>';	
+*/					
 				}	
 				else {
 					fwrite($handut,"2 RGDS ".$utx."\r\n");
@@ -456,7 +669,8 @@ else
 		}
 		fclose($handin);
 		fclose($handut);
-/*		echo "<br/>";
+//
+		echo "<br/>";
 		echo "Församlingar på: ".(int)($pant/$tant*100+0.5)."% av F-V-D händelser <br/>";
 		echo "<br/>";
 		echo "Med angivna källor: ".$sant." (".(int)($sant/$tant*100+0.5)."%) <br/>";
@@ -484,7 +698,7 @@ else
 				}	
 			}
 			echo "<br/>";
-		}*/
+		}
 		echo "<br/>";
 		echo "Program komprgdsz avslutad <br/>";
 /*			
