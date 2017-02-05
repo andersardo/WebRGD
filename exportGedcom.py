@@ -157,7 +157,7 @@ def compTagEQ(tag):
 
 def gedPrintMergeEvent(events):
     #print 'gedPrintMergeEvent', events
-    for evtag in events.keys():
+    for evtag in events.keys():  #Evt sort order?
         if len(events[evtag]) == 1: print gedcomNoRGD(events[evtag][0])
         else:
             #make dict with quality as key and list of events as value
@@ -301,7 +301,7 @@ for ind in config['persons'].find({}):
 #                    else: print 'Skipped', tag.tag(), tag.value(), tag.gedcom(), '!!'
                     continue
 ##                elif tag.tag() in ('CHR', 'BURI'):
-                elif tag.tag() in ('BIRT', 'DEAT', 'CHR', 'BURI'):
+                elif tag.tag() in ('BIRT', 'CHR', 'DEAT', 'BURI'):
                     #print '1 NOTE openRGD Merge ', tag.tag()
                     if tag.tag() in gedMergeEvent:
                         gedMergeEvent[tag.tag()].append(tag)
@@ -334,11 +334,11 @@ for ind in config['persons'].find({}):
 for fam in config['families'].find({}):
     #basedata
     print "0 @"+str(fam['RGDid'])+"@ FAM"
-    for ev in ('marriage',):
-        if ev not in fam: continue
-        print "1", mapGedcom[ev]
-        for item in ('date', 'place', 'source'):
-            if item in fam[ev]: printTag("2 "+mapGedcom[item],fam[ev][item])
+    #for ev in ('marriage',):
+    #    if ev not in fam: continue
+    #    print "1", mapGedcom[ev]
+    #    for item in ('date', 'place', 'source'):
+    #        if item in fam[ev]: printTag("2 "+mapGedcom[item],fam[ev][item])
     #sort according to birth-date
     for ch in sorted(fam['children'], key=lambda c: birth[c]):
         printTagI("1 CHIL", mapPersId[ch])
@@ -358,6 +358,7 @@ for fam in config['families'].find({}):
                traceback.print_exception(exc_type, exc_value, exc_traceback)
             parseGedcom(ged, rec['gedcom'])
             parsedGed.append(ged.family_list()[0])
+    gedMergeEvent = {}
     for gedTag in parsedGed:
         for tag in gedTag.children_lines():
             if tag.level() == 1:
@@ -365,11 +366,16 @@ for fam in config['families'].find({}):
                     continue
                 elif tag.tag() in ('CHAN'):
                     chanTag = tag
-		    continue
+                    continue
                 elif tag.tag() in ('MARR'):
-                    if not compTagEQ(tag): print gedcomNoRGD(tag)
+                    if tag.tag() in gedMergeEvent:
+                        gedMergeEvent[tag.tag()].append(tag)
+                    else:
+                        gedMergeEvent[tag.tag()] = [tag]
+#                    if not compTagEQ(tag): print gedcomNoRGD(tag)
 #                    else: print 'Skipped', tag.tag(), tag.value(), tag.gedcom(), '!!'
                 else: print gedcomNoRGD(tag)
+    if gedMergeEvent: gedPrintMergeEvent(gedMergeEvent)
     #CHAN-tag
     if len(parsedGed) == 1 and chanTag:
         print gedcomNoRGD(chanTag)
