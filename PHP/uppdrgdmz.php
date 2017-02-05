@@ -16,8 +16,7 @@ if(file_exists($filesou2))
 else
 {
 //
-    //AA0	$filein=$directory . "RGD9Y.GED";
-    $filein=$directory . "RGD9Z.GED";
+	$filein=$directory . "RGD9Z.GED";
 //
 	if(file_exists($filein))
 	{
