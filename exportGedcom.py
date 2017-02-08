@@ -46,37 +46,13 @@ for db in dbs:
                 (fndir,tmp) = os.path.split(rec['file'])
                 #print db, fndir, rec['cId']
                 try:
-                    #namMap[rec['cId']] = json.load(open(fndir + '/name.dat'))
-                    #placMap[rec['cId']] = json.load(open(fndir + '/plac.dat'))
                     #placMap.update(json.load(open(fndir + '/plac.dat')))
-                    #dateMap[rec['cId']] = json.load(open(fndir + '/date.dat'))
                     #dateMap.update(json.load(open(fndir + '/date.dat')))
                     #sourMap[rec['cId']] = json.load(open(fndir + '/sour.dat'))
                     sourMap.update(json.load(open(fndir + '/sour.dat')))
                     #print 'loaded', type(namMap[rec['cId']]), type(placMap[rec['cId']]), type(dateMap[rec['cId']]), type(sourMap[rec['cId']])
                 except:
                     pass
-#allMap = {}
-#allMap.update(dateMap)
-#allMap.update(placMap)
-#allMap.update(sourMap)
-#print 'MAP', cIdMap
-#def merge_dicts(*dict_args):
-#    """
-#    Given any number of dicts, shallow copy and merge into a new dict,
-#    precedence goes to key value pairs in latter dicts.
-#    """
-#    result = {}
-#    print type(dict_args)
-#    for dictionary in dict_args:
-#            print type(dictionary)
-#            result.update(dictionary)
-#    return result
-
-#placMapAll = merge_dicts(placMap.values())
-#dateMapAll = merge_dicts(dateMap.values())
-#sourMapAll = merge_dicts(sourMap.values())
-
 #def cId2file(id):
 #        return cIdMap.get(id)
 #print 'A_923', cId2file('A_923')
@@ -97,17 +73,18 @@ def parseGedcom(ged,frag):
 def gedcomNoRGD(self):
     """ Return GEDCOM code for this line and all of its sub-lines """
     result = unicode(self)
+    plac = ''
+    for e in self.children_lines():
+        if e.tag() in ('PLAC'): plac = e.value()
     for e in self.children_lines():
         if e.tag() in ('RGDF', 'RGDE', 'RGDP', 'RGDD'): continue
         result += '\n' + e.gedcom()
         if e.tag() in ('SOUR'):
                 #use mapped or not?
                 try:
-                        t = sourMap[e.value()]
-                        result += u'\n2 NOTE RGD källa: ' + sourMap[e.value()]
-                        #print '1 NOTE openRGD', e.tag(), ':', e.value(),'=', sourMap[e.value()]
+                        t = sourMap[plac+'-'+e.value()]
+                        result += u'\n2 NOTE RGD källa: ' + t
                 except:
-                        #print '1 NOTE openRGD', e.tag(), ':', e.value(),'= NoMapping i sour.dat'
                         pass
     return result
 
@@ -155,19 +132,25 @@ def compTagEQ(tag):
         return True
     return False
 
+import datePrecision
 def gedPrintMergeEvent(events):
     #print 'gedPrintMergeEvent', events
-    for evtag in events.keys():  #Evt sort order?
+    #for evtag in events.keys():  #Evt sort order?
+    for evtag in ('BIRT', 'CHR', 'DEAT', 'BURI', 'MARR'):
+        if not evtag in events: continue
         if len(events[evtag]) == 1: print gedcomNoRGD(events[evtag][0])
         else:
             #make dict with quality as key and list of events as value
             Qevent = defaultdict(list)
             for gedev in events[evtag]:
                 qual = 10  #unmarked default quality
+                plac = ''
+                for cline in gedev.children_lines():
+                    if cline.tag() == 'PLAC': plac = cline.value()
                 for cline in gedev.children_lines():
                     if cline.tag() == 'SOUR':
                         try:
-                            if sourMap[cline.value()].startswith('*'):
+                            if sourMap[plac+'-'+cline.value()].startswith('*'):
                                 qual = int(cline.value()[1])
                         except:
                             pass
@@ -183,13 +166,16 @@ def gedPrintMergeEvent(events):
             for cline in useEvent.children_lines():
                 if cline.tag() == 'DATE':
                     Qdate = cline.value()
+                    (dummy, spanQdate) = datePrecision.date2span(cline.value())
                     break
             for gedev in events[evtag]:
                 for cline in gedev.children_lines():
                     if cline.tag() == 'DATE':
-                        if len(cline.value()) > len(Qdate):
-                            print 'Better date?', cline.value(), Qdate
+                        (dummy, span) = datePrecision.date2span(cline.value())
+                        if span < spanQdate:
+                            #print 'Better date?', cline.value(), '_', span, 'or', Qdate, '_', spanQdate
                             Qdate = cline.value()
+                            Pdate = datePrecision.date2span(cline.value())
             for cline in useEvent.children_lines():
                 if cline.tag() == 'DATE': cline._value = Qdate  #HACK
             print gedcomNoRGD(useEvent)
@@ -216,12 +202,13 @@ def gedPrintUniqueEvent(events):
                     textrepr.append(evtext)
                     print gedcomNoRGD(gedev)
 
-def gedPrintUniqueTag(tags):
+def gedPrintUniqueTag(tags, tagsToPrint = []):
     #print 'gedPrintUniqueTag', tags
     for tag in tags.keys():
+        if tag not in tagsToPrint: continue
         txt = set()
         for gedTag in tags[tag]:
-            txt.add(unicode(gedTag))
+            txt.add(gedTag.gedcom())
         for line in txt: print line
     #print
 
@@ -313,7 +300,7 @@ for ind in config['persons'].find({}):
                         gedUniqueEvent[tag.tag()].append(tag)
                     else:
                         gedUniqueEvent[tag.tag()] = [tag]
-                elif tag.tag() in ('OCCU', 'NOTE', ):
+                elif tag.tag() in ('OCCU', 'NOTE'):
                     #print 'Unique tags ', tag.tag()
                     if tag.tag() in gedUniqueTag:
                         gedUniqueTag[tag.tag()].append(tag)
@@ -321,8 +308,9 @@ for ind in config['persons'].find({}):
                         gedUniqueTag[tag.tag()] = [tag]
                 else: print gedcomNoRGD(tag)
     if gedMergeEvent: gedPrintMergeEvent(gedMergeEvent)
+    if gedUniqueTag: gedPrintUniqueTag(gedUniqueTag, ['OCCU'])
     if gedUniqueEvent: gedPrintUniqueEvent(gedUniqueEvent)
-    if gedUniqueTag: gedPrintUniqueTag(gedUniqueTag)
+    if gedUniqueTag: gedPrintUniqueTag(gedUniqueTag, ['NOTE'])
     #CHAN-tag
     if len(parsedGed) == 1 and chanTag:
         print gedcomNoRGD(chanTag)

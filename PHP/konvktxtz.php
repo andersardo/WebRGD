@@ -1444,7 +1444,7 @@ else
 //					
 					else {
 						fwrite($handut,$str."\r\n");
-						$ejlista[] = substr($str,7,$strlen);
+//						$ejlista[] = substr($str,7,$strlen);
 					}
 				}		
 				else
@@ -1456,7 +1456,7 @@ else
 		fclose($handin);
 		fclose($handut);
 //
-//	Unika radändringar listas
+/*	Unika radändringar listas
 		$radbr = 0;
 		$utlista=array_unique($utlista);
 		sort($utlista);
@@ -1488,7 +1488,7 @@ else
 				echo "<br/>";
 				$radbr = 0;
 			}	
-		}
+		}*/
 //
 		echo "<br/>";
 		echo "Filen ".$fileut." har skapats <br/>";

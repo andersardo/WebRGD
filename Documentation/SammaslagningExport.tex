@@ -1,0 +1,214 @@
+\documentclass[swedish,11pt]{article}
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{tikz}
+\usetikzlibrary{arrows,snakes,backgrounds,shapes}
+\usepackage{hyperref}
+\textwidth=16cm
+\textheight=23cm
+\oddsidemargin=-0.1cm
+\evensidemargin=-0.1cm
+\topmargin=-2cm
+
+\title{openRGD - sammanslagning och Gedcom-export \newline
+  Version 1.1}
+\author{Anders Ardö\\Anders.Ardo@gmail.com}
+
+\begin{document}
+\maketitle
+
+\section{Inledning/Översikt}
+openRGD använder (och sparar i databasen) endast namn, född, död, gift samt relationer
+- resten av information sparas i orginalform som ett Gedcom-fragment.
+
+Målet för produktions RGD är att behandla nedanstående uppgifter/Gedcom taggar enligt tabellen.
+Kolumnen 'matchning' indikerar om en uppgift ska användas vid matchningen.
+Så mycket som möjligt av detta ska implementeras i openRGD.
+Kolumnen 'openRGD' anger
+var i processen (jmfr UI) detta sker eller är tänkt att ske.
+
+%När det gäller export av NAME, BIRT, DEAT, MARR till Gedcom så exporteras först
+%den sammanslagna uppgiften,
+%sedan görs ett försök att exportera även sådana uppgifter där data inte stämmer överens med
+%den sammanslagna uppgiften.
+%<Koden för detta ser konstig ut!!>
+
+\begin{tabular}{|l|l|l|l|l|l|}
+  \hline
+ Uppgift & Gedcom & typ & matchning & sammanslagning & openRGD \\ \hline \hline
+namn & NAME  & event & * & slås samman & 7. Sammanslagning \\ \hline
+kön & SEX  & event & * & slås samman & 7. Sammanslagning \\ \hline
+född &  BIRT & event & * & slås samman & 7. Sammanslagning \\ \hline
+döpt &  CHR  & event & BIRT saknas & slås samman & 8. Skapa Gedcom \\ \hline
+gift &    MARR & event & * & slås samman & 7. Sammanslagning \\ \hline
+död  &  DEAT & event & * & slås samman & 7. Sammanslagning \\ \hline
+begravd & BURI & event & DEAT saknas & slås samman & 8. Skapa Gedcom \\ \hline
+flyttad & - & & & & \\ \hline
+inflyttad & IMMI & event & & alla unika sparas & 8. Skapa Gedcom \\ \hline
+utflyttad & EMIG & event & & alla unika sparas & 8. Skapa Gedcom \\ \hline
+levde & RESI & event & & alla unika  sparas & 8. Skapa Gedcom \\ \hline
+text &  NOTE & text & &  alla unika  sparas & 8. Skapa Gedcom \\ \hline
+special & NOTE & & &  alla unika  sparas & 8. Skapa Gedcom \\ \hline
+yrke & OCCU & & &  alla unika  sparas & 8. Skapa Gedcom \\ \hline
+skild & DIV & event & & alla unika sparas & 8. Skapa Gedcom \\ \hline
+händelse & EVEN & event & & alla unika sparas & 8. Skapa Gedcom \\ \hline
+ & alla andra & & & alla sparas & 8. Skapa Gedcom \\ \hline
+\end{tabular}
+
+\subsection{Status}
+Huvuddelen av det som behandlas i detta dokument (inklusive frågorna nedan och algoritm \ref{algoritm})
+är implementerat, men inte uppladdat till DIS server. 
+Ett undatag är kommentaren (av Anders H)
+om viktning/prioritering i avsnitt \ref{redmine1943}.
+Koden är inte heller testad speciellt mycket.
+
+\section{Frågor}
+\subsection{TYPE i event}
+Vissa händelser (event) innehåller förutom DATE, PLAC, och SOUR även en TYPE
+- ska den behandlas som de andra?
+
+Redmine RGD Design 1211 anger att det kan finnas en massa andra taggar också.
+
+Följande Gedcom-taggar har förekommit i BIRT, DEAT, MARR events i filer i RGD:\\
+CONT,
+\_PLC,
+TEXT,
+\_PRIM,
+CONC,
+FILE,
+DATE,
+\_SIZE,
+DATA,
+\_CONF\_NOTE,
+ADR1,
+\_PRNT,
+\_SCBK,
+TITL,
+\_STYLE,
+LONG,
+\_NAME,
+CAUS,
+SOUR,
+PHON,
+\_TYPE,
+QUAY,
+FORM,
+CITY,
+\_APID,
+OBJE,
+PLAC,
+POST,
+MAP,
+ADDR,
+TYPE,
+NOTE,
+LATI,
+PAGE
+
+{\it Kalle:}
+\begin{quotation}
+  \label{type}
+TYPE bör absolut inkluderas. Den innehåller förklarande information, t.ex. före eller utom äktenskap vör en relation. Men TYPE kan också innehålla tillägg som släktforskaren gjort för att förtydliga.
+Taggen EVEN skall alltid har TYPE för att tala om vilken typ av händelse det är.
+
+En händelse kan bara ha max 1 TYPE
+\end{quotation}
+
+\subsubsection{Vid sammanslagning av en event ska taggarna DATE, PLAC, SOUR, och TYPE tas hand om.}
+
+\subsection{Redmine RGD Design 3514}
+
+Vid sammanslagning av händelser kan man komma att välja DATE från en händelse (A)
+och PLAC från en händelse (B). Vad ska då SOUR för den sammanslagna händelsen sättas till?
+\begin{enumerate}
+\item SOUR från A
+\item SOUR från B
+\item 2 st SOUR (från A och B)
+\item SOUR = RGD med en NOTE som anger SOUR A och SOUR B
+\end{enumerate}
+
+Hur generaliserar man detta till sammanslagning av N händelser?
+
+{\it Kalle:}
+\begin{quotation}
+PLAC och SOUR bör hänga samman. SOUR i sig själv ger inte alltid en komplett källa men PLAC och SOUR tillsammans skall alltid göra det. Detta gäller främst när kyrkböcker används som källa.
+
+Datum skulle kunna tas från den andra posten om datumet är mer komplett. Som i ett exempel du tidigare visade att posten med bästa källan bara hade årtal men att den andra posten hade komplett datum.
+\end{quotation}
+
+\subsubsection{Se avsnitt \ref{algoritm}}
+
+\subsection{Redmine RGD Design 1943 + mail - Välja data vid sammanslagning}
+\label{redmine1943}
+Källan (SOUR) kan eventuellt, efter maskinell kvalitetsbedömning börja med asterisk och en siffra
+Maskinellt *1 till *9, förbered för manuellt satt *0 som bästa värde.
+
+Om de poster som skall mergas båda har ett visst data skall:
+\begin{itemize}
+\item källan med lägsta siffra efter asterisken användas
+\item om bara en källa har asterisk, använd den
+\item om båda har samma värde efter asterisken används den med mest kompletta texten
+\item om båda saknar asterisk används den med mest kompletta texten
+\end{itemize}
+  ({\it hur ska 'mest kompletta texten' tolkas maskinellt? Den längsta?})
+
+{\it Kalle:}
+\begin{quotation}
+Mest komplett text är troligen inte alltid den bästa men det är svårt att sätta en regel.
+Om uppgifterna i övrigt, datum och ort, är lika kanske förslaget från punkt 4 i 2.2 användas.
+Är datum och ort i konflikt kanske man kan använda principen att det är den filen man gör sammanslagningen till som "vinner". Datum och plats på matchade individer bör dock inte släppas igenom manuella matchningen.
+\end{quotation}
+
+{\it Anders H:}
+\begin{quotation}
+En ytterligare viktning, som jag tror nämndes någonstans, är att den databas man matchar TILL, har en något högre prioritet vi konflikter.
+\end{quotation}
+
+\subsubsection{Algoritm för att välja data vid sammanslagning av händelser (event)}
+Sammanslagning av databaser B och A till databas A (se också \ref{redmine1943}).
+\label{algoritm}
+
+Välj {\bf PLAC och SOUR} från den händelse som har högst kvalitet.
+
+Vid flera likvärdiga och händelsen från A tillhör dessa välj {\bf PLAC och SOUR} från A.
+
+Annars välj {\bf PLAC och SOUR} slumpmässigt bland de händelser som har högst kvalitet.
+
+Välj det mest kompletta {\bf DATE}.
+
+Vid flera likvärdiga välj {\bf DATE} bland de med högst kvalitet (med prioritet för händelsen från A).
+
+Texten från alla unika {\bf TYPE} adderas till en samlad TYPE rad.
+
+Övriga taggar ignoreras.
+
+\subsection{Vilken källa ska anges}
+Vi har inte bestämt vilken källa som kan/skall användas i utfilen.
+ 
+Original källa så som den skrivits i den “bästa” källan (detta är väl normalläget)
+ 
+Den manipulerade källan som eventuellt innehåller Asterisk och nivåvärde.
+Den innehåller också vissa förkortningar expanderade på ett standardiserat sätt.
+
+\subsubsection{Förslag}
+Inkludera bägge: Orginal källa som SOUR och manipulerad källa som NOTE.
+
+\subsection{Redmine RGD Design 3511 -Ursprungsmarkering vid sammanslagning}
+
+
+För att poster vid sammanslagning skall kunna identifieras av användaren finns en NOTE tagg.
+
+Denna information bör bli mer informativ för att passa vid sammanslagning av flera filer.
+Förslag:
+
+Original följt av namnet på filen och som nu identiteten på individen
+xempel:\\
+1 NOTE Original Kalle 26-10457\\
+1 NOTE Original Gun 14-190
+
+Ger spårbarhet till vem som bidragit till posten och den identiteten i den personens släktforskning.
+Är det ingen sammanslagen post finns också motsvarande information
+
+\end{document}

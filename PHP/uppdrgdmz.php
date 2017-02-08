@@ -26,6 +26,7 @@ else
 //		$handdata=fopen($filedata,"w");
 		$handsou2=fopen($filesou2,"w");
 //	
+		$sou2p = '';
 		$typ = 'X X';
 		$htyp = 'XXXX';
 		$head = 'ON';
@@ -144,10 +145,20 @@ else
 				elseif($tagg == '2 RGDP') {
 					if($htyp != 'XXXX') {
 						$data[$ptyp]['@'.$znum.'@'][$htyp]['RGDP']=$text; }
-				}	
+/*	Array2
+						$soulen=strlen($str);
+						$sou2p=substr($str,7,$soulen);*/
+				}
 				elseif($tagg == '2 RGDX') {
 					if($htyp != 'XXXX') {
 						$data[$ptyp]['@'.$znum.'@'][$htyp]['RGDX']=$text; }
+				}
+				elseif($tagg == '2 PLAC') {
+//					if($htyp != 'XXXX') {
+//	Array2
+						$soulen=strlen($str);
+						$sou2p=substr($str,7,$soulen);
+//					}
 				}
 				elseif($tagg == '2 RGDS') {
 					if($htyp != 'XXXX') {
@@ -173,6 +184,12 @@ else
 							$smax--;
 						}
 						$str = $strtmp;
+//						if($sou2p == '') {
+/*							$pos2 = substr($str,7,2);
+							if(($pos2 == '*7') || ($pos2 == '*8') || ($pos2 == '*9')) $sou2p = '9999';
+*/
+//echo $znum.'***/***/'.$pos2.'>'.$sou2p.'/'.$str."/ <br/>";
+//						}
 //
 //	Array2
 						$soulen=strlen($str);
@@ -180,16 +197,26 @@ else
 					}
 				}	
 				elseif($tagg == '2 SOUR') {
-					if($htyp != 'XXXX') {
+//					if($htyp != 'XXXX') {
 						$data[$ptyp]['@'.$znum.'@'][$htyp]['RGDS']=$text;
 //	Array2
 						$soulen=strlen($str);
-						$sou2org=substr($str,7,$soulen);
-//	Array2 
-						$sou2[$sou2org]=$sou2ut;
-						$sou2cnt++;
-					}
-//echo $znum."/".$sou2org."/".$sou2ut."/ <br/>";
+						$sou2s=substr($str,7,$soulen);
+//	Array2
+						if($sou2p != '') {
+							$sou2org=$sou2p.'-'.$sou2s;
+							$sou2[$sou2org]=$sou2ut;
+							$sou2cnt++;
+							$sou2p = '';
+//echo $znum."*/*".$sou2org."/".$sou2ut."/ <br/>";
+						}
+						else {
+							$sou2org=$sou2s;
+							$sou2[$sou2org]=$sou2ut;
+							$sou2cnt++;
+//echo $znum."#/#".$sou2org."/".$sou2ut."/ <br/>";
+						}
+//					}
 				}	
 				else {
 //	Skipa resten

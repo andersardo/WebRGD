@@ -509,16 +509,28 @@ else
 					}	
 					$bmix = '';
 //	Alternativ test
+//echo $book;
 					$altx = strlen($book);
 					$alt1 = substr($book,0,1);
 					$alt2 = substr($book,1,1);
+					$alt3 = substr($book,1,2);
 					$altr = substr($book,1,$altx);
+					$alta = substr($book,3,$altx);
+					if($alt3 == '1:') {
+						$book = $alt1.'I:'.$alta;
+					}
 					if($alt2 == ':') {
 						$balt = $alt1.'I'.$altr;
 					}
 					else {
-						$balt = $book;
+						if(($alt3 == 'I:') || ($alt3 == '1:')) {
+							$balt = $alt1.':'.$alta;
+						}
+						else {
+							$balt = $book;
+						}
 					}
+//echo '/'.$book.'/'.$balt.'<br/>';
 //			
 					$sbok = '';
 					if($fors == '') {
@@ -658,7 +670,7 @@ echo $spar.'*'.$id.'-'.$typ.$aar.'/'.$fbok.'/'.$sbok.'/'.$salt.'-?-'.$old2.'/ <b
 				}	
 				else {
 					fwrite($handut,"2 RGDS ".$utx."\r\n");
-					$fellista[] = $utx;
+//					$fellista[] = $utx;
 				}
 //
 			}
@@ -681,7 +693,7 @@ echo $spar.'*'.$id.'-'.$typ.$aar.'/'.$fbok.'/'.$sbok.'/'.$salt.'-?-'.$old2.'/ <b
 		echo "<br/>";
 		echo "Filen ".$fileut." har skapats <br/>";
 		echo "<br/>";
-//
+/*
 		if($zant > 0) {
 			echo "<br/>";
 			echo "Oidentifierade källor listas: <br/>";
@@ -698,7 +710,7 @@ echo $spar.'*'.$id.'-'.$typ.$aar.'/'.$fbok.'/'.$sbok.'/'.$salt.'-?-'.$old2.'/ <b
 				}	
 			}
 			echo "<br/>";
-		}
+		}*/
 		echo "<br/>";
 		echo "Program komprgdsz avslutad <br/>";
 /*			

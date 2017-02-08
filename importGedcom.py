@@ -88,9 +88,15 @@ def pers_dict(p):
 #         pers['birth']['normPlaceUid'] = fno
       if (p.birth().place):
          pers['birth']['place'] = p.birth().place
+      ##try:
+      ##    pers['birth']['source'] = sourMap[p.birth()._get_value('SOUR')]
+      ##except: pass
       try:
-          pers['birth']['source'] = sourMap[p.birth()._get_value('SOUR')]
-      except: pass
+          pers['birth']['source'] = sourMap[p.birth().place+'-'+p.birth()._get_value('SOUR')]
+      except:
+          try:
+              pers['birth']['source'] = sourMap[p.birth()._get_value('SOUR')]
+          except: pass
 #          print 'SOUR not mapped', p.birth().source
 #      if (p.birth().nsource):
 #         pers['birth']['source'] = p.birth().nsource
@@ -108,7 +114,13 @@ def pers_dict(p):
                        pers['birth']['normPlaceUid'] = placMap[cline.value()]
                        pers['birth']['place'] = cline.value()
                    elif cline.tag() == 'SOUR':
-                       pers['birth']['source'] = sourMap[cline.value()]
+                       ##pers['birth']['source'] = sourMap[cline.value()]
+                       try:
+                           pers['birth']['source'] = sourMap[pers['birth']['place']+'-'+cline.value()]
+                       except:
+                           try:
+                               pers['birth']['source'] = sourMap[cline.value()]
+                           except: pass
    if p.death():
       pers['death']= {}
       try: pers['death']['date'] = datMap[p.death().date]
@@ -122,9 +134,15 @@ def pers_dict(p):
 #         pers['death']['normPlaceUid'] = fno
       if p.death().place:
          pers['death']['place'] = p.death().place
+      ##try:
+      ##    pers['death']['source'] = sourMap[p.death()._get_value('SOUR')]
+      ##except: pass
       try:
-          pers['death']['source'] = sourMap[p.death()._get_value('SOUR')]
-      except: pass
+          pers['death']['source'] = sourMap[p.death().place+'-'+p.death()._get_value('SOUR')]
+      except:
+          try:
+              pers['death']['source'] = sourMap[p.death()._get_value('SOUR')]
+          except: pass
 #          print 'SOUR not mapped', p.death().source
 #      if (p.death().nsource):
 #         pers['death']['source'] = p.death().nsource
@@ -142,7 +160,13 @@ def pers_dict(p):
                        pers['death']['normPlaceUid'] = placMap[cline.value()]
                        pers['death']['place'] = cline.value()
                    elif cline.tag() == 'SOUR':
-                       pers['death']['source'] = sourMap[cline.value()]
+                       ##pers['death']['source'] = sourMap[cline.value()]
+                       try:
+                           pers['death']['source'] = sourMap[pers['death']['place']+'-'+cline.value()]
+                       except:
+                           try:
+                               pers['death']['source'] = sourMap[cline.value()]
+                           except: pass
    return pers
 
 def fam_dict(fam):
@@ -170,20 +194,26 @@ def fam_dict(fam):
            except: pass
 #           if fam.marriage().ndate:
 #               familj['marriage']['date'] = fam.marriage().ndate
-           try:
-               familj['marriage']['source'] = sourMap[fam.marriage()._get_value('SOUR')]
-           except: pass
-#               print 'SOUR not mapped', fam.marriage().source
-#           if (fam.marriage().nsource):
-#               familj['marriage']['source'] = fam.marriage().nsource
-#           elif (fam.marriage().source):
-#               familj['marriage']['source'] = fam.marriage().source
            if fam.marriage().place:
                familj['marriage']['place'] = fam.marriage().place
            try: familj['marriage']['normPlaceUid'] = placMap[fam.marriage().place]
            except: pass
 #           if (fam.marriage().nplace):
 #               familj['marriage']['normPlaceUid'] = fam.marriage().nplace
+           ##try:
+           ##    familj['marriage']['source'] = sourMap[fam.marriage()._get_value('SOUR')]
+           ##except: pass
+#               print 'SOUR not mapped', fam.marriage().source
+#           if (fam.marriage().nsource):
+#               familj['marriage']['source'] = fam.marriage().nsource
+#           elif (fam.marriage().source):
+#               familj['marriage']['source'] = fam.marriage().source
+           try:
+              familj['marriage']['source'] = sourMap[fam.marriage().place+'-'+fam.marriage()._get_value('SOUR')]
+           except:
+              try:
+                  familj['marriage']['source'] = sourMap[fam.marriage()._get_value('SOUR')]
+              except: pass
    except:
        pass
    return familj
