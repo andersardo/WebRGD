@@ -163,6 +163,7 @@ def gedPrintMergeEvent(events):
                     #give priority to event from master-file
                     #info not available her :-(
                 useEvent = Qevent[bestqual][0]
+            spanQdate = 1000000
             for cline in useEvent.children_lines():
                 if cline.tag() == 'DATE':
                     Qdate = cline.value()
