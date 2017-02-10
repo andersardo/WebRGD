@@ -101,7 +101,10 @@ def date2span(date, endIntervall = False):
         else:
             if endIntervall: day = '99'
             else: day = '01'
-        return (int(year+monInt[mon]+day), span)
+        try:
+            return (int(year+monInt[mon]+day), span)
+        except:
+            return (0,1000000)
     return (0,1000000)
 
 if __name__=="__main__":
