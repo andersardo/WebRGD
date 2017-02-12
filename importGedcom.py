@@ -238,10 +238,14 @@ logging.info('Using database %s importing from file %s', dbName, fn)
 #Read mappings
 import json
 (fndir,tmp) = os.path.split(fn)
-namMap = json.load(open(fndir + '/name.dat'))
-placMap = json.load(open(fndir + '/plac.dat'))
-datMap = json.load(open(fndir + '/date.dat'))
-sourMap = json.load(open(fndir + '/sour.dat'))
+try: namMap = json.load(open(fndir + '/name.dat'))
+except: logging.info('ERROR - namnfil saknas')
+try: placMap = json.load(open(fndir + '/plac.dat'))
+except: logging.info('ERROR - platsfil saknas')
+try: datMap = json.load(open(fndir + '/date.dat'))
+except: logging.info('ERROR - datumfil saknas')
+try: sourMap = json.load(open(fndir + '/sour.dat'))
+except: logging.info('ERROR - sourcefil saknas')
 ##
 
 config = common.init(dbName, dropWorkDB=True, indexes=True)
