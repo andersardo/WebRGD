@@ -2658,6 +2658,7 @@ Ladda array med kända värden.
 					$datlen=strlen($str);
 					$datorg=substr($str,7,$datlen);
 //
+					$fxx='NEJ';
 					$akt='NEJ';
 					$date=substr($str,0,2);
 					$date=$date."RGDD ";
@@ -2694,12 +2695,24 @@ Ladda array med kända värden.
 							if(($tkn == ' ') || ($imax == $len))
 							{
 								if(strlen($temp) == 1) {
+//	Fix för att ge årtal ut
+									if($temp == '?') {
+										$temp = '0';
+										$fxx = 'JA';
+									}
 									if(($temp < '0') || ($temp > '9')) {
 										$temp = '';
 										$fant++;
 									}	
 								}
 								if(strlen($temp) == 2) {
+//	Fix för att ge årtal ut
+									if(($temp == ' ?') || ($temp == ' 0') ||
+										($temp == '? ') || ($temp == '?0') ||
+										($temp == '??')) {
+										$temp = '00';
+										$fxx = 'JA';
+									}
 									$p1 = substr($temp,0,1);
 									if(($p1 < '0') || ($p1 > '9')) {
 										$p1 = '';
@@ -2838,6 +2851,10 @@ Ladda array med kända värden.
 								$tdag = '';
 								$tman = '';
 							}
+//	Felsignal fixen
+							if(($fant == 0) && ($fxx == 'JA')) {
+								$fant++;
+							}
 //	Sätt samman befintliga bitar av datumet	om datum eller årtal är OK
 							if($fant == 0) {
 								$datut=$date.$taar.$tman.$tdag;
@@ -2855,7 +2872,16 @@ Ladda array med kända värden.
 								$datut = $taar.$tman.$tdag;
 								$dat[$datorg]=$datut;
 								$datcnt++;
-							}	
+							}
+//	Skriver fixen							
+							if(($fant > 0) && ($fxx == 'JA')) {
+								$datut=$date.$taar;
+								fwrite($handut,$datut."\r\n");
+//	Array 
+								$datut = $taar;
+								$dat[$datorg]=$datut;
+								$datcnt++;
+							}
 						}
 						else
 						{
