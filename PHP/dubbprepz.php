@@ -22,6 +22,7 @@ hur detta skall hanteras, måste normeringsansvariga ta hänsyn till.
 
 */
 require 'initbas.php';
+require 'initname.php';
 //
 $brytr = 0;
 $larmant = 0;
@@ -44,25 +45,24 @@ else
 	{
 		echo "Program dubbprepz startat<br/>";
 		echo $filein." finns<br/>";
+		echo "<br/>";
 //
 		$handin=fopen($filein,"r");
 		$handut=fopen($fileut,"w");
 		$handux=fopen($fileux,"w");
 		$handnam=fopen($filenam,"w");
-//	
+//
 //	Beräkna checksum
 		$namndbFil='fsndata.txt';
 		$dbl=file_get_contents($namndbFil);
 		$checksum=md5($dbl);
 //	Anropa disnamnREST
 		ini_set('default_socket_timeout',60);
-		$url = "https://rgd.dis.se/disnamnREST.php?download=1&md5=".$checksum;
-//	Temp skip		
-//		$dbx = file_get_contents($url);
-//	Temp alt		
-		$dbx = FALSE;
+		$url = 'https://'.$namndev.'/NamnDB/disnamnREST.php?download=1&md5='.$checksum;
+//
+		$data = file_get_contents($url, false, $context);
 //	Alternativ
-		if(($dbx===FALSE)||($dbx=='NoChanges')) {
+		if(($data===FALSE)||($data=='NoChanges')) {
 			echo 'Använder lokal namntabell';
 //			Avkoda lokala data		
 			$resp=json_decode($dbl,true);
@@ -70,11 +70,11 @@ else
 			}else{
 //			Lagra data		
 			$fp=fopen($namndbFil,'w');
-			fwrite($fp,$dbx);
+			fwrite($fp,$data);
 			fclose($fp);
 			echo 'Hämtat nytt data från DISNAMN';
 //			Avkoda data
-			$resp = json_decode($dbx,true);
+			$resp = json_decode($data,true);
 		}	
 //
 		$text = "NAMNFEL ELLER NAMN SOM SAKNAS I NAMNDATABASEN, MEN FINNS MED AVVIKANDE KÖN:";
@@ -684,6 +684,7 @@ else
 			fwrite($handux," \r\n");
 			fwrite($handux,"Listningen avslutad. \r\n");
 		}
+		echo "<br/>";
 		echo "Program dubbprepz avslutat<br/>";
 		echo "<br/>";
 		echo "Filen ".$fileux." har skapats <br/n>";
@@ -694,6 +695,9 @@ else
 //
 //	Array start	
 		fwrite($handnam,json_encode($nam)."\r\n");
+		echo "json ERR=".json_last_error_msg()."::\r\n";
+//		print_r($nam);
+		
 		fclose($handnam);
 //	Array slut
 	}
@@ -703,6 +707,7 @@ else
 	}
 }	
 if($larmant > 0) {
+	echo "<br/>";
 	echo "<br/>";
 	if($larmant == 1) {
 		echo "* * * Check-listan utökad med ".$larmant." rad. <br/>";
