@@ -109,9 +109,11 @@ def pers_dict(p):
                pers['birth'] = {}
                for cline in ev.line.children_lines():
                    if cline.tag() == 'DATE':
-                       pers['birth']['date'] = datMap[cline.value()]
+                       try: pers['birth']['date'] = datMap[cline.value()]
+                       except: pass
                    elif cline.tag() == 'PLAC':
-                       pers['birth']['normPlaceUid'] = placMap[cline.value()]
+                       try: pers['birth']['normPlaceUid'] = placMap[cline.value()]
+                       except: pass
                        pers['birth']['place'] = cline.value()
                    elif cline.tag() == 'SOUR':
                        ##pers['birth']['source'] = sourMap[cline.value()]
@@ -155,9 +157,11 @@ def pers_dict(p):
                pers['death'] = {}
                for cline in ev.line.children_lines():
                    if cline.tag() == 'DATE':
-                       pers['death']['date'] = datMap[cline.value()]
+                       try: pers['death']['date'] = datMap[cline.value()]
+                       except: pass
                    elif cline.tag() == 'PLAC':
-                       pers['death']['normPlaceUid'] = placMap[cline.value()]
+                       try: pers['death']['normPlaceUid'] = placMap[cline.value()]
+                       except: pass
                        pers['death']['place'] = cline.value()
                    elif cline.tag() == 'SOUR':
                        ##pers['death']['source'] = sourMap[cline.value()]
@@ -258,7 +262,7 @@ logging.info('Reading and parsing gedcom')
 try:
     people = Gedcom(fn)
 except Exception, e:
-    logging.error('<h1>Fatalt fel vid import av Gedcom</h1>')
+    logging.error('<h1>FATALT fel vid import av Gedcom</h1>')
     exc_type, exc_value, exc_traceback = sys.exc_info()
     traceback.print_exception(exc_type, exc_value, exc_traceback)
     sys.exit()
