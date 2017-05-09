@@ -1,7 +1,7 @@
 <?PHP
 //	Logga in
-$username = 'disbyttest';
-$password = 'sallad80';
+$username = 'vallon';
+$password = 'Du7vBSqc';
 //
 $context = stream_context_create(array(
     'http' => array(

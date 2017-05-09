@@ -9,6 +9,7 @@
 * 2015-11-30 change_ged_CP general funtion for GEDCOM-file to UTF-8 CP
 * 2015-12-10 Extended ANSEL codes conversion
 * 2015-12-10 Extended check and correction on unsufficient code page mark up and error messages
+* 2016-02-25 Reviderad kod på changeCP
 * @author Ulf Arfvidsson
 */
 define ('UTF32_BIG_ENDIAN_BOM'   , chr(0x00) . chr(0x00) . chr(0xFE) . chr(0xFF));
@@ -181,7 +182,7 @@ class exchange {
   * @param arr $acp code page, special code, error message, stop/go
   * @param mixed $logg logg file used in test
   ***********************************/
-  public function changeCP($str,$acp,$logg = FALSE){  
+  public function changeCP($str,$acp= FALSE,$logg = FALSE){  
     $nu_code = mb_detect_encoding($str,'ASCII,UTF-8,CP850,ISO-8859-1,Windows-1252',TRUE);
     $str= $this->mb_rtrim($str);
     $str = ltrim($str);
@@ -199,78 +200,96 @@ class exchange {
         $tmp .= ord($value) . '(' . $value . ')| ';
       }
       fwrite($logg, $tmp . "\n");
+      $tmp = '';
     } 
     if($special_cp == 'ANSEL'){
       // ANSEL special conversion rules in table
       if(!$this->ascii_ansel)
         $this->getAnsel();
+      $tmp_skip = '';
       $str_part = str_split($str_ut);
       $BeforeVal = 'N1'; // All -2 values
       $BeforeVal2 = 'N2';  // All -1 values 
       $Add_chr = FALSE ; // Character to concatenate in end of string
-      $str_ut = ''; $step = 0;
+      $str_ut = ''; $skip = 0;
       if($logg)fwrite($logg,$str . '|CP=' . $nu_code . ' ==> UTF-8' . "\n");
-      if($logg) fwrite($logg,"Tecken - antal - step - sträng\n");
-      foreach($str_part as $value){
+      if($logg) fwrite($logg,"Tecken - antal - step - string\n");
+      $write_offset = -2; // Offset to $key in string for write to $str_ut
+      foreach($str_part as $key => $value){
         $ut_arr = array();
         $val = ord($value); $nx = 0;
+        $BeforeVal = $key > 1 ? ord($str_part[$key - 2]) : 'ZXZ';
+        $BeforeVal2 = $key > 0 ? ord($str_part[$key - 1]) : 'ZXZ';
         $ndx4 = $val . '|All|' . $BeforeVal2 . '|' . $BeforeVal;
         $ndx5 = $val . '|All|' . $BeforeVal2 . '|N1';
         $ndx6 = $val . '|All|N2|N1';
-        if($logg) fwrite($logg,"ndx4= " . $ndx4 . "step=" . $step . "\n");    
-        if($step){
-          // Skip next value -$step times - values in last key search
-          $step--;
-          $Add_chr = $BeforeVal;
-          $BeforeVal = $BeforeVal2; 
-          $BeforeVal2 = $val; }
+        if($logg) fwrite($logg,"ndx4=" . $ndx4 . " ndx5=" . $ndx5 . " skip=" . $skip . "\n" );    
+        if($skip){
+          // Skip next value -$skip times - values in last key search
+          if($logg){
+            $tmp_skip .= $str_part[$write_offset] . '|';
+          }
+          $skip--;
+          $write_offset++;    
+        }
         else {
           // String $ndx* of 3 ascii-values to compare with exchange rules 
           if(array_key_exists($ndx4,$this->ascii_ansel)){
             // Compare to this value and -2 and -1 char all names
             $ut_arr = $this->ascii_ansel[$ndx4];
-            $step = 2; $nx = 24; } 
+            $skip = 2; $nx = 24; } 
           elseif(array_key_exists($ndx5,$this->ascii_ansel)){
             // Compare to this value, -1 char and all names
             $ut_arr = $this->ascii_ansel[$ndx5];
-            $step = 1;  $nx = 25;}   
+            $skip = 1;  $nx = 25;}   
           elseif(array_key_exists($ndx6,$this->ascii_ansel)){ 
             // Compare to this value and all names
             $ut_arr = $this->ascii_ansel[$ndx6];
-            $step = 0;  $nx = 26; }
+            $skip = 0;  $nx = 26; }
           /***** key search done ****/
-          if($ut_arr){
-            // key hit, add replacement values
-            foreach($ut_arr as $vue){
-              $str_ut .= is_numeric($vue) ? chr($vue):'';
+          if($key > 1){
+            if($skip == 0){
+              $str_ut .= $str_part[$write_offset];
+              foreach($ut_arr as $vue){
+                $str_ut .= is_numeric($vue) ? chr($vue):'';
+              }
+            } elseif($skip == 1){
+              $str_ut .= $str_part[$write_offset];
+              foreach($ut_arr as $vue){
+                $str_ut .= is_numeric($vue) ? chr($vue):'';
+              }
+              $skip = 2; // Two replacement chars
+            } elseif($skip == 2) {
+              foreach($ut_arr as $vue){
+                $str_ut .= is_numeric($vue) ? chr($vue):'';
+              }
             }
-          } else{ 
-            // Step index one pos. Add char to string
-            $Add_chr = $BeforeVal; 
-            $BeforeVal = $BeforeVal2;
-            $BeforeVal2 = $val;
-            // No key! Copy as is one char
-            $str_ut .= is_numeric($Add_chr) ? chr($Add_chr):''; 
-          }                 
+          }
+          $write_offset++;                
         }
-        if($logg) fwrite($logg,$value . '-' . count($ut_arr) . '-' . $step . '-' . $str_ut . '= ' . $nx . "\n");
+        if($logg){
+          if($tmp_skip) {
+          fwrite($logg,"Skippade tecken:" . $tmp_skip . "\n" );
+          $tmp_skip = '';
+          }
+          fwrite($logg,$value . '-' . count($ut_arr) . '-' . $skip . '-' . $str_ut . '= ' . $nx . "\n"); 
+        } 
       }
-      while($step){
-        // Skip next value -$step times - values in last key search
-        $step--;
-        $Add_chr = $BeforeVal;
-        $BeforeVal = $BeforeVal2; 
-        $BeforeVal2 = ''; }
-      // Add last 2 chars in cache if no replacement made  
-      if(empty($ut_arr)){
-        $str_ut .= is_numeric($BeforeVal) ? chr($BeforeVal):''; 
-        $str_ut .= is_numeric($BeforeVal2) ? chr($BeforeVal2):'';
+      while($skip){
+        // Skip next value -$skip times - values in last key search
+        $skip--;
+        $write_offset++;
+      }
+      // Add last 2 chars in cache no replacement made  
+      while($write_offset <= $key){
+        $str_ut .= $str_part[$write_offset]; 
+        $write_offset++;
       }
     }
     if($logg) fwrite($logg, $str_ut . "\n");
     return $str_ut;  
   }
-
+  
   /********************************************
   * Detection of code page used in gedcom file 
   * BOM first choice check in supplied file
@@ -359,7 +378,7 @@ class exchange {
         else $cp = 'CP1252';
         break;
     }
-    // Test of code page is in compliance with mark up.
+    // Test if code page is in compliance with mark up.
     $other_cp = FALSE; $ansel = 0; $goon = TRUE; $rows = 0;
     while(($row = fgets($in,500)) !== FALSE):
       // Detect ansel codes
