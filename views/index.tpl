@@ -303,6 +303,34 @@ onmouseout="this.width='397'; this.style='position: reslative;right: 0px;'" />
 </table>
 
 <table style="width: 100%"><tr><td style="vertical-align: top;">
+<h2>6A. Visa likheter (matchningar)</h2>
+<p>
+<form action="/downloadFamMatches" method="GET" name="famMatches">
+Nerladdning av matchade familjer med filformat
+<select name="fileFormat">
+  <option value="xlsx">Spreadsheet (.xlsx)</option>
+  <option value="csv">Kommaseparerad text (.csv)</option>
+</select>
+<br><br>
+Familje-matchningar mellan
+<select name="workDB"
+onchange='load("/databases/famMatches/"+document.famMatches.workDB.options[document.famMatches.workDB.selectedIndex].value,
+	document.getElementById("db2famMatches"));'>
+<option value="">Välj matchad databas</option>
+
+%for db in dbs:
+    <option>{{db}}</option>'
+%end
+
+</select>
+och
+<div id="db2famMatches"><i>&lt;möjliga jämförd databas val&gt;<i></div>
+</form>
+</td><td style="float: right;">
+</td></tr>
+</table>
+
+<table style="width: 100%"><tr><td style="vertical-align: top;">
 <h2>7. Sammanslagning - <a href="#Merge">Läs mera</a></h2>
 Sammanslagning av två matchade databaser till en gemensam databas.
 <p><br><br>

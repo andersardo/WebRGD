@@ -3,7 +3,7 @@
 from collections import OrderedDict
 import codecs, time, logging, os.path
 
-from uiUtils import listPersons, listFamilies, personView, familyView
+from uiUtils import listPersons, listFamilies, personView, familyView, famDisp
 from uiUtils import listPersonSkillnad, listFamiljeSkillnad, getFlags, addFlag
 from utils import setOKfamily, setEjOKfamily, setOKperson, setEjOKperson, kopplaLoss, split
 from uiUtils import dbfind,familyViewAll
@@ -197,7 +197,7 @@ def getfile():
         return 'File not found: ' + os.path.basename(fn)
     if fn.endswith('.zip'):
         bottle.response.headers.append("Expires:", "0")
-        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
+        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0")
         bottle.response.headers.replace("Content-Type:", "application/force-download")
         bottle.response.headers.append("Content-Type:", "application/octet-stream")
         bottle.response.headers.append("Content-Type:", "application/download")
@@ -209,7 +209,7 @@ def getfile():
 	return mess
     elif fn.endswith('.CSV'):
         bottle.response.headers.append("Expires:", "0")
-        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
+        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0")
         bottle.response.headers.replace("Content-Type:", "application/force-download")
         bottle.response.headers.append("Content-Type:", "application/octet-stream")
         bottle.response.headers.append("Content-Type:", "application/download")
@@ -220,7 +220,7 @@ def getfile():
         f.close()
 	return mess
     else:
-        bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")        
+        bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")
         bottle.response.content_type = 'text/html; charset=UTF-8'
         f = codecs.open(fn, "r", "utf-8")
 #        mess = '<pre>' + f.read() + '</pre>'
@@ -287,7 +287,7 @@ def runprog(prog):
         if 'dubl' in bottle.request.query: cmd.append('--dubl')
     elif prog == 'merge':
         #check parameters FIX
-        cmd = ['python', 'merge.py', bottle.request.query.workDB, bottle.request.query.matchDB]        
+        cmd = ['python', 'merge.py', bottle.request.query.workDB, bottle.request.query.matchDB]
     else:
         mess = prog + ' Not implemented'
     if cmd:
@@ -562,6 +562,106 @@ def listSkillnad(typ):
         tot = 0
     return bottle.template('listSkillnad', typ = typ, title = tit, page = page,
                            tot = tot, prow=rows, buttons=buttons, difftyp=difftyp)
+#Likheter
+@bottle.route('/downloadFamMatches')
+@authorize()
+def downloadFamMatches():
+    import StringIO
+    output = StringIO.StringIO()
+    fileFormat = bottle.request.query.fileFormat
+    titleRow = ['','',bottle.request.query.workDB,'','','',bottle.request.query.matchDB,'','']
+    if fileFormat == 'xlsx':
+        from openpyxl import Workbook
+        from openpyxl.writer.write_only import WriteOnlyCell
+        from openpyxl.styles import colors
+        from openpyxl.styles import Border, Side, Font, Color, PatternFill, Alignment
+        from openpyxl.utils import get_column_letter
+        wb = Workbook(write_only=True)
+        ws = wb.create_sheet()
+        ws.title = "RGD matches"
+        greyFill = PatternFill(start_color='DDDDDD',
+                   end_color='DDDDDD',
+                   fill_type='solid')
+        greenFill = PatternFill(start_color='50FF50',
+                   end_color='50FF50',
+                   fill_type='solid')
+        yellowFill = PatternFill(start_color='FFFF50',
+                   end_color='FFFF50',
+                   fill_type='solid')
+        redFill = PatternFill(start_color='FF5050',
+                   end_color='FF5050',
+                   fill_type='solid')
+        thick = Side(border_style="thick", color="000000")
+        thin = Side(border_style="thin", color="000000")
+        rowVals = []
+        for val in titleRow:
+            cell = WriteOnlyCell(ws, value=val.encode("utf-8"))
+            cell.font = Font(bold=True)
+            rowVals.append(cell)
+        ws.append(rowVals)
+    else:
+        import csv
+        CSV =  csv.writer(output, dialect='excel')
+        CSV.writerow([s.encode("utf-8") for s in titleRow])
+    for fmatch in common.config['fam_matches'].find({'status':
+                          {'$in': list(common.statOK.union(common.statManuell))}}):
+        rows = famDisp(None, None, fmatch)
+        head = True
+        line = False
+        for r in rows:
+            #remove html-code for buttons
+            r[0] = r[0][0:4]
+            if r[0]=='chil': r[0]='child'
+            elif r[0]=='Marr': r[0]='Marriage'
+            elif r[0]=='':
+                line = True
+                if fileFormat == 'xlsx': continue
+            r[5] = '|' #separator between workDB and matchDB
+            if fileFormat == 'xlsx':
+                rowVals = []
+                for val in r:
+                    if val == '|':
+                        cell = WriteOnlyCell(ws, value='')
+                        cell.border = Border(top=thin, left=thick, right=thick, bottom=thin)
+                    else:
+                        cell = WriteOnlyCell(ws,
+                                value=val.replace('<br/>', "\n").rstrip().encode("utf-8"))
+                        cell.alignment = Alignment(wrapText=True)
+                        cell.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+                    if head:
+                        cell.font = Font(bold=True)
+                        cell.border = Border(top=thick, left=thin, right=thin, bottom=thick)
+                        cell.fill = greyFill
+                    elif line:
+                        if val == '|':
+                            cell.border = Border(top=thick, left=thick, right=thick, bottom=thin)
+                        else:
+                            cell.border = Border(top=thick, left=thin, right=thin, bottom=thin)
+                    if r[1] in ('Match', 'OK', 'rOK'): cell.fill = greenFill
+                    elif r[1] in ('Manuell', 'rManuell'):  cell.fill = yellowFill
+                    elif r[1] in ('EjMatch', 'EjOK', 'rEjOK'):  cell.fill = redFill
+                    rowVals.append(cell)
+                head = False
+                line = False
+                ws.append(rowVals)
+            else:
+                CSV.writerow([s.replace('<br/>', "\n").rstrip().encode("utf-8") for s in r])
+        if fileFormat != 'xlsx':
+            CSV.writerow(['#####', '#####', '#####', '#####', '#####', '|', '#####', '#####', '#####'])
+    if fileFormat == 'xlsx':
+        #doesn't really work?
+        for i, column_width in enumerate([8,10,25,25,25,1,25,25,25]):
+            ws.column_dimensions[get_column_letter(i+1)].width = (column_width + 2) * 1.2
+        wb.save(output)
+    #Download
+    bottle.response.headers.append("Expires:", "0")
+    bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
+    bottle.response.headers.replace("Content-Type:", "application/force-download")
+    bottle.response.headers.append("Content-Type:", "application/octet-stream")
+    bottle.response.headers.append("Content-Type:", "application/download")
+    filn = 'RGD_' + bottle.request.query.workDB + '-' + bottle.request.query.matchDB + '.' + fileFormat
+    bottle.response.headers.append("Content-Disposition:", 'attachment; filename='+filn)
+    return output.getvalue()
 
 @bottle.route('/viewNext')
 @bottle.route('/viewNext/<skip>')
