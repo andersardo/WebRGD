@@ -37,6 +37,8 @@ Files for guests are not saved.
 <br style="clear: left;" />
 <h4>Nyheter/Händelser/Meddelanden</h4>
 <ul>
+  <li> 2017-05-21: Ny funktionalitet - export av alla matchade familjer
+  <li> 2017-02: Förbättrad GEDCOM export
   <li> 2016-03-15: Det ser ut som openRGD nu har stabiliserats.
   <li> 2016-02-13: <b>VARNING:</b> Än så länge kör vi tester för att få openRGD att fungera så bra som möjligt i den nya server-miljön.
 Det betyder att openRGD kommer att vara under de tider vi modifierar programvaran. Och vi kan inte garantera att det eventuella jobb ni gör kommer att sparas :-(
@@ -104,7 +106,9 @@ utvecklingen med RGD med Släkttrim.
 <li>Matchning av två GEDCOM filer<br>
 Släktforskare, med viss del av forskningen gemensam, kan analysera likheter/skillnader
 <li>Avvikelser i matchat data<br>
-Forskare som hittat gemensamma anor kan hitta detaljskillnader hos matchade personer
+  Forskare som hittat gemensamma anor kan hitta detaljskillnader hos matchade personer
+<li>Utdrag av matchningsresultatet<br>
+Export av sammandrag från matchningen i Excel format .xlsx eller i generellt .csv format.
 <li>Sammanslagning av matchat släktforskningsdata<br>
 Två matchade GEDCOM filer kan sammanföras till en gemensam fil utan dubbletter
 <li>Skapa GEDCOM fil av sammanslaget släktforskningsdata<br>
@@ -123,12 +127,13 @@ eller i något kommersiellt sammanhang.<br>
 <li> Alpha-release slutet Oktober 2014
 <li> Beta-release slutet November 2014
 <li> Version 0.5 slutet Januari 2015
-<li> Version 1.0 Maj 2015
+<li> Version 1.0 Maj 2015 - openRGD
+<li> ?
 </ul>
 
 I projektet används metoder från områden som
 Machine Learning och Information Retrieval. Verktyg/metoder som används är
-Python, MongoDB, Lucene, och SVM.
+Python, PHP, MongoDB, Lucene, och SVM.
 <p>
 <b>Vill du medverka i projektet?</b><br>
 Du kan bidra med teknisk kunskap i produktutformning (inkluderar programutveckling, Web

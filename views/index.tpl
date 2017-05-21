@@ -303,7 +303,7 @@ onmouseout="this.width='397'; this.style='position: reslative;right: 0px;'" />
 </table>
 
 <table style="width: 100%"><tr><td style="vertical-align: top;">
-<h2>6A. Visa likheter (matchningar)</h2>
+<h2>6A. Visa likheter (matchningar) - <a href="#Likhet">Läs mera</a></h2>
 <p>
 <form action="/downloadFamMatches" method="GET" name="famMatches">
 Nerladdning av matchade familjer med filformat
@@ -327,7 +327,9 @@ och
 <div id="db2famMatches"><i>&lt;möjliga jämförd databas val&gt;<i></div>
 </form>
 </td><td style="float: right;">
-</td></tr>
+<img src="/img/wfOP_6A.png" width="397"
+onmouseover="this.width='794'; this.style='position: absolute;right: 0px;'"
+onmouseout="this.width='397'; this.style='position: reslative;right: 0px;'" /></td></tr>
 </table>
 
 <table style="width: 100%"><tr><td style="vertical-align: top;">
@@ -693,6 +695,31 @@ fil,
 			<BR>Om matchningen gjorts mot RGD databasen och felaktigheter i RGD
 			upptäcks skall dessa felaktigheter rapporteras till RGD
 administrationen.<BR>
+			</P>
+		</TD>
+		<TD WIDTH=72>
+			<P><BR><B></B></P>
+		</TD>
+	</TR>
+
+	<TR VALIGN=TOP>
+		<TD WIDTH=72 HEIGHT=18>
+			<P><BR><a name=Likhet><strong>Likhet</a></strong></P>
+		</TD>
+		<TD WIDTH=400>
+			<P><BR><FONT SIZE=4><B>Ladda ner matchade familjer</B></FONT>
+			<BR><BR>Export av matchade familjer.</P>
+		</TD>
+		<TD WIDTH=400>
+			<P><BR>Sammanställer samtliga matchade familjer i en fil för presentation
+			eller för vidare bearbetning i ett matrisprogram (t.ex. Excel)<BR>
+			Ger två släktforskare god översikt över gemensamma familjer och ger
+			båda forskarna ett utmärkt hjälpmedel i sin kommunikation, då bådas
+			personidentiteter framgår i familjebilderna.<BR>
+			<BR><B>Tips:</B>
+			<BR>Filformatet xlsx är anpassat för Excel, men flera matrisprogram
+			brukar klara av att läsa filtypen. Alternativet csv innehåller mindre
+			information. men kan användas om xlsx formatet inte fungerar.<BR>
 			</P>
 		</TD>
 		<TD WIDTH=72>
