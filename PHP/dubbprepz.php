@@ -3,6 +3,8 @@
 Programmet skall bryta isär förnamn och efternamn på samma sätt som måste göras
 före normering av namn.
 
+2017-06 förbättrad information i meddelanden.
+
 Programmet går direkt mot DISNAMN via en REST funktion 
 *******************
 	OBS! 
@@ -100,6 +102,15 @@ else
 		$eant=0;
 		$indant=0;
 		$head="ON";
+		$aktf="";
+		$txtf="";
+		$aktd="";
+		$txtd="";
+		$ktext7="";
+		$ktext4="";
+		$ktext3="";
+		$ktext6="";
+		$ktext5="";
 //	Läs in indatafilen				
 		$lines = file($filein,FILE_IGNORE_NEW_LINES);
 		foreach($lines as $radnummer => $str)
@@ -145,13 +156,43 @@ else
 						}	
 //	namn saknas men finns med avvikande kön
 						$ktext = $rtxt."Id => ".$znum." - ".$nrad;
-						$fellista[] = $ktext;
+						$fellista[] = $ktext.' => '.$txtf.'-'.$txtd;
 						$kant++;
 					}
+					if($ktext7 != '') {
+						$fellista[] = $ktext7." - ".$nrad.' => '.$txtf.'-'.$txtd;
+						$kant++;
+					}
+					if($ktext4 != '') {
+						$fellista[] = $ktext4.' => '.$txtf.'-'.$txtd;
+						$kant++;
+					}
+					if($ktext3 != '') {
+						$fellista[] = $ktext3.' => '.$txtf.'-'.$txtd;
+						$kant++;
+					}
+					if($ktext6 != '') {
+						$fellista[] = $ktext6.' => '.$txtf.'-'.$txtd;
+						$kant++;
+					}
+					if($ktext5 != '') {
+						$fellista[] = $ktext5.' => '.$txtf.'-'.$txtd;
+						$kant++;
+					}
+					$ktext7="";
+					$ktext4="";
+					$ktext3="";
+					$ktext6="";
+					$ktext5="";
+					$aktf="";
+					$txtf="";
+					$aktd="";
+					$txtd="";
 					$ftyp='';
 					$fnamn='';
 					$kok='EJ';
 					$nrad='';
+					$sex='X';
 					$eant=0;
 					$znum = '';
 					$zlen = strlen($str);
@@ -173,13 +214,31 @@ else
 				$wnorme="";
 				$tnamn="";
 				$nnamn="";
-				$tagg=substr($str,0,5);
-				if($tagg == '1 SEX')
+				$tagk=substr($str,0,5);
+				$tagg=substr($str,0,6);
+				if($tagk == '1 SEX')
 				{
 					$sex=substr($str,6,1);
 					$indant++;
 				}
-				$tagg=substr($str,0,6);
+//	lägg till datum
+				if(($tagg == '1 BIRT' ) || ($tagk == '1 CHR')) {
+					$aktf = 'JA';
+				}
+				if(($tagg == '1 DEAT') || ($tagg == '1 BURI')) {
+					$aktd = 'JA';
+				}
+				if($tagg == '2 DATE') {
+					$lend = strlen($str);
+					if(($aktf == 'JA') && ($txtf == '')) {
+							$txtf = substr($str,7,$lend); }
+					if(($aktd == 'JA') && ($txtd == '')) {
+							$txtd = substr($str,7,$lend); }
+//echo '?'.$aktf.$txtf.$aktd.$txtd.'<br/>';
+					$aktf = '';
+					$aktd = '';
+				}
+//
 				if($tagg == '1 NAME')
 				{
 //	Array
@@ -240,32 +299,36 @@ else
 						if($tret == $trep) {
 							if($tret == $tren) {
 //	Trippeltecken
-								$ktext = "4Id => ".$znum." - ".$nrad."/".$trep.$tret.$tren."/";
+								$ktext4 = "4Id => ".$znum." - ".$nrad." (".$trep.$tret.$tren.")";
+/*								$ktext = "4Id => ".$znum." - ".$nrad.' => '.$txtf.'-'.$txtd." (".$trep.$tret.$tren.")";
 								$fellista[] = $ktext;
-								$kant++;
+								$kant++;*/
 							}
 						}
 //	Dotter test
 						$fixe = substr($str,$trem,6);
 						if(($fixe == 'dotter') && ($sex == 'M')) {
-							$ktext = "3Id => ".$znum." - ".$nrad;
+							$ktext3 = "3Id => ".$znum." - ".$nrad;
+/*							$ktext = "3Id => ".$znum." - ".$nrad.' => '.$txtf.'-'.$txtd;
 							$fellista[] = $ktext;
-							$kant++;
+							$kant++;*/
 						}	
 						if(($fixe == 'dottir') && ($sex == 'M')) {
-							$ktext = "3Id => ".$znum." - ".$nrad;
+							$ktext3 = "3Id => ".$znum." - ".$nrad;
+/*							$ktext = "3Id => ".$znum." - ".$nrad.' => '.$txtf.'-'.$txtd;
 							$fellista[] = $ktext;
-							$kant++;
+							$kant++;*/
 						}	
 ////
 //	Varning för <>
 						if(($tret == '<') || ($tret == '>')) {
 							$treh++;
 							if($treh == 1) {
-								$ktext = "6Id => ".$znum." - ".$nrad;
+								$ktext6 = "6Id => ".$znum." - ".$nrad;
+/*								$ktext = "6Id => ".$znum." - ".$nrad.' => '.$txtf.'-'.$txtd;
 								$fellista[] = $ktext;
-								$kant++;
-//	Larm								
+								$kant++;*/
+/*	Larm								
 								$larmant++;
 								$filelarm=$directory . "Check_lista.txt";
 								$handlarm=fopen($filelarm,"a");
@@ -282,7 +345,7 @@ else
 								}
 // sätt om möjligt id och namn
 								$larmid = $znum;
-								$larmnamn = $nrad;
+								$larmnamn = $nrad.' => '.$txtf.'-'.$txtd;
 								$brytr++;
 								if($brytr >= 4) {
 									fwrite($handlarm," \r\n");
@@ -292,7 +355,7 @@ else
 								$larm = "Olämpliga tecken i namnfältet - lt/gt (<>) - Id => "
 								.$larmid." - ".$larmnamn;
 								fwrite($handlarm,$larm."\r\n");
-								fclose($handlarm);
+								fclose($handlarm);*/
 							}	
 //							
 						}
@@ -304,10 +367,15 @@ else
 					{
 						$ntyp="K-";
 					}
-					else
+					elseif($sex == 'M')
 					{
 						$ntyp="M-";
 					}
+					else
+					{
+						$ntyp="M-";
+//						$ktext7 = "7Id => ".$znum;
+					}	
 					$imax=7;
 					while($imax <= $nlen)
 					{
@@ -318,11 +386,12 @@ else
 							{
 								if($eant == 0) {
 //	Felaktigt använda / i namnfältet
-									$ktext = "5Id => ".$znum." - ".$nrad;
+									$ktext5 = "5Id => ".$znum." - ".$nrad;
+/*									$ktext = "5Id => ".$znum." - ".$nrad.' => '.$txtf.'-'.$txtd;
 									$fellista[] = $ktext;
-									$kant++;
+									$kant++;*/
 									$eant++;
-//	Larm
+/*	Larm
 									$larmant++;
 									$filelarm=$directory . "Check_lista.txt";
 									$handlarm=fopen($filelarm,"a");
@@ -339,7 +408,7 @@ else
 									}
 // sätt om möjligt id och namn
 									$larmid = $znum;
-									$larmnamn = $nrad;
+									$larmnamn = $nrad.' => '.$txtf.'-'.$txtd;
 									$brytr++;
 									if($brytr >= 4) {
 										fwrite($handlarm," \r\n");
@@ -349,7 +418,7 @@ else
 									$larm = "Olämpligt tecken i namnfältet - slash (/) - Id => "
 									.$larmid." - ".$larmnamn;
 									fwrite($handlarm,$larm."\r\n");
-									fclose($handlarm);
+									fclose($handlarm);*/
 //
 								}				
 							}
@@ -667,9 +736,9 @@ else
 					if($rubid == '6') {
 						fwrite($handux,"Tecknen lt/gt (<>) är olämpliga i namnfältet \r\n");
 					}
-					if($rubid == '7') {
-						fwrite($handux,"Person med okänt kön och bör kontrolleras manuellt \r\n");
-					}
+//					if($rubid == '7') {
+//						fwrite($handux,"Person med okänt kön, bör kompletteras \r\n");
+//					}
 					$brytr = 0;
 				}	
 				$brytr++;

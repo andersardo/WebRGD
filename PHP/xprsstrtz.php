@@ -1,9 +1,11 @@
 ﻿<?PHP
 /*
 Programmet är avsett för snabbkontroll av GEDCOM filer.
-Består av ett antal program som körs i serie.
+Består av ett program som körs i serie.
 
 Säkerhetstest av teckenformat.
+
+2017-06 förbättrad information i meddelanden.
 
 */
 require 'initbas.php';
@@ -621,6 +623,10 @@ $wsex='';
 $wpar='';
 $wmar='';
 $ztyp='';
+$aktf="";
+$txtf="";
+$aktd="";
+$txtd="";
 //
 if(file_exists($fileut))
 {
@@ -666,6 +672,7 @@ else
 //	Töm sparat data vid postbyte	
 				$pos1 = substr($str,0,1);
 				$tagg = substr($str,2,4);
+				$tagk = substr($str,2,3);
 				$tag6 = substr($str,0,6);
 				if($pos1 == '0')
 				{
@@ -674,10 +681,10 @@ else
 					}	
 					if(($wname != '') && ($wsex == '') && ($ztyp == 'IND'))
 					{
-						echo "Kön saknas, ändras till M eller F om kön framgår - Id => "
+						echo "Kön saknas, ändras till M eller F om kön framgår . . . . . . . . . . Id => "
 						.$znum." - ".$lnamn." <br/>";
 						fwrite($handut,"1 SEX O\r\n");
-						$wname = '';
+////						$wname = '';
 //	Larm
 						$larmant++;
 						$filelarm=$directory . "Check_lista.txt";
@@ -706,17 +713,17 @@ else
 						}	
 // och beskrivande feltext
 						$larm = "Individen saknar angiven könstillhörighet - Id => "
-						.$larmid." - ".$larmnamn;
+						.$larmid." - ".$larmnamn." => ".$txtf."-".$txtd;
 						fwrite($handlarm,$larm."\r\n");
 						fclose($handlarm);
 //
 					}
 					elseif($wsex == '1 SEX O')
 					{
-						echo "Kön saknas, ändras till M eller F om kön framgår - Id => "
+						echo "Kön saknas, ändras till M eller F om kön framgår . . . . . . . . . . Id => "
 						.$znum." - ".$lnamn." <br/>";
 						fwrite($handut,"1 SEX O\r\n");
-						$wname = '';
+////						$wname = '';
 //	Larm
 						$larmant++;
 						$filelarm=$directory . "Check_lista.txt";
@@ -745,7 +752,7 @@ else
 						}	
 // och beskrivande feltext
 						$larm = "Individen saknar angiven könstillhörighet - Id => "
-						.$larmid." - ".$larmnamn;
+						.$larmid." - ".$larmnamn." => ".$txtf."-".$txtd;
 						fwrite($handlarm,$larm."\r\n");
 						fclose($handlarm);
 //
@@ -757,7 +764,7 @@ else
 					}
 					if(($wsex != '') && ($wname == '') && ($ztyp == 'IND'))
 					{
-//						echo "Namn saknas . . . . . . . . . . Id => ".$znum." <br/>";
+						echo "Namn saknas, NAME satt till Saknas /Saknas/ . . . . . . . . . . Id => ".$znum." <br/>";
 						fwrite($handut,"1 NAME Saknas /Saknas/\r\n");
 						$wsex = '';
 					}
@@ -809,6 +816,10 @@ else
 						$wname='';
 						$wwname='';
 						$wsex='';
+						$aktf="";
+						$txtf="";
+						$aktd="";
+						$txtd="";
 						$spar1 = 'NEJ';
 						$spar2 = 'NEJ';
 						$spar3 = 'NEJ';
@@ -949,6 +960,30 @@ else
 							$w3ant++;
 						}
 //	Resten				
+						elseif(($tagg == 'BIRT') || ($tagk == 'CHR')) {
+							$aktd = 'JA';
+//	Spara rader	
+							$wwstr[$wrant]=$str;
+							$wrant++;
+						}
+						elseif(($tagg == 'DEAT') || ($tagg == 'BURI')) {
+							$aktd = 'JA';
+//	Spara rader	
+							$wwstr[$wrant]=$str;
+							$wrant++;
+						}
+						elseif($tagg == 'DATE') {
+							$lend = strlen($str);
+							if(($aktf == 'JA') && ($txtf == '')) {
+									$txtf = substr($str,7,$lend); }
+							if(($aktd == 'JA') && ($txtd == '')) {
+									$txtd = substr($str,7,$lend); }
+							$aktf = '';
+							$aktd = '';
+//	Spara rader	
+							$wwstr[$wrant]=$str;
+							$wrant++;
+						}
 						else
 						{
 //	Spara rader	
@@ -1023,6 +1058,15 @@ $fileut=$directory . "RGDJ.GED";
 		$qant=0;
 		$fixant=0;
 		$akt='NEJ';
+		$aktf="";
+		$txtf="";
+		$aktd="";
+		$txtd="";
+		$aktm="";
+		$txtm="";
+		$xnum="";
+		$xfam="";
+		$xlrm="";
 		$head="ON";
 //	Läs in indatafilen				
 		$lines = file($filein,FILE_IGNORE_NEW_LINES);
@@ -1056,6 +1100,21 @@ $fileut=$directory . "RGDJ.GED";
 //	hitta idnummer för individ/relation
 				$ztag = substr($str,0,3);
 				if($ztag == '0 @') {
+// Larm och beskrivande feltext
+					if(($xlrm != '') && ($xfam == 'JA')) {
+						$larmv++;
+						$lrmv[] = $xlrm.' => '.$txtm.' (Jfr. '.$xnum.')';
+					}
+//
+					$aktf="";
+					$txtf="";
+					$aktd="";
+					$txtd="";
+					$aktm="";
+					$txtm="";
+					$xnum="";
+					$xfam="";
+					$xlrm="";
 					$znum = '';
 					$zlen = strlen($str);
 					$zmax = 3;
@@ -1065,6 +1124,9 @@ $fileut=$directory . "RGDJ.GED";
 							$znum = $znum.$ztal;
 						}
 						else {
+							if(substr($str,$zmax,5) == '@ FAM') {
+								$xfam = 'JA';
+							}
 							$zmax = $zlen;
 							$zmax++;
 						}
@@ -1087,15 +1149,44 @@ $fileut=$directory . "RGDJ.GED";
 				if(($tagg == '1 BIRT' ) || ($tagk == '1 CHR'))
 				{
 					$akt = 'JA';
+					$aktf = 'JA';
 				}
 				if(($tagg == '1 DEAT') || ($tagg == '1 BURI'))
 				{
 					$akt = 'JA';
+					$aktd = 'JA';
 				}
 				if($tagg == '1 MARR')
 				{
 					$akt = 'JA';
+					$aktm = 'JA';
+					$lnamn = 'Plats familj';
 				}
+				if($tagg == '2 DATE') {
+					$lend = strlen($str);
+					if(($aktf == 'JA') && ($txtf == '')) {
+							$txtf = substr($str,7,$lend); }
+					if(($aktd == 'JA') && ($txtd == '')) {
+							$txtd = substr($str,7,$lend); }
+					if(($aktm == 'JA') && ($txtm == '')) {
+							$txtm = substr($str,7,$lend); }
+					$aktf = '';
+					$aktd = '';
+					$aktm = '';
+				}
+				if(($tagg == '1 HUSB') || ($tagg == '1 WIFE') || ($tagg == '1 CHIL')) {
+					if($xnum == '') {
+						$xlen = strlen($str);
+						$xmax = 7;
+						while($xmax <= $xlen) {
+							$xtal = substr($str,$xmax,1);
+							if($xtal != '@') {
+								$xnum = $xnum.$xtal;
+							}
+							$xmax++;
+						}					
+					}
+				}	
 				if(($tagg == '2 PLAC') && ($akt == 'JA'))
 				{
 //	Spara orginal
@@ -1283,15 +1374,22 @@ $fileut=$directory . "RGDJ.GED";
 					}
 					if(($pant == 1) || ($pant == 3) || ($pant == 5) || ($pant == 7))
 					{
-						echo "> > ".$str." - Udda antal parenteser . . . . . . . . . . Id => "
+						echo $str." - Udda antal parenteser . . . . . . . . . . Id => "
 						.$znum." - ".$lnamn." <br/>"; 
 						$pant = 0;
 // Larm och beskrivande feltext
-						$larmid = $znum;
-						$larmnamn = $lnamn;
-						$larmv++;
-						$lrmv[] = "Udda antal parenteser - ".$str.
-						" - Id => ".$larmid." - ".$larmnamn;
+						if($xfam == '') {
+							$larmid = $znum;
+							$larmnamn = $lnamn;
+							$larmv++;
+							$lrmv[] = "Udda antal parenteser - ".$str.
+							" - Id => ".$larmid." - ".$larmnamn.' => '.$txtf.'-'.$txtd;
+							$txtf = '';
+							$txtd = '';
+						}
+						else {
+							$xlrm = "Udda antal parenteser - ".$str." - Id => ".$znum;
+						}
 //
 					}
 					if($str != $spar)
@@ -1311,6 +1409,12 @@ $fileut=$directory . "RGDJ.GED";
 				}
 			}
 		}	
+// Larm och beskrivande feltext
+		if(($xlrm != '') && ($xfam == 'JA')) {
+			$larmv++;
+			$lrmv[] = $xlrm.' => '.$txtm.' (Jfr. '.$xnum.')';
+		}
+//
 		echo "Program konvtext avslutad <br/n>";
 		echo "<br/n>";
 		fclose($handin);
@@ -2566,6 +2670,12 @@ Ladda array med kända värden.
 		$tst[]="BET";
 		$tst[]="AND";
 //	
+		$aktm="";
+		$txtm="";
+		$xnum="";
+		$xfam="";
+		$xlrm="";
+		$xlrm2="";
 		$len=0;
 		$stop=0;
 		$datcnt=0;
@@ -2605,6 +2715,46 @@ Ladda array med kända värden.
 //	hitta idnummer för individ/relation
 				$ztag = substr($str,0,3);
 				if($ztag == '0 @') {
+// Larm och beskrivande feltext
+					if(($xlrm2 != '') && ($xfam == 'JA')) {
+						$larmd++;
+						$lrmd[] = $xlrm2.' => (Jfr. '.$xnum.')';
+					}
+//
+//	Larm
+					if(($xlrm != '') && ($xfam == 'JA')) {
+						$larmant++;
+						$filelarm=$directory . "Check_lista.txt";
+						$handlarm=fopen($filelarm,"a");
+						if($larmrub6 == 1) {
+							$larm = " ";
+							fwrite($handlarm,$larm."\r\n");
+							fwrite($handlarm,$larm."\r\n");
+							$larm = "*** F E L  L I S T A  (VI) Datum, ej godkända";
+							fwrite($handlarm,$larm."\r\n");
+							$larm = " ";
+							fwrite($handlarm,$larm."\r\n");
+							$larmrub6++;
+							$brytr = 0;
+						}
+// sätt om möjligt id och namn
+						$brytr++;
+						if($brytr >= 4) {
+							fwrite($handlarm," \r\n");
+							$brytr = 1;
+						}	
+// och beskrivande feltext
+						$larm = $xlrm.' => (Jfr. '.$xnum.')';
+						fwrite($handlarm,$larm."\r\n");
+						fclose($handlarm);
+					}
+					$aktm="";
+					$txtm="";
+					$xnum="";
+					$xfam="";
+					$xlrm="";
+					$xlrm2="";
+//	
 					$znum = '';
 					$znamn = '';
 					$zlen = strlen($str);
@@ -2615,6 +2765,9 @@ Ladda array med kända värden.
 							$znum = $znum.$ztal;
 						}
 						else {
+							if(substr($str,$zmax,5) == '@ FAM') {
+								$xfam = 'JA';
+							}
 							$zmax = $zlen;
 							$zmax++;
 						}
@@ -2642,16 +2795,31 @@ Ladda array med kända värden.
 				{
 					$akt = 'JA';
 				}
-				if(($tagg == '1 MARR') || ($tagg == '1 CHAN'))
+				if($tagg == '1 MARR')
 				{
 					$akt = 'JA';
-					if($tagg == '1 MARR') {
-						$lnamn = 'Vigseldatum familj';
-					}
-					if($tagg == '1 CHAN') {
-						$lnamn = 'Ändringsdatum';
-					}
+					$aktm = 'JA';
+					$lnamn = 'Vigseldatum familj';
 				}
+				if(($tagg == '1 HUSB') || ($tagg == '1 WIFE') || ($tagg == '1 CHIL')) {
+					if($xnum == '') {
+						$xlen = strlen($str);
+						$xmax = 7;
+						while($xmax <= $xlen) {
+							$xtal = substr($str,$xmax,1);
+							if($xtal != '@') {
+								$xnum = $xnum.$xtal;
+							}
+							$xmax++;
+						}					
+					}
+				}	
+				if($tagg == '2 DATE') {
+					$lend = strlen($str);
+					if(($aktm == 'JA') && ($txtm == '')) {
+							$txtm = substr($str,7,$lend); }
+					$aktm = '';
+				}				
 				if(($tagg == '2 DATE') && ($akt == 'JA'))
 				{
 //	Array
@@ -2900,46 +3068,55 @@ Ladda array med kända värden.
 //	Särbehandling av ungefärliga tidpunkter
 					if(($ntmp >= 13) && ($nman <= 19)) {
 // Larm och beskrivande text
-						$esttxt = "Ej definitiv tidsangivelse  ".$str;	
-						$larmd++;
-						$lrmd[] = $esttxt." - Id => ".$znum." - ".$lnamn;
-						$fant = 0;
+						if($xfam == '') {
+							$esttxt = "Ej definitiv tidsangivelse  ".$str;	
+							$larmd++;
+							$lrmd[] = $esttxt." - Id => ".$znum." - ".$lnamn;
+							$fant = 0;
+						}
+						else {
+							$xlrm2 = "Ej definitiv tidsangivelse  ".$str." - Id => ".$znum;
+						}
 					}
 //							
 					if($fant > 0)
 					{
 						$kant++;
-						echo "<br/>";
 						echo " *  *  *  *  *  Ej korrekt kalenderdatum ".$str.
 						" . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 //	Larm
-						$larmant++;
-						$filelarm=$directory . "Check_lista.txt";
-						$handlarm=fopen($filelarm,"a");
-						if($larmrub6 == 1) {
-							$larm = " ";
-							fwrite($handlarm,$larm."\r\n");
-							fwrite($handlarm,$larm."\r\n");
-							$larm = "*** F E L  L I S T A  (VI) Datum, ej godkända";
-							fwrite($handlarm,$larm."\r\n");
-							$larm = " ";
-							fwrite($handlarm,$larm."\r\n");
-							$larmrub6++;
-							$brytr = 0;
-						}
+						if($xfam == '') {
+							$larmant++;
+							$filelarm=$directory . "Check_lista.txt";
+							$handlarm=fopen($filelarm,"a");
+							if($larmrub6 == 1) {
+								$larm = " ";
+								fwrite($handlarm,$larm."\r\n");
+								fwrite($handlarm,$larm."\r\n");
+								$larm = "*** F E L  L I S T A  (VI) Datum, ej godkända";
+								fwrite($handlarm,$larm."\r\n");
+								$larm = " ";
+								fwrite($handlarm,$larm."\r\n");
+								$larmrub6++;
+								$brytr = 0;
+							}
 // sätt om möjligt id och namn
-						$larmid = $znum;
-						$larmnamn = $lnamn;
-						$brytr++;
-						if($brytr >= 4) {
-							fwrite($handlarm," \r\n");
-							$brytr = 1;
-						}	
+							$larmid = $znum;
+							$larmnamn = $lnamn;
+							$brytr++;
+							if($brytr >= 4) {
+								fwrite($handlarm," \r\n");
+								$brytr = 1;
+							}	
 // och beskrivande feltext
-						$larm = "Ej korrekt kalenderdatum ".$str.
-						" - Id => ".$larmid." - ".$larmnamn;
-						fwrite($handlarm,$larm."\r\n");
-						fclose($handlarm);
+							$larm = "Ej korrekt kalenderdatum ".$str.
+							" - Id => ".$larmid." - ".$larmnamn;
+							fwrite($handlarm,$larm."\r\n");
+							fclose($handlarm);
+						}
+						else {
+							$xlrm = "Ej korrekt vigseldatum ".$str." - Id => ".$znum;
+						}
 //
 					}			
 					else
@@ -2951,6 +3128,39 @@ Ladda array med kända värden.
 				$cal='NEJ';
 			}
 			fwrite($handut,$str."\r\n");
+		}
+// Larm och beskrivande feltext
+		if(($xlrm2 != '') && ($xfam == 'JA')) {
+			$larmd++;
+					$lrmd[] = $xlrm2.' => (Jfr. '.$xnum.')';
+		}
+//
+//	Larm
+		if(($xlrm != '') && ($xfam == 'JA')) {
+			$larmant++;
+			$filelarm=$directory . "Check_lista.txt";
+			$handlarm=fopen($filelarm,"a");
+			if($larmrub6 == 1) {
+				$larm = " ";
+				fwrite($handlarm,$larm."\r\n");
+				fwrite($handlarm,$larm."\r\n");
+				$larm = "*** F E L  L I S T A  (VI) Datum, ej godkända";
+				fwrite($handlarm,$larm."\r\n");
+				$larm = " ";
+				fwrite($handlarm,$larm."\r\n");
+				$larmrub6++;
+				$brytr = 0;
+			}
+// sätt om möjligt id och namn
+			$brytr++;
+			if($brytr >= 4) {
+				fwrite($handlarm," \r\n");
+				$brytr = 1;
+			}	
+// och beskrivande feltext
+			$larm = $xlrm.' => '.$txtm.' (Jfr. '.$xnum.')';
+			fwrite($handlarm,$larm."\r\n");
+			fclose($handlarm);
 		}
 //		
 		if($larmrub6 > 1) {
@@ -3915,6 +4125,14 @@ $snak = '@';
 $snal = '0 @';
 $name = '';
 $post = '';
+$aktf="";
+$txtf="";
+$aktd="";
+$txtd="";
+$aktm="";
+$txtm="";
+$xnum="";
+$xfam="";
 $cntind = 0;
 $cntfam = 0;
 $infoant = 0;
@@ -3953,21 +4171,31 @@ if(file_exists($filename))
 		{
 			$tagg1=substr($str,0,1);
 			$taggk=substr($str,2,4);
+			$tagg3=substr($str,2.3);
 			if($tagg1 == '0')
 			{
 				if(($post == 'FAM') && ($cntfam == 0)) {
-					$fellista[] = '1Id '.$id.' - Familj';
+					$fellista[] = '1Id '.$id.' - Familj'.' => '.$txtm.' (Jfr. '.$xnum.')';
 					$infoant++;
 				}
 				if(($post == 'FAM') && ($cntfam == 1)) {
-					$fellista[] = '2Id '.$id.' - Familj'; 
+					$fellista[] = '2Id '.$id.' - Familj'.' => '.$txtm.' (Jfr. '.$xnum.')';
 					$infoant++;
 				}
 				if(($post == 'IND') && ($cntind == 0)) {
-					$fellista[] = '3Id '.$id.' - '.$name; 
+					$fellista[] = '3Id '.$id.' - '.$name.' => '.$txtf.'-'.$txtd;
 					$infoant++;
 				}
 //
+				$aktf="";
+				$txtf="";
+				$aktd="";
+				$txtd="";
+				$aktm="";
+				$txtm="";
+				$xnum="";
+				$xfam="";
+//				
 				$imax=3;
 				$id='';
 				while($imax <= 20)
@@ -3988,6 +4216,7 @@ if(file_exists($filename))
 						{
 							$cntfam = 0;
 							$name = '';
+							$xfam ='JA';
 						}
 					}
 					else
@@ -4004,6 +4233,40 @@ if(file_exists($filename))
 				$nlen = strlen($str);
 				$name = substr($str,6,($nlen-6));
 			}
+			if(($taggk == 'BIRT') || ($tagg3 == 'CHR')) {
+				$aktf = 'JA';
+			}
+			if(($taggk == 'DEAT') || ($taggk == 'BURI')) {
+				$aktd = 'JA';
+			}
+			if($taggk == 'MARR') {
+				$aktm = 'JA';
+			}
+			if($taggk == 'DATE') {
+				$lend = strlen($str);
+				if(($aktf == 'JA') && ($txtf == '')) {
+						$txtf = substr($str,7,$lend); }
+				if(($aktd == 'JA') && ($txtd == '')) {
+						$txtd = substr($str,7,$lend); }
+				if(($aktm == 'JA') && ($txtm == '')) {
+						$txtm = substr($str,7,$lend); }
+				$aktf = '';
+				$aktd = '';
+				$aktm = '';
+			}
+			if(($taggk == 'HUSB') || ($taggk == 'WIFE') || ($taggk == 'CHIL')) {
+				if($xnum == '') {
+					$xlen = strlen($str);
+					$xmax = 7;
+					while($xmax <= $xlen) {
+						$xtal = substr($str,$xmax,1);
+						if($xtal != '@') {
+							$xnum = $xnum.$xtal;
+						}
+						$xmax++;
+					}					
+				}
+			}	
 			if($taggk == 'HUSB')
 			{
 				$cntfam++;

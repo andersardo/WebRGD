@@ -6,12 +6,14 @@ Konverterar ANSEL, ANSI eller IBMPC teckenrepresentation till UTF-8.
 
 För enkelhetens skull har även andra funktioner lagts till.
 
+2017-06 förbättrad information i meddelanden.
+
 */
 require 'initbas.php';
 require 'initdb.php';
 //
-include 'class_exchange_disbyt.php';
-include 'class_db_disbyt.php';
+include 'exchange.php';
+include 'db.php';
 //
 $brytr = 0;
 $larma = 0;
@@ -474,14 +476,14 @@ if($typtest == 'JA') {
 //
 //
 		$filein=$directory . "RGDX.GED";
-		$fileut=$directory . "RGD1.GED";
+		$fileut=$directory . "RGDR.GED";
 		$handin=fopen($filein,"r");
 		$handut=fopen($fileut,"w");
 //	Disbyt konvertering hel fil
 		$byt = new exchange();
 		$dir = $directory;
         $file_in = "RGDX.GED";
-        $file_out = "RGD1.GED";
+        $file_out = "RGDR.GED";
         $logg = FALSE;//$logg = fopen($dir . 'logg.txt','wb');//  
         // Start timer
         $secs = microtime(true);
@@ -493,14 +495,75 @@ if($typtest == 'JA') {
         $acp = $byt->change_ged_CP($file_in,$file_out,$dir,$logg);        
       
         /************************************/
+		if(!empty($acp[3])) { 
+			$acp3 = array($acp[3]);
+		   foreach($acp3 as $value){
+			   echo '*** '.$value.'<br/>';
+		   }
+		}
+		else {
+			echo "UFT-8 test OK <br/>";
+		}
         // Measure time
         $sece = microtime(true);
         $laptime = (int)($sece - $secs);  
-		echo $laptime.'<br/n>';	
+		echo 'Time: '.$laptime.'<br/n>';	
+//		
+		fclose($handin);
+		fclose($handut);
+//
+		$filein=$directory . "RGDR.GED";
+		$fileut=$directory . "RGD1.GED";
+		$handin=fopen($filein,"r");
+		$handut=fopen($fileut,"w");
+//
+//	Läs in indatafilen				
+		$lines = file($filein,FILE_IGNORE_NEW_LINES);
+		foreach($lines as $radnummer => $str)
+		{
+//
+			$text = $str;
+//	Kolla $str
+			mb_internal_encoding("UTF-8");
+			if(mb_check_encoding($str,"UTF-8") == false) 
+			{
+				$utfant++;
+				echo "* ".$str." - UTF-8 fel <br/>";
+//	Kolla tecken
+				$text = '';
+				$imax=0;
+				$len=strlen($str);
+				while($imax <= $len)
+				{
+					$std=substr($str,$imax,1);
+//	kolla om $std är UTF-8
+					mb_internal_encoding("UTF-8");
+					If(mb_check_encoding($std,"UTF-8") == false) {
+						$std = '#';
+					}	
+//			
+					$text=$text.$std;
+					$imax++;
+				}
+			}
+//if($str != $text) {
+//	echo $str." fixad till ".$text." <br/>";
+//}
+//					
+			fwrite($handut,$text."\r\n");
+			$text="";
+		}
 //		
 		fclose($handin);
 		fclose($handut);
 //		
+		if($utfant > 0) {
+			echo "<br/n>";
+			echo $utfant." Rader med okända UTF-8 tecken som ersatts med #-tecken  <br/>";
+		}
+		else {
+			echo "UTF-8 koll OK <br/>";
+		}
 		echo "<br/n>";
 		echo "Program konvutf8 avslutat <br/n>";
 		echo "<br/n>";
@@ -524,6 +587,14 @@ $cant=0;
 $dant=0;
 $bant=0;
 $mant=0;
+$aktf="";
+$txtf="";
+$aktd="";
+$txtd="";
+$aktm="";
+$txtm="";
+$dbmr="";
+$xnum="";
 //
 if(file_exists($filename))
 {
@@ -587,12 +658,24 @@ if(file_exists($filename))
 			$tagg3=substr($str,2,3);
 			$ztag = substr($str,0,3);
 			if($ztag == "0 @") {
+				if($dbmr != '') {
+					$larma++;
+					$lrmr[] = $dbmr.' (Jfr. '.$xnum.')';
+				}
 				$nant=0;
 				$fant=0;
 				$cant=0;
 				$dant=0;
 				$bant=0;
 				$mant=0;
+				$aktf="";
+				$txtf="";
+				$aktd="";
+				$txtd="";
+				$aktm="";
+				$txtm="";
+				$dbmr="";
+				$xnum="";
 				$ntxt=' - ';
 			}
 			if($taggk == 'NAME')
@@ -600,58 +683,119 @@ if(file_exists($filename))
 				$nlen = strlen($str);
 				$ntxt = $ntxt.substr($str,7,($nlen-6));
 				$nant++;
+			}
+			if($taggk == 'BIRT')
+			{
+				$aktf = 'JA';
+				$fant++;
+			}
+			if($tagg3 == 'CHR')
+			{
+				$aktf = 'JA';
+				$cant++;
+			}
+			if($taggk == 'DEAT')
+			{
+				$aktd = 'JA';
+				$dant++;
+			}
+			if($taggk == 'BURI')
+			{
+				$aktd = 'JA';
+				$bant++;
+			}
+			if($taggk == 'MARR')
+			{
+				$aktm = 'JA';
+				$mant++;
+			}
+			if($taggk == 'DATE') {
+				$lend = strlen($str);
+				if(($aktf == 'JA') && ($txtf == '')) {
+						$txtf = substr($str,7,$lend); }
+				if(($aktd == 'JA') && ($txtd == '')) {
+						$txtd = substr($str,7,$lend); }
+				if(($aktm == 'JA') && ($txtm == '')) {
+						$txtm = substr($str,7,$lend); }
+				$aktf = '';
+				$aktd = '';
+				$aktm = '';
+			}
+			if(($taggk == 'HUSB') || ($taggk == 'WIFE') || ($taggk == 'CHIL')) {
+				if($xnum == '') {
+					$xlen = strlen($str);
+					$xmax = 7;
+					while($xmax <= $xlen) {
+						$xtal = substr($str,$xmax,1);
+						if($xtal != '@') {
+							$xnum = $xnum.$xtal;
+						}
+						$xmax++;
+					}					
+				}
+			}	
+			if($taggk == 'NAME')
+			{
 				if($nant > 1)
 				{
 					$larma++;
-					$lrmr[] = 'Dubbla namnförekomster för individ - '.$znum.$ntxt;
+					$lrmr[] = 'Dubbla namnförekomster för individ - Id => '.$znum.$ntxt.' => '.$txtf.'-'.$txtd;
+					$txtf = '';
+					$txtd = '';
 				}
 			}
 			if($taggk == 'BIRT')
 			{
-				$fant++;
 				if($fant > 1)
 				{
 					$larma++;
-					$lrmr[] = 'Dubbla födelsenotiser för individ - '.$znum.$ntxt;
+					$lrmr[] = 'Dubbla födelsenotiser för individ - Id => '.$znum.$ntxt.' => '.$txtf.'-'.$txtd;
+					$txtf = '';
+					$txtd = '';
 				}
 			}
 			if($tagg3 == 'CHR')
 			{
-				$cant++;
 				if($cant > 1)
 				{
 					$larma++;
-					$lrmr[] = 'Dubbla dopnotiser för individ - '.$znum.$ntxt;
+					$lrmr[] = 'Dubbla dopnotiser för individ - Id => '.$znum.$ntxt.' => '.$txtf.'-'.$txtd;
+					$txtf = '';
+					$txtd = '';
 				}
 			}
 			if($taggk == 'DEAT')
 			{
-				$dant++;
 				if($dant > 1)
 				{
 					$larma++;
-					$lrmr[] = 'Dubbla dödsnotiser för individ - '.$znum.$ntxt;
+					$lrmr[] = 'Dubbla dödsnotiser för individ - Id => '.$znum.$ntxt.' => '.$txtf.'-'.$txtd;
+					$txtf = '';
+					$txtd = '';
 				}
 			}
 			if($taggk == 'BURI')
 			{
-				$bant++;
 				if($bant > 1)
 				{
 					$larma++;
-					$lrmr[] = 'Dubbla begravningsnotiser för individ - '.$znum.$ntxt;
+					$lrmr[] = 'Dubbla begravningsnotiser för individ - Id => '.$znum.$ntxt.' => '.$txtf.'-'.$txtd;
+					$txtf = '';
+					$txtd = '';
 				}
 			}
 			if($taggk == 'MARR')
 			{
-				$mant++;
 				if($mant > 1)
 				{
-					$larma++;
-					$lrmr[] = 'Dubbla giftemålsnotiser för familj - '.$znum;
+					$dbmr = 'Dubbla giftemålsnotiser för familj - Id => '.$znum.' => '.$txtm;
 				}
 			}
 		}	
+	}
+	if($dbmr != '') {
+		$larma++;
+		$lrmr[] = $dbmr.' (Jfr. '.$xnum.')';
 	}
 	fclose($handle);
 //
@@ -722,7 +866,7 @@ if(file_exists($filename))
 		}
 		$larm = " ";
 		fwrite($handlarm,$larm."\r\n");
-		$larm = "* * * Endast en förekomst behandlas, så resultetet blir slumpartat.";
+		$larm = "* * * Om endast en förekomst behandlas, blir resultetet slumpartat.";
 		fwrite($handlarm,$larm."\r\n");
 		$larm = " ";
 		fwrite($handlarm,$larm."\r\n");

@@ -12,6 +12,9 @@ Avvikelser adderas i $neg, endast 1 avvikelse tillåten
 Även familjekombinationen kan påverka resultatet.
 
 Utdata, en sorterad kandidatlista avsedd för egenkontroll.
+
+Antalsspärr, f.n. 100 000 inlagd
+
 */
 require 'initbas.php';
 //
@@ -30,12 +33,59 @@ else
 	{
 		echo $filename." finns<br/>";
 		echo "$filename har storleken ".filesize($filename)."<br/>";
-		$handut=fopen($fileut,"w");
-//
-		echo "<br/>";
 //
 		echo "Program startar ".date('Y-m-d')." / ".date('H:i:s')."<br/>";
-//		echo "<br/>";
+//****
+//	Extra snurra för att kunna begränsa volymen
+	$zlen = 0;
+	$zind = 0;
+	$zfam = 0;
+	$ztst = '';
+	$handle=fopen($filename,"r");
+//	Läs in indatafilen				
+	$lines = file($filename,FILE_IGNORE_NEW_LINES);
+	foreach($lines as $radnummer => $str)
+	{
+		$zlen = strlen($str);
+		$ztst = substr($str,$zlen-6,6);
+		if($ztst == '@ INDI') {
+			$zind++;
+		}
+		$ztst = substr($str,$zlen-5,5);
+		if($ztst == '@ FAM') {
+			$zfam++;
+		}
+	}
+	fclose($handle);
+//
+	if($zind >= 100000) 
+	{
+		$handut=fopen($fileut,"w");
+		fwrite($handut,"Dubblett Sökning \r\n");
+		fwrite($handut," \r\n");
+		fwrite($handut,"Antalet individer är för stort för dubblettkontrollen.  \r\n");
+		fwrite($handut," \r\n");
+		fwrite($handut,"Kontakta administratören som anges på inloggningssidan  \r\n");
+		fwrite($handut,"för att få hjälp med dubblettkontrollen på annat sätt.   \r\n");
+		fwrite($handut," \r\n");
+		fwrite($handut,"Antal individer = ".$zind." \r\n");
+		fwrite($handut,"Antal familjer  = ".$zfam." \r\n");
+		fclose($handut);
+		echo "<br/>";
+		echo 'Antal individer = '.$zind.'<br/>';
+		echo 'Antal familjer  = '.$zfam.'<br/>';
+		echo "<br/>";
+		echo 'Dubblettkontrollen inte körd.<br/>';
+	}
+	else
+	{	
+//****
+		$handut=fopen($fileut,"w");
+		echo "<br/>";
+//
+		echo 'Antal individer = '.$zind.'<br/>';
+		echo 'Antal familjer  = '.$zfam.'<br/>';
+//
 		fwrite($handut,"Dubblett Sökning \r\n");
 		fwrite($handut," \r\n");
 		fwrite($handut,"Individer med lika eller snarlika uppgifter, som bör ");
@@ -3158,6 +3208,8 @@ else
 		}
 	fclose($handut);
 //
+	}
+//**** extra fixen
 	}
 	else
 	{
