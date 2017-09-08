@@ -22,8 +22,7 @@
 //OBS! lokal anpassning
     private static $database = 'RGDindatavalid'; // This database will be used
     private static $user = 'rgd';
-      //private static $pw = 'mzs388insJ';
-    private static $pw = 'pilot';
+    private static $pw = 'mzs388insJ';
 //OBS!
     private function __construct(){
       

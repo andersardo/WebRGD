@@ -12,8 +12,8 @@ För enkelhetens skull har även andra funktioner lagts till.
 require 'initbas.php';
 require 'initdb.php';
 //
-include 'exchange.php';
-include 'db.php';
+include 'class_exchange_disbyt.php';
+include 'class_db_disbyt.php';
 //
 $brytr = 0;
 $larma = 0;

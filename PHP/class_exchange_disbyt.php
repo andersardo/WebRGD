@@ -9,7 +9,7 @@
 * 2015-11-30 change_ged_CP general funtion for GEDCOM-file to UTF-8 CP
 * 2015-12-10 Extended ANSEL codes conversion
 * 2015-12-10 Extended check and correction on unsufficient code page mark up and error messages
-* 2016-02-25 Reviderad kod på changeCP
+* 2016-02-25 Revised code in changeCP
 * @author Ulf Arfvidsson
 */
 define ('UTF32_BIG_ENDIAN_BOM'   , chr(0x00) . chr(0x00) . chr(0xFE) . chr(0xFF));
@@ -22,7 +22,7 @@ class exchange {
   private $ascii_a = NULL;
   private $ascii_u = NULL;
   private $ascii_ansel = NULL;
-  // Significant words noridic languages in ANSEL CP1252
+  // Significant words nordic languages in ANSEL CP1252
   private $ansel_pat = array('fèodd','dèod', ' êar ',' èar ' ,'fèorsamling',
    'vèast','èost','gêard','kèand','ocksêa','dèar',' pêa ','frêan','fèor');
   /***
@@ -31,7 +31,7 @@ class exchange {
   public function __construct(){
     }
   /********************
-  * Read table charconvert on exchange rules
+  * Read table kmq__charconvert on exchange rules
   * 2015-10-30 Type rules => 0 general, 1 UTF-8
   ***************************/
   private function getAscii(){  
@@ -57,7 +57,7 @@ class exchange {
   
   
   /********************
-  * Read table charconvert on exchange rules for ANSEL
+  * Read table kmq__charconvert on exchange rules for ANSEL
   * 2015-10-30 Type rules => 2 ANSEL
   ***************************/
   private function getAnsel(){  
@@ -233,7 +233,7 @@ class exchange {
           $write_offset++;    
         }
         else {
-          // String $ndx* of 3 ascii-values to compare with exchange rules 
+          // String $ndx? of 3 ascii-values to compare with exchange rules 
           if(array_key_exists($ndx4,$this->ascii_ansel)){
             // Compare to this value and -2 and -1 char all names
             $ut_arr = $this->ascii_ansel[$ndx4];
@@ -295,7 +295,7 @@ class exchange {
   * BOM first choice check in supplied file
   * @param str $file first line with BOM
   * @param str $path path to file in document root
-  * @return arr $acp detected code page, special codepage, error message, STOP/GO
+  * @return arr $acp detected code page, special codepage, arr $error message, STOP/GO
   */
   function detect_encoding($file, $path = FALSE) {
     $err = array();
@@ -489,7 +489,7 @@ class exchange {
   * @param str $file_out
   * @param str $dir
   * @param str [$logg]
-  * @return bol TRUE or False
+  * @return arr $acp detected code page, special codepage, arr $error message, STOP/GO
   *************************************/
   function change_ged_CP($file_in, $file_out, $dir, $logg = FALSE){
     $in = fopen($dir . $file_in,'rb');
