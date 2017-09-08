@@ -24,7 +24,7 @@ common.config = config
 print 'Merging', dbName, 'into', mDBname
 from bson.objectid import ObjectId
 from mergeUtils import createMap, mergeOrgDataPers, mergeOrgDataFam
-from mergeUtils import Imap, Fmap
+from mergeUtils import Imap, Fmap, Fignore
 
 #FIX HANDLE Flags FIX
 
@@ -115,13 +115,12 @@ for all families
 inscnt=0
 updcnt=0
 for family in config['families'].find():
+    #New ignore
+    if family['_id'] in Fignore:
+        continue
+    #end
     workOrgData = config['originalData'].find_one({'recordId': family['_id'], 'type': 'family'})
-#    mt = config['fam_matches'].find_one({'workid': family['_id'],
-#                                         'status': {'$in': list(common.statOK)}})
-#    if mt:
-#        if Fmap[family['_id']] != mt['matchid']: print 'Fmap error A'
     if family['_id'] in Fmap:
-#        matchid = mt['matchid']
         matchid = Fmap[family['_id']]
         updcnt += 1
         for rec in workOrgData['data']:

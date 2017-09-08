@@ -226,8 +226,8 @@ def updateFamMatch(flist, conf):
             famMatchData = matchFam(match['workid'], match['matchid'], conf)
             logging.debug('Uppdating Fam-match %s %s Old=%s New=%s', match['workRefId'],
                           match['matchRefId'], match['status'], famMatchData['status'])
-            conf['fam_matches'].remove({'_id': match['_id']})
-            conf['fam_matches'].insert(famMatchData)
+            conf['fam_matches'].delete_one({'_id': match['_id']})
+            conf['fam_matches'].insert_one(famMatchData)
     return ''
 
 def setFamOK(wid, mid, conf, famlist = None, button = False):
@@ -310,7 +310,7 @@ def setEjOKfamily(wid, mid, code='EjOK'):
         if ch['status'] in common.statManuell:
             #setEjOKperson calls updateFam
             res += setEjOKperson(str(ch['workid']), str(ch['matchid']), code=code)
-    common.config['fam_matches'].update({'workid': ObjectId(wid), 'matchid': ObjectId(mid)}, {'$set': {'status': 'FamEjOK'}})
+    common.config['fam_matches'].update_one({'workid': ObjectId(wid), 'matchid': ObjectId(mid)}, {'$set': {'status': 'FamEjOK'}})
     return res
 
 def setOKperson(wid, mid, button = True):
@@ -328,7 +328,7 @@ def setOKperson(wid, mid, button = True):
             if common.checkStatusUpdate(mt['status'], kod):
                 logging.debug('wid=%s mid=%s status old=%s new=%s',
                               wid, mid, mt['status'], kod)
-                common.config['matches'].update({'_id': mt['_id']}, {'$set': {'status': kod}})
+                common.config['matches'].update_one({'_id': mt['_id']}, {'$set': {'status': kod}})
                 if mt['status'] in common.statOK: continue  #No other updates needed
                 indlist.append(mt['workid'])
                 ##TEST
@@ -341,13 +341,13 @@ def setOKperson(wid, mid, button = True):
                     for f in tFam:
                         for ff in rFam:
                             if not common.config['fam_matches'].find_one({'workid': f['_id'], 'matchid': ff['_id']}):
-                                common.config['fam_matches'].insert(matchFam(f['_id'], ff['_id'], common.config))
+                                common.config['fam_matches'].insert_one(matchFam(f['_id'], ff['_id'], common.config))
                            #Check multifam-resolution From match.py
                 ##TEST
         elif common.checkStatusUpdate(mt['status'], negKod):
             logging.debug('wid=%s mid=%s status old=%s new=%s',
                           mt['workid'], mt['matchid'], mt['status'], negKod)
-            common.config['matches'].update({'_id': mt['_id']}, {'$set': {'status': negKod}})
+            common.config['matches'].update_one({'_id': mt['_id']}, {'$set': {'status': negKod}})
             if mt['status'] in common.statEjOK: continue  #No other updates needed
             indlist.append(mt['workid'])
     if not indlist:
@@ -363,7 +363,7 @@ def setEjOKperson(wid, mid, code='EjOK'):
     mt = common.config['matches'].find_one({'workid': ObjectId(wid), 'matchid': ObjectId(mid)})
     if not common.checkStatusUpdate(mt['status'], code): return 'setEjOKperson Update not done'
     logging.debug('setEjOKperson work=%s match=%s code=%s', wid, mid, code)
-    common.config['matches'].update({'_id': mt['_id']}, {'$set': {'status': code}})
+    common.config['matches'].update_one({'_id': mt['_id']}, {'$set': {'status': code}})
     indlist = [ObjectId(wid)]
     flist = set()
     for id in indlist:  #get list of involved individuals
@@ -383,7 +383,9 @@ def kopplaLoss(personId, famId, role):
         #assert personId in fam['children']
         fam['children'].remove(ObjectId(personId))
     else: pass  #ERR
-    common.config['families'].update({'_id': ObjectId(famId)}, fam)
+#    common.config['families'].update_one({'_id': ObjectId(famId)}, fam)
+    common.config['families'].replace_one({'_id': ObjectId(famId)}, fam)
+#??
     #update originalData
     fam = common.config['originalData'].find_one({'recordId': ObjectId(famId)})
     #assert fam not None
@@ -395,7 +397,9 @@ def kopplaLoss(personId, famId, role):
             #assert personId in fam['children']??
             rec['record']['children'].remove(ObjectId(personId))
         else: pass  #ERR
-    common.config['originalData'].update({'recordId': ObjectId(famId)}, fam)
+#    common.config['originalData'].update_one({'recordId': ObjectId(famId)}, fam)
+    common.config['originalData'].replace_one({'recordId': ObjectId(famId)}, fam)
+#??
     #update fam_matches
     famMatch = common.config['fam_matches'].find_one({'workid': ObjectId(famId)})
     flist = set()
@@ -412,7 +416,7 @@ def split(wid, mid):
     """
 ##    common.config['matches'].remove({'workid': ObjectId(wid), 'matchid': ObjectId(mid)})
 #TEST
-    common.config['matches'].update({'workid': ObjectId(wid), 'matchid': ObjectId(mid)},
+    common.config['matches'].update_one({'workid': ObjectId(wid), 'matchid': ObjectId(mid)},
                                     {'$set': {'status': 'split'}})
 #TEST
     famList = set()

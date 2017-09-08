@@ -374,7 +374,6 @@ d = defaultdict(set)
 #finds families where husb and wife is not None KOLLA!
 for f in families.find({'husb': {'$ne': None}, 'wife': {'$ne': None}},
                        {'_id': 1, 'husb': 1, 'wife': 1}):
-
    d[f['husb'], f['wife']].add(f['_id'])
 ##Delete entries where both Wife and Husb is None
 ##del(d[None,None])
@@ -382,17 +381,19 @@ for s in d.values():
     if len(s)>=2:
       fdubl = list(s)
       #merge all into fdubl[0]
+      F = families.find_one({'_id': fdubl[0]}, {'refId': 1})
+      FrefId = F['refId']
       for fd in fdubl:
           if fd == fdubl[0]: continue
           #FIX check marriage dates - see pattern notes
           #Enl Rolf: Marr  datum kan vara olika eller blanka
           p1 = families.find_one({'_id': fd})
-          logging.info('Merging family %s (%s into %s)', p1['refId'], fd, fdubl[0])
+          logging.info('Merging family %s into %s', p1['refId'], FrefId)
           config['originalData'].update({'recordId': fdubl[0]},
                                         {'$push': {'data': 
                                                    {'contributionId': contributionId,
                                                     'record': p1 }}})
-          families.remove(fd)
+          families.remove({'_id': fd})
           config['originalData'].remove({'recordId': fd})
       families.update({'_id': fdubl[0]},
                       mergeOrgDataFamImport(fdubl[0], config['families'],

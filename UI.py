@@ -73,7 +73,7 @@ def setupCommon():
             rec = {'type': 'admin', 'time': time.time(), 'workDB': workDB,
                    'matchDB': matchDB, 'url': bottle.request.url,
                    'from': bottle.request.remote_addr, 'user': user}
-            common.config['originalData'].insert(rec)
+            common.config['originalData'].insert_one(rec)
     bottle.response.set_header("Cache-Control", "no-cache")
     #print user, bottle.request.remote_addr, str(datetime.now()), bottle.request.url
     logging.info('%s %s %s', user, bottle.request.remote_addr, bottle.request.url)
@@ -105,8 +105,7 @@ def combined():
     (mess, fdir, fn) = doUpload(bottle.request.session['directory'], bottle.request.files.get('gedcomfile'))
     yield '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />'
     yield '<meta charset="UTF-8" />'
-
-    yield '<pre>'+mess+"\n"
+    yield '<pre>'+mess.encode('UTF-8')+"\n"
     fn = fdir + '/' + fn
     cmd = ['/usr/bin/python', 'indataValidering.py', bottle.request.session['directory'], fn]
     if bottle.request.forms.get('resmail'):
@@ -197,7 +196,7 @@ def getfile():
         return 'File not found: ' + os.path.basename(fn)
     if fn.endswith('.zip'):
         bottle.response.headers.append("Expires:", "0")
-        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0")
+        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
         bottle.response.headers.replace("Content-Type:", "application/force-download")
         bottle.response.headers.append("Content-Type:", "application/octet-stream")
         bottle.response.headers.append("Content-Type:", "application/download")
@@ -209,7 +208,7 @@ def getfile():
 	return mess
     elif fn.endswith('.CSV'):
         bottle.response.headers.append("Expires:", "0")
-        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0")
+        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
         bottle.response.headers.replace("Content-Type:", "application/force-download")
         bottle.response.headers.append("Content-Type:", "application/octet-stream")
         bottle.response.headers.append("Content-Type:", "application/download")
@@ -220,7 +219,7 @@ def getfile():
         f.close()
 	return mess
     else:
-        bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")
+        bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")        
         bottle.response.content_type = 'text/html; charset=UTF-8'
         f = codecs.open(fn, "r", "utf-8")
 #        mess = '<pre>' + f.read() + '</pre>'
@@ -287,7 +286,7 @@ def runprog(prog):
         if 'dubl' in bottle.request.query: cmd.append('--dubl')
     elif prog == 'merge':
         #check parameters FIX
-        cmd = ['python', 'merge.py', bottle.request.query.workDB, bottle.request.query.matchDB]
+        cmd = ['python', 'merge.py', bottle.request.query.workDB, bottle.request.query.matchDB]        
     else:
         mess = prog + ' Not implemented'
     if cmd:

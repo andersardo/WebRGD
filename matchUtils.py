@@ -2,10 +2,14 @@
 # This Python file uses the following encoding: utf-8
 import re, sys, math
 from datetime import date
+from svmutil import svm_load_model, svm_predict
+import importlib
 from matchtext import matchtext
 
-from svmutil import *
-svmModel = svm_load_model('conf/person.model')
+mt_tmp = matchtext()
+svmModel = False
+SVMfeatures = None
+
 _cache = {}
 
 def cos(l1,l2):
@@ -233,108 +237,68 @@ def compValAlla(v1, v2):
     elif v1 == v2: return [1,0,0]
     else: return [0,1,0]
 
-def svmfeatures(tmp,rgd):
-    features = []
-#feature                            values
-##Kön olika/lika                       0,1
-    if (tmp['sex'] == rgd['sex']): features.append(1)
-    else: features.append(0)
-
-#Normalized given name finns och lika                 0,1
-    if (tmp['grpNameGiven'] and rgd['grpNameGiven'] and
-        (compName(tmp['grpNameGiven'], rgd['grpNameGiven'])) >= 0.6): features.append(1)
-    else: features.append(0)
-#Normalized given name finns och olika                0,1
-    if (tmp['grpNameGiven'] and rgd['grpNameGiven'] and
-        (compName(tmp['grpNameGiven'], rgd['grpNameGiven'])) < 0.6): features.append(1)
-    else: features.append(0)
-#Normalized given name finns inte                     0,1
-    features.append(compValInte(tmp['grpNameGiven'],rgd['grpNameGiven']))
-
-#Normalized last (family) name finns och lika                 0,1
-    if (tmp['grpNameLast'] and rgd['grpNameLast'] and
-        (compName(tmp['grpNameLast'], rgd['grpNameLast'])) >= 0.6): features.append(1)
-    else: features.append(0)
-#Normalized last (family) name finns och olika                0,1
-    if (tmp['grpNameLast'] and rgd['grpNameLast'] and
-        (compName(tmp['grpNameLast'], rgd['grpNameLast'])) < 0.6): features.append(1)
-    else: features.append(0)
-#Normalized last (family) name finns inte                     0,1
-    features.append(compValInte(tmp['grpNameLast'],rgd['grpNameLast']))
-
-    for ev in ('birth', 'death'):
-        if (ev in tmp) and (ev in rgd):
-            if ('date' in tmp[ev]) and ('date' in rgd[ev]):
-                features.extend(compValAlla(tmp[ev]['date'][0:4],rgd[ev]['date'][0:4]))
-            else: features.extend([0,0,1])
-            for item in ('date', 'normPlaceUid'):                        #'place'??
-                if (item in tmp[ev]) and (item in rgd[ev]):
-                    features.extend(compValAlla(tmp[ev][item],rgd[ev][item]))
-                else: features.extend([0,0,1])
-        else: features.extend([0,0,1,0,0,1,0,0,1])
-#Född/död år finns och lika               0,1
-#Född/död år finns och olika              0,1
-#Född/död år finns inte                   0,1
-#Född/död datum finns och lika            0,1
-#Född/död datum finns och olika           0,1
-#Född/död datum finns inte                0,1
-#Född/död församling finns och lika       0,1
-#Född/död församling finns och olika      0,1
-#Född/död församling finns inte           0,1
-    return features
-
-def TESTsvmfeatures(tmp, rgd):
-    features = []
-#feature                            values
-##Kön olika/lika                       0,1
-    if (tmp['sex'] == rgd['sex']): features.append(1)
-    else: features.append(0)
-    return features
-
 def antFeaturesNorm(tmp,rgd):
     ant = 0
     maxAnt = 0
     for field in ('grpNameGiven', 'grpNameLast'):
         maxAnt += 1
-        if (field in tmp) and (field in rgd): ant += 1
+        if tmp.get(field) and rgd.get(field): ant += 1
     for ev in ('birth', 'death'):
         maxAnt += 3
         if (ev in tmp) and (ev in rgd):
             for item in ('date', 'normPlaceUid','place'):
-                if (item in tmp[ev]) and (item in rgd[ev]): ant += 1
+                if tmp[ev].get(item) and rgd[ev].get(item): ant += 1
     #Max 8?
     #print 'antF', ant, 'max', maxAnt
     return float(ant)/maxAnt
 
-from SVMfeatures import SVMfeatures
 def matchPers(p1, rgdP, conf, score = None):
+    global svmModel, mt_tmp, SVMfeatures
+    if not svmModel:
+        if 'featureSet' in conf:
+            SVMfeatures = getattr(importlib.import_module('featureSet'), conf['featureSet'])
+            svmModel = svm_load_model('conf/person_' + conf['featureSet'] + '.model')
+        else:  #default
+            SVMfeatures = getattr(importlib.import_module('featureSet'), 'personDefault')
+            svmModel = svm_load_model('conf/personDefault.model')
     nodeScore = nodeSim(p1, rgdP)
-        #print '    NS',nodeScore,
-        #Only calculate famScore if NS and score above cut-off??
-        #Test with facit!
-#    print 'inMatchPers', p1['_id'], p1['refId'], rgdP['_id'], rgdP['refId']
     pFam = conf['families'].find_one({ 'children': p1['_id']}) #find fam if p in 'children'
     rgdFam = conf['match_families'].find_one({ 'children': rgdP['_id']})
     famScore = familySim(pFam, conf['persons'], rgdFam, conf['match_persons']) 
-    feat = SVMfeatures(p1, rgdP, conf, score)
+    cand_matchtxt = mt_tmp.matchtextPerson(rgdP, conf['match_persons'], conf['match_families'])
+    matchtxt = mt_tmp.matchtextPerson(p1, conf['persons'], conf['families'])
+    cosScore = cos(matchtxt, cand_matchtxt)
+    if score is None and 'featureSet' in conf:  #score not used by deault
+        try:  #Lucene
+            from luceneUtils import search
+            import traceback
+            candidates = search(matchtxt, p1['sex'], ant=100, config=conf) #Lucene search
+            score = 0.0
+            for (kid,sc) in candidates:
+                if str(kid) == str(rgdP['_id']):
+                    score = sc
+                    break
+        #except:  #use cos instead ?? if problems running Java in Bottle
+        except Exception, e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+    feat = SVMfeatures(p1, rgdP, conf, score, nodeScore,
+                       famScore, cosScore, matchtxtLen=len(matchtxt.split()))
 #    p_labels, p_acc, p_vals = svm_predict([0],[feat],svmModel,options="-b 1 -q")
     p_labels, p_acc, p_vals = svm_predict([0],[feat],svmModel,options="-b 1")
     svmstat = p_vals[0][0]
-
     # Use also score, NS, FS, and coscw? to determine status? See below!
     status = 'Manuell'
     if svmstat<0.1: status = 'EjMatch'
     if svmstat>0.9: status = 'Match'
-    #print i,':   ', p['_id'], kid, status, svmstat, score/5.0, nodeScore, famScore, featureScore
-#        if ((svmstat>0.5) or ((k['score']>25.0) and (nodeScore>0.75) and (famScore>0.75))):
-#            pass #or do something??
-
     matchdata = {}
     matchdata['workid'] = p1['_id']
     matchdata['pwork'] = p1
     matchdata['matchid'] = rgdP['_id']
     matchdata['pmatch'] = rgdP
     matchdata['score'] = score
+    matchdata['cosScore'] = cosScore
     matchdata['nodesim'] = nodeScore
     matchdata['familysim'] = famScore
     matchdata['svmscore'] = svmstat

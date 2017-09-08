@@ -8,6 +8,7 @@ import pickle
 
 Imap = {}
 Fmap = {}
+Fignore = []
 
 def maxdict(d):
     """ key for max value in dict
@@ -110,16 +111,17 @@ def checkPers(partner, orgDataRec):
     print
 
 def checkFam(wid,mid):
+  #wid, mid family refId 
   fams = set()
   for role in ('husb', 'wife', 'children'):
     tFam = common.config['families'].find({role: wid}, {'_id': 1, 'marriage.date': 1} )
     rFam = common.config['match_families'].find({role: mid}, {'_id': 1, 'marriage.date': 1} )
     tfams = []
     tDone = []
-#take all combinations of families
-#if several posibilities for 1 work-family keep only the the pair where marriage-date matches
-    for f in tFam:
-        for ff in rFam:
+    #take all combinations of families
+    #if several posibilities for 1 work-family keep only the the pair where marriage-date matches
+    for f in tFam: #work
+        for ff in rFam: #match
             try:
                 if len(f['marriage']['date'])>4 and f['marriage']['date'] == ff['marriage']['date']:
                     fams.add((f['_id'], ff['_id']))
@@ -132,13 +134,13 @@ def checkFam(wid,mid):
         if l[0] not in tDone:
             fams.add((l[0], l[2]))
 #?#
-    for (tFamId,rFamId) in fams:    #  for all involved families
+    for (tFamId,rFamId) in fams:    #  for all involved families do new matchning
         print 'checking',tFamId,rFamId
         famMatchData = matchFam(tFamId, rFamId, config)
         if common.config['fam_matches'].find({'workid': tFamId, 'matchid': rFamId}).count() == 0:
             if famMatchData['status'] in common.statOK.union(common.statManuell):
                 #fam_matches.insert(famMatchData)
-                print 'NY',famMatchData['workRefId'],famMatchData['workRefId'],famMatchData['status']
+                print 'NY MATCH',famMatchData['workRefId'],famMatchData['workRefId'],famMatchData['status']
 
 def mergeOrgDataFam(recordid, families, originalData):
     """ Merge orginalData for 'recordid' into a
@@ -207,6 +209,8 @@ def mergeOrgDataFam(recordid, families, originalData):
 
 def createMap(config):
 #?does not work?    global Fmap, Imap
+    #creates map work -> match for all statusOK
+    #
     cnt=0
     #families
     #get map from earlier merge's
@@ -215,9 +219,14 @@ def createMap(config):
         Fmap['_id'] = map['_id']
         for (k,v) in pickle.loads(map['data']).iteritems(): Fmap[k] = v
     for famMatch in config['fam_matches'].find({'status': {'$in': list(common.statOK)}}):
+        if famMatch['workid'] in Fignore: continue
         cnt += 1
         if famMatch['workid'] in Fmap and Fmap[famMatch['workid']] != famMatch['matchid']:
-            print famMatch['workRefId'], 'Family dubble map'
+            print 'Family', famMatch['workRefId'], 'in dbI matches 2 families in dbII => ignore dbI family'
+            print 'WARNING dbI family', famMatch['workRefId'], 'is NOT beeing merged into dbII'
+            del Fmap[famMatch['workid']]
+            Fignore.append(famMatch['workid'])
+            continue
         Fmap[famMatch['workid']] = famMatch['matchid']
         workOrg = config['originalData'].find_one({'recordId': famMatch['workid'], 'type': 'family'})
         for rec in workOrg['data']:
@@ -230,7 +239,7 @@ def createMap(config):
                 print famMatch['matchRefId'], 'Family dubble map from matchOrg'
             Fmap[rec['record']['_id']] = famMatch['matchid']
 
-    print 'Matched families', cnt, 'out of', config['families'].count(), '; Mapped:', len(Fmap)
+    print 'Matched families', cnt, 'out of', config['families'].count(), '; Mappings:', len(Fmap)
     cnt=0
     #persons
     #get map from earlier merge's
@@ -273,9 +282,9 @@ def createMap(config):
                      {'wife.pwork._id': match['workid'],'wife.pmatch._id': match['matchid'] },
                     ]}):
             if famMatch['workid'] in Fmap and Fmap[famMatch['workid']] != famMatch['matchid']:
-                print 'Personmap husb/wife disagree', match['pwork']['refId'], match['pmatch']['refId'],
-                print 'In fams', famMatch['workrefId'], famMatch['matchrefId']
+                print 'Personmap husb/wife disagree', match['pwork']['refId'], match['pmatch']['refId']
+                #print '  In fams', famMatch['workrefId'], famMatch['matchrefId']
         #KOLLA OM data i originalData också OK??
 
-    print 'Matched persons', cnt, 'out of', config['persons'].count(), '; Mapped:', len(Imap)
+    print 'Matched persons', cnt, 'out of', config['persons'].count(), '; Mappings:', len(Imap)
     return

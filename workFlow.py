@@ -64,8 +64,6 @@ def getDBselect(what, db1, activeUser, workingDir):
         submitValue = 'do Sanity Check'
     elif what == 'listSkillnad':
         submitValue = 'do Visa Skillnad'
-    elif what == 'famMatches':
-        submitValue = 'ladda ner matchade familjer'
     elif what == 'listDubl':
         submitValue = 'do Visa Duplicates'
     elif what == 'merge':

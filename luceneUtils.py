@@ -4,11 +4,12 @@
 import os
 
 import lucene
-from java.io import File
+#from java.io import File
+from java.nio.file import Paths
 from org.apache.lucene.analysis.core import WhitespaceAnalyzer
 from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.analysis.miscellaneous import LimitTokenCountAnalyzer
-from org.apache.lucene.document import Document, Field, TextField
+from org.apache.lucene.document import Document, Field, TextField, StringField
 from org.apache.lucene.index import \
   FieldInfo, IndexWriter, IndexWriterConfig, DirectoryReader
 from org.apache.lucene.store import SimpleFSDirectory
@@ -21,7 +22,8 @@ from matchtext import matchtext
 #INIT
 lucene.initVM() #default 2048?
 #lucene.initVM(lucene.CLASSPATH, maxheap='4096m') # does not increase indexing speed
-analyzer = StandardAnalyzer(Version.LUCENE_CURRENT)
+#analyzer = StandardAnalyzer(Version.LUCENE_CURRENT)
+analyzer = StandardAnalyzer()
 indexDir = None
 searcher = None
 
@@ -32,14 +34,16 @@ def setupDir(dbName):
     directory = "./files/"+user+'/'+db+'/LuceneIndex'
     if not os.path.exists(directory):
         os.mkdir(directory)
-    indexDir = SimpleFSDirectory(File(directory))
+    #indexDir = SimpleFSDirectory(File(directory))
+    indexDir = SimpleFSDirectory(Paths.get(directory))
     try:
         searcher = IndexSearcher(DirectoryReader.open(indexDir))
     except Exception, e:
         pass
 
 def index(person_list, fam_list):
-    config = IndexWriterConfig(Version.LUCENE_CURRENT, analyzer)
+    #config = IndexWriterConfig(Version.LUCENE_CURRENT, analyzer)
+    config = IndexWriterConfig(analyzer)
     config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
     writer = IndexWriter(indexDir, config)
 #?#indexWriter.setRAMBufferSizeMB(50);  KOLLA
@@ -50,9 +54,12 @@ def index(person_list, fam_list):
         matchtxt = mt.matchtextPerson(p, person_list, fam_list)
         #print 'person', p.oid, matchtxt.decode("utf-8")
         doc = Document()
-        doc.add(Field('uid',str(p['_id']), Field.Store.YES, Field.Index.NOT_ANALYZED))
-        doc.add(Field('sex',str(p['sex']), Field.Store.YES, Field.Index.NOT_ANALYZED))
-        doc.add(Field("text", matchtxt, Field.Store.NO, Field.Index.ANALYZED))
+        #doc.add(Field('uid',str(p['_id']), Field.Store.YES, Field.Index.NOT_ANALYZED))
+        #doc.add(Field('sex',str(p['sex']), Field.Store.YES, Field.Index.NOT_ANALYZED))
+        #doc.add(Field("text", matchtxt, Field.Store.NO, Field.Index.ANALYZED))
+        doc.add(Field('uid',str(p['_id']), StringField.TYPE_STORED))
+        doc.add(Field('sex',str(p['sex']), StringField.TYPE_STORED))
+        doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
         writer.addDocument(doc)
 
     #Family matchtext
@@ -60,9 +67,12 @@ def index(person_list, fam_list):
         matchtxt = mt.matchtextFamily(f, person_list)
         #print 'family', f.oid, matchtext.decode("utf-8")
         doc = Document()
-        doc.add(Field('uid',str(f['_id']), Field.Store.YES, Field.Index.NOT_ANALYZED))
-        doc.add(Field('sex','FAM', Field.Store.YES, Field.Index.NOT_ANALYZED))
-        doc.add(Field("text", matchtxt, Field.Store.NO, Field.Index.ANALYZED))
+        #doc.add(Field('uid',str(f['_id']), Field.Store.YES, Field.Index.NOT_ANALYZED))
+        #doc.add(Field('sex','FAM', Field.Store.YES, Field.Index.NOT_ANALYZED))
+        #doc.add(Field("text", matchtxt, Field.Store.NO, Field.Index.ANALYZED))
+        doc.add(Field('uid',str(f['_id']), StringField.TYPE_STORED))
+        doc.add(Field('sex','FAM', StringField.TYPE_STORED))
+        doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
         writer.addDocument(doc)
 
     writer.commit()
@@ -76,7 +86,8 @@ def search(q, sex, ant=5, config = None):
 #        #lucene.initVM()
 #        lucene.attachCurrentThread()
 #        setupDir(config['matchDB'])
-    query = QueryParser(Version.LUCENE_CURRENT, "text", analyzer).parse(q.replace('/', '\/'))
+    #query = QueryParser(Version.LUCENE_CURRENT, "text", analyzer).parse(q.replace('/', '\/'))
+    query = QueryParser("text", analyzer).parse(q.replace('/', '\/'))
     #Hur lägga till sex?
     scoreDocs = searcher.search(query, ant).scoreDocs
     #print "%s total matching documents." % len(scoreDocs)

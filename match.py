@@ -11,10 +11,17 @@ logging.basicConfig(level=logging.INFO,
 parser = argparse.ArgumentParser()
 parser.add_argument("workDB", help="Working database name" )
 parser.add_argument("matchDB", help="Database to match against")
+#Featureset => svmModel + rutin to calc features
+parser.add_argument("--featureset", help="Basename for featureset. Used for feature extraction and SVMmodel" )
+parser.add_argument("--famfeatureset", help="Basename for family featureset. Used for feature extraction and SVMmodel for families" )
+parser.add_argument("--noFamSVM", action='store_true', help="Do not do SVM matching for families" )
 
 args = parser.parse_args()
 workDB = args.workDB
 matchDB = args.matchDB
+featureSet = args.featureset
+famfeatureSet = args.famfeatureset
+noFamSVM = args.noFamSVM
 
 dbName  = os.path.basename(workDB).split('.')[0]  #No '.' or '/' in databasenames
 mDBname = os.path.basename(matchDB).split('.')[0]
@@ -32,6 +39,11 @@ mt_tmp = matchtext()
 t0 = time.time()
 logging.info('using db %s matching against %s', dbName, mDBname)
 config = common.init(dbName, matchDBName=mDBname, indexes=True)
+if featureSet:
+    config['featureSet'] = featureSet
+if famfeatureSet:
+    config['famfeatureSet'] = famfeatureSet
+
 common.config = config
 setupDir(mDBname)
 
@@ -50,7 +62,8 @@ dubltmp = defaultdict(list)
 dbltmpNs = defaultdict(float)
 
 ant=0
-for p in person_list.find():
+#for p in person_list.find():
+for p in person_list.find().batch_size(100):
     matchtxt = mt_tmp.matchtextPerson(p, person_list, fam_list)
     #Ta bort * och ? från matchtxt? KOLLA
     if not matchtxt:
@@ -64,6 +77,7 @@ for p in person_list.find():
 #OLD        matchdata = matchPers(p, candidate, config, score/8.0) #?? range of Lucene scores?
         matchdata = matchPers(p, candidate, config, score)
         #FIX EVT: lägg in mönster (autoOK, autoCheck -> EjOK) (multimatch Resolve) här
+        logging.debug('Insert main matching for %s, %s',p['refId'], candidate['refId'])
         matches.insert(matchdata)
         ant += 1
 #se mail 'Stickprov' Juni 5 2015
@@ -402,11 +416,24 @@ for multiiter in (1,2):
                     setFamOK(None, None, config, famlist = fLb, button = False)
 
 logging.info('Time %s',time.time() - t0)
+if noFamSVM:
+    logging.info('Matching All done')
+    sys.exit()
 logging.info('Doing SVM family match, incl split-ifying')
-from SVMfeatures import famSVMfeatures
+
 from uiUtils import nameDiff, eventDiff
 from utils import updateFamMatch
-svmFamModel = svm_load_model('conf/family.model')
+#USE famfeatureSet!!
+if 'famfeatureSet' in config:
+    famSVMfeatures = getattr(importlib.import_module('featureSet'), config['famfeatureSet'])
+    svmFamModel = svm_load_model('conf/' + config['famfeatureSet'] + '.model')
+else:
+    #from SVMfeatures import famSVMfeatures
+    #svmFamModel = svm_load_model('conf/family.model')
+    famSVMfeatures = getattr(importlib.import_module('featureSet'), 'famBaseline')
+    svmFamModel = svm_load_model('conf/famBaseline.model')
+antChanged = 0
+antSVM = 0
 for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
     #Why use refID and not _id?
     work = config['families'].find_one({'refId': fmatch['workRefId']})
@@ -427,9 +454,10 @@ for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManu
             config['matches'].update({'_id': mt['_id']}, {'$set': {'status': 'split'}})
     if changes:
         updateFamMatch((fmatch['workid'],), config)
+        antChanged += 1
         #FIX if not Manuell: continue
 ##
-    v = famSVMfeatures(work, match, config, None)
+    v = famSVMfeatures(work, match, config)
     logging.debug('SVMvect=%s, work=%s, match=%s', v, work, match)
     p_labels, p_acc, p_vals = svm_predict([0],[v],svmFamModel,options="-b 1")
     svmstat = p_vals[0][0]
@@ -438,5 +466,26 @@ for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManu
                       fmatch['workRefId'], fmatch['matchid'], fmatch['matchRefId'])
         logging.debug('svmstat=%s vect=%s', svmstat, v)
         setFamOK(fmatch['workid'], fmatch['matchid'], config)
+        antSVM += 1
+logging.info('%d families updated after split; %d set to OK by SVM', antChanged, antSVM)
 logging.info('Time %s',time.time() - t0)
 logging.info('Matching All done')
+"""
+#Does not improve results
+famSVMstat = defaultdict(int)
+for fmatch in config['fam_matches'].find().batch_size(50):
+    work = config['families'].find_one({'refId': fmatch['workRefId']})
+    match = config['match_families'].find_one({'refId': fmatch['matchRefId']})
+    v = famSVMfeatures(work, match, config)
+    p_labels, p_acc, p_vals = svm_predict([0],[v],svmFamModel,options="-b 1")
+    svmstat = p_vals[0][0]
+    if svmstat>0.9:
+        if fmatch['status'] not in list(common.statOK):
+            setFamOK(fmatch['workid'], fmatch['matchid'], config)
+            famSVMstat[fmatch['status']+'->OK'] += 1
+    elif svmstat<0.1:
+        if fmatch['status'] not in list(common.statEjOK):
+            setEjOKfamily(fmatch['workid'], fmatch['matchid'])
+            famSVMstat[fmatch['status']+'->EjOK'] += 1
+print 'SVMstat', famSVMstat
+"""
