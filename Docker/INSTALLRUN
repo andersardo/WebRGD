@@ -1,0 +1,46 @@
+##############
+FIXA DB för PHP MySQL
+###############
+
+#GENERATE container
+docker build -t openrgd -f Dockerfile .
+
+#REBUILD
+docker kill $(docker ps -q)
+docker rm -v `docker ps -a -q -f status=exited`
+docker rmi $(docker images -q -f dangling=true)
+docker rmi openrgd
+docker build -t openrgd -f Dockerfile .
+
+
+#FIX runable RGD
+cd ..
+mkdir conf files
+cp conf.example/* conf/
+#OBS edit config.py host = socket.gethostname()
+#                   port = 8085
+mkdir RGDdb
+
+#RUN interactive container with openRGD databases as external volumes
+#   run in openRGD source code directory
+#openRGD source code: .
+#Mongodb databases: ./RGDdb
+docker run -it -p 8084:8085 -v `pwd`:/gedMerge -v `pwd`/RGDdb:/var/lib/mongodb -d openrgd
+
+docker attach xyzxyzxyz
+
+#in container
+#   start supervisord, (starts mondo, mysql, openRGD
+/usr/bin/supervisord
+
+or
+Manual start:
+cd gedMerge
+python UI.py
+
+
+#Outside (on your machine)
+# use a browser to goto
+http://localhost:8084/
+#No users from start - root account admin/admin
+
