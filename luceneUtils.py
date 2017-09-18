@@ -41,7 +41,7 @@ def setupDir(dbName):
     except Exception, e:
         pass
 
-def index(person_list, fam_list):
+def index(personDB, relationDB):
     #config = IndexWriterConfig(Version.LUCENE_CURRENT, analyzer)
     config = IndexWriterConfig(analyzer)
     config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
@@ -50,35 +50,26 @@ def index(person_list, fam_list):
 
     mt = matchtext()
 
-    for p in person_list.find():
-        matchtxt = mt.matchtextPerson(p, person_list, fam_list)
-        #print 'person', p.oid, matchtxt.decode("utf-8")
+    for p in personDB.find():
+        matchtxt = mt.matchtextPerson(p, personDB, relationDB)
         doc = Document()
-        #doc.add(Field('uid',str(p['_id']), Field.Store.YES, Field.Index.NOT_ANALYZED))
-        #doc.add(Field('sex',str(p['sex']), Field.Store.YES, Field.Index.NOT_ANALYZED))
-        #doc.add(Field("text", matchtxt, Field.Store.NO, Field.Index.ANALYZED))
         doc.add(Field('uid',str(p['_id']), StringField.TYPE_STORED))
         doc.add(Field('sex',str(p['sex']), StringField.TYPE_STORED))
         doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
         writer.addDocument(doc)
 
     #Family matchtext
-    for f in fam_list.find():
-        matchtxt = mt.matchtextFamily(f, person_list)
-        #print 'family', f.oid, matchtext.decode("utf-8")
-        doc = Document()
-        #doc.add(Field('uid',str(f['_id']), Field.Store.YES, Field.Index.NOT_ANALYZED))
-        #doc.add(Field('sex','FAM', Field.Store.YES, Field.Index.NOT_ANALYZED))
-        #doc.add(Field("text", matchtxt, Field.Store.NO, Field.Index.ANALYZED))
-        doc.add(Field('uid',str(f['_id']), StringField.TYPE_STORED))
-        doc.add(Field('sex','FAM', StringField.TYPE_STORED))
-        doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
-        writer.addDocument(doc)
+    #for f in fam_list.find():
+    #    matchtxt = mt.matchtextFamily(f, person_list)
+    #    doc = Document()
+    #    doc.add(Field('uid',str(f['_id']), StringField.TYPE_STORED))
+    #    doc.add(Field('sex','FAM', StringField.TYPE_STORED))
+    #    doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
+    #    writer.addDocument(doc)
 
     writer.commit()
     writer.close()
     return
-#    return (person_list, fam_list)
 
 def search(q, sex, ant=5, config = None):
 #    if not searcher:

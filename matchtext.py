@@ -10,6 +10,7 @@ Lucene supports escaping special characters that are part of the query syntax.
 To escape these character use the \ before the character.
 str.translate does not work on Unicode objects
 """
+from dbUtils import getFamilyFromChild
 class matchtext:
     """
     calculates the text representation used for initial selection of match-kandidates
@@ -75,29 +76,32 @@ class matchtext:
         return mtxt.strip()
 
     ###########################
+    def matchtextPerson(self, p, personDB, relationDB):
+            matchtext = self.personText(p)
+            #Add father and mother
+            try:
+                fam = getFamilyFromChild(p['_id'], personDB, relationDB)
+                if fam:
+                    mtxt = set()
+                    if fam['husb']:
+                        for item in self.personText(personDB.find_one({'_id': fam['husb']})).split():
+                            mtxt.add('Father'+item)
+                    if fam['wife']:
+                        for item in self.personText(personDB.find_one({'_id': fam['wife']})).split():
+                            mtxt.add('Mother'+item)
+                    matchtext += ' ' + ' '.join(mtxt)
+            except: pass
+            return self.luceneFix(matchtext)
+
+    ###########################
+    #Not used
+    """
     def familyText(self, fam):
         if 'marriage' in fam:
             mtxt = self.eventText(fam['marriage'], 'M')
         else:
             mtxt = ''
         return mtxt
-
-    ###########################
-    def matchtextPerson(self, p, pers_list, fam_list):
-            matchtext = self.personText(p)
-            #Add father and mother
-            mtxt = set()
-            fam = fam_list.find_one({ 'children': p['_id']}) #find fam if p in 'children'
-            if fam:
-                if fam['husb']:
-                    for item in self.personText(pers_list.find_one({'_id': fam['husb']})).split():
-                        mtxt.add('Father'+item)
-                if fam['wife']:
-                    for item in self.personText(pers_list.find_one({'_id': fam['wife']})).split():
-                        mtxt.add('Mother'+item)
-            matchtext += ' ' + ' '.join(mtxt)
-            return self.luceneFix(matchtext)
-
     ###########################
     def matchtextFamily(self, fam, pers_list):
             matchtext = self.familyText(fam)
@@ -115,3 +119,4 @@ class matchtext:
                     mtxt.add('CHILD' + item)
             matchtext += ' ' + ' '.join(mtxt)
             return self.luceneFix(matchtext)
+    """

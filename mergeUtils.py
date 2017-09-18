@@ -3,6 +3,7 @@
 import re
 from collections import defaultdict
 import common
+from dbUtils import getFamilyFromId
 from utils import matchFam
 import pickle
 
@@ -63,42 +64,6 @@ def mergeOrgDataPers(recordid, persons, originalData):
         persDict[ev] = mergeEvent(ev, orgDataRec)
     return persDict
 
-def mergeOrgDataFamImport(recordid, families, originalData):
-    """ Merge orginalData for 'recordid' into a
-        combined record used in RGD.
-        husb, wife should be identical - if not raises mergeERR
-        children is just added together (no duplicates)
-        marriage uses maxdict to determine which value to keep"""
-    #print 'mergeOrgDataFam', recordid
-    famDict = families.find_one({'_id': recordid})
-    #keep _id, refId
-    orgDataRec = originalData.find_one({'recordId': recordid, 'type': 'family'})
-    #children
-    famDict['children'] =[]
-    for rec in orgDataRec['data']:
-        for child in rec['record']['children']:
-             if child not in famDict['children']: famDict['children'].append(child)
-    #marriage
-    famDict['marriage'] = mergeEvent('marriage', orgDataRec)
-    #husb, wife
-    for partner in ('husb', 'wife'):
-        for rec in orgDataRec['data']:
-            if rec['record'][partner]:
-                if famDict[partner]:
-                     if famDict[partner] != rec['record'][partner]:  #use assert?
-                        print 'ERR mergeOrgDataFam',recordid, partner,famDict[partner], rec['record'][partner]
-                        import pprint
-                        pp = pprint.PrettyPrinter(indent=4)
-                        print 'famDict'
-                        pp.pprint(famDict)
-                        print 'orgDataRec'
-                        pp.pprint(orgDataRec)
-                        #raise mergeERR
-                else:
-                    famDict[partner] = rec['record'][partner]
-#    pp.pprint(orgDataRec)
-    return famDict
-
 def checkPers(partner, orgDataRec):
     pers = []
     for rec in orgDataRec['data']:
@@ -145,66 +110,10 @@ def checkFam(wid,mid):
 def mergeOrgDataFam(recordid, families, originalData):
     """ Merge orginalData for 'recordid' into a
         combined record used in RGD.
-        husb, wife should be identical
-        children is just added together (no duplicates)
         marriage uses maxdict to determine which value to keep"""
-#    print 'mergeOrgDataFam', recordid
     famDict = families.find_one({'_id': recordid})
-    #keep _id, refId
     orgDataRec = originalData.find_one({'recordId': recordid, 'type': 'family'})
-    #children
-    famDict['children'] = []
-    chSet = set()
-    for rec in orgDataRec['data']:
-        for child in rec['record']['children']:
-#if mapped
-            #chSet.add(relationsMap(child))
-            if child in Imap:
-                chSet.add(Imap[child])
-            else:
-#                print "Check if identitymap", child
-                #if exists personrecord in originalData with recordId=child
-                if originalData.find_one({'recordId': child}):
-                    chSet.add(child)
-                else: print "No map for child", child
-    for ch in chSet:
-        famDict['children'].append(ch)
-    #marriage
     famDict['marriage'] = mergeEvent('marriage', orgDataRec)
-    #husb, wife
-    for partner in ('husb', 'wife'):
-#create set of mapped ids
-#if len(set)==1 => OK
-#else choose one
-        ids = defaultdict(int)
-        refIds = []
-        for rec in orgDataRec['data']:
-            if rec['record'][partner]:
-#if mapped
-                #ids[relationsMap(rec['record'][partner])] += 1
-                if rec['record'][partner] in Imap:
-                    ids[Imap[rec['record'][partner]]] += 1
-                    refIds.append(rec['record']['refId'])
-                else:
-                   #print "Check if identitymap", rec['record']['refId'] 
-                   #if exists personrecord in originalData with recordId=_id
-                    if originalData.find_one({'recordId': rec['record'][partner]}):
-                        ids[rec['record'][partner]] += 1
-                        refIds.append(rec['record']['refId'])
-                    else:
-                        print "No map for partner", rec['record'][partner], rec['record']['refId']
-        if len(ids) == 1: 
-            famDict[partner] = ids.keys()[0]
-        elif len(ids)>1: 
-            famDict[partner] = max((v,k) for k,v in ids.items())[1]
-            print 'WARN MultiMap in fam', recordid, partner
-            print 'refId fams', ', '.join(refIds)
-            #print orgDataRec
-            #print 'Id alternatives', ids
-            #for (id,n) in ids.iteritems():
-            #    o = originalData.find_one({'recordId': id, 'type': 'person'})
-            #    print o
-            checkPers(partner, orgDataRec)
     return famDict
 
 def createMap(config):

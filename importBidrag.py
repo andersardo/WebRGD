@@ -360,5 +360,5 @@ logging.info('Time %s',time.time() - t0)
 logging.info('Indexing %s in Lucene', dbName)
 from luceneUtils import setupDir, index
 setupDir(dbName)
-index(config['persons'],config['families'])
+index(config['persons'],config['relations'])
 logging.info('Time %s',time.time() - t0)

@@ -24,6 +24,7 @@ sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 #Read mappings per file
 import json
 from workFlow import workFlowUI
+from dbUtils import getFamilyFromId
 from pymongo import MongoClient
 #namMap = {}
 #placMap = {}
@@ -234,13 +235,14 @@ print "1 CHAR UTF-8"
 mapFamc = {}
 mapPersId = {}
 for fam in config['families'].find({}):
-    for ch in fam['children']: mapFamc[ch] = fam['RGDid']
+    famAll = getFamilyFromId(fam['_id'], config['families'], config['relations'])
+    for ch in famAll['children']: mapFamc[ch] = fam['_id']
 
 birth = {}
 for ind in config['persons'].find({}):
-    mapPersId[ind['_id']] = ind['RGDid']
+    mapPersId[ind['_id']] = ind['_id']
     #basedata
-    print "0 @"+str(ind['RGDid'])+"@ INDI"  #USE refId or RGDid???? FIX
+    print "0 @"+str(ind['_id'])+"@ INDI"  #USE refId or _id???? FIX
     print "1 SEX "+ind['sex']
     printTag("1 NAME",ind['name'])
     try: birth[ind['_id']] = ind['birth']['date']
@@ -252,13 +254,18 @@ for ind in config['persons'].find({}):
 ##                for item in ('date', 'place', 'source'):
 ##                    if item in ind[ev]: printTag("2 "+mapGedcom[item],ind[ev][item])
     if ind['_id'] in  mapFamc: printTagF("1 FAMC", mapFamc[ind['_id']])
+    """
     for fam in config['families'].find(
         {'$or': [ {'husb': ind['_id']},
                   {'wife': ind['_id']}
                   ]},
-        {'RGDid': True, 'marriage': True}
+        {'_id': True, 'marriage': True}
         ).sort([('marriage.date', 1)]):
-        printTagF("1 FAMS",fam['RGDid'])
+        printTagF("1 FAMS",fam['_id'])
+    """
+    for rel in config['relations'].find({'persId': ind['_id']}):
+        if rel['relTyp'] == 'child': continue
+        printTagF("1 FAMS",rel['famId'])
     #Other tags
     chanTag = None
     orgData =  config['originalData'].find_one({'recordId': ind['_id']})
@@ -320,9 +327,10 @@ for ind in config['persons'].find({}):
         print today.strftime('2 DATE %d %b %Y').upper() # 27 DEC 2011
         print today.strftime('3 TIME %H:%M:%S')         # 07:52:26
 
-for fam in config['families'].find({}):
+for famRec in config['families'].find({}):
+    fam = getFamilyFromId(famRec['_id'], config['families'], config['relations'])
     #basedata
-    print "0 @"+str(fam['RGDid'])+"@ FAM"
+    print "0 @"+str(fam['_id'])+"@ FAM"
     #for ev in ('marriage',):
     #    if ev not in fam: continue
     #    print "1", mapGedcom[ev]

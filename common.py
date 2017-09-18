@@ -61,7 +61,7 @@ def init(workDBName, dropWorkDB=False, matchDBName = None, dropMatchDB=False,
 #Indexes only used from standalone, long-running programs
 #If called from UI.py it interferes with database deletion
     cmn = {}
-    cmn['RGDid'] = RGDadm.seq
+    #cmn['RGDid'] = RGDadm.seq
     cmn['contributor'] = RGDadm.contributor
     cmn['contribution'] = RGDadm.contribution
     client = MongoClient()
@@ -75,13 +75,13 @@ def init(workDBName, dropWorkDB=False, matchDBName = None, dropMatchDB=False,
     db = client[workDBName]
     cmn['workDB'] = workDBName
     cmn['persons'] = db.persons
-#    cmn['persons'].ensure_index({...})
     cmn['families'] = db.families
+    cmn['relations'] = db.relations
     cmn['originalData'] = db.originalData
     if indexes:
-       cmn['families'].ensure_index('children')
-       cmn['families'].ensure_index('husb')
-       cmn['families'].ensure_index('wife')
+       cmn['relations'].ensure_index('relTyp')
+       cmn['relations'].ensure_index('famId')
+       cmn['relations'].ensure_index('persId')
        cmn['originalData'].ensure_index('recordId')
        cmn['originalData'].ensure_index('type')
     if matchDBName:
@@ -100,19 +100,18 @@ def init(workDBName, dropWorkDB=False, matchDBName = None, dropMatchDB=False,
         matchDB = matchClient[matchDBName]
         cmn['match_persons'] = matchDB.persons
         cmn['match_families'] = matchDB.families
+        cmn['match_relations'] = matchDB.relations
         cmn['match_originalData'] = matchDB.originalData
         if indexes:
            cmn['matches'].ensure_index('workid')
            cmn['matches'].ensure_index('matchid')
-           cmn['matches'].ensure_index('children')
            cmn['matches'].ensure_index('status')
            cmn['fam_matches'].ensure_index('workid')
            cmn['fam_matches'].ensure_index('matchid')
-           cmn['fam_matches'].ensure_index('children.workid')
            cmn['fam_matches'].ensure_index('status')
-           cmn['match_families'].ensure_index('children')
-           cmn['match_families'].ensure_index('husb')
-           cmn['match_families'].ensure_index('wife')
+           cmn['match_relations'].ensure_index('relTyp')
+           cmn['match_relations'].ensure_index('famId')
+           cmn['match_relations'].ensure_index('persId')
            cmn['match_originalData'].ensure_index('recordId')
            cmn['match_originalData'].ensure_index('type')
     return cmn
@@ -121,7 +120,7 @@ def checkStatusUpdate(fromStat, toStat):
    if (fromStat,toStat) in statUpdates: return True
    else: return False
 
-def getRGDid(what):
+def get_id(what):
    r = RGDadm.seq.find_and_modify(query={'type': what},
                                   update={'$inc' : {'seqNo': 1} }, 
                                   safe=True, new=True, upsert=True)

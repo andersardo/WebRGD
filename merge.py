@@ -22,7 +22,6 @@ common.config = config
 #FIX save mDBname som mongodump in workdir
 
 print 'Merging', dbName, 'into', mDBname
-from bson.objectid import ObjectId
 from mergeUtils import createMap, mergeOrgDataPers, mergeOrgDataFam
 from mergeUtils import Imap, Fmap, Fignore
 
@@ -99,7 +98,7 @@ for person in config['persons'].find():
         except:
             #pass
             print 'ERROR inserting new person', person['refId']
-print 'Persons new=',inscnt,'updated=',updcnt        
+print 'Persons new=',inscnt,'updated=',updcnt
 print 'Time:',time.time() - t0
 
 #families
@@ -132,10 +131,29 @@ for family in config['families'].find():
         config['match_families'].insert(family)
         config['match_originalData'].insert(workOrgData)
         inscnt += 1
-    config['match_families'].update({'_id': matchid}, 
+    config['match_families'].update({'_id': matchid},
                                     mergeOrgDataFam(matchid, config['match_families'],
                                                     config['match_originalData']))
 print 'Families new=',inscnt,'updated=',updcnt
+print 'Time:',time.time() - t0
+#Relations
+"""
+for all relations
+   if famId in Fmap: use mapped famId
+   if persId in Imap: use mapped persId
+   if relation not in match_relations: add
+"""
+totRel = 0
+updatedRel = 0
+for rel in config['relations'].find():
+    if rel['famId'] in Fignore: continue
+    if rel['famId'] in Fmap: rel['famId'] = Fmap[rel['famId']]
+    if rel['persId'] in Imap: rel['persId'] = Imap[rel['persId']]
+    del(rel['_id'])
+    res = config['match_relations'].update(rel, rel, upsert=True)
+    totRel += 1
+    if res['nModified']: updatedRel += 1
+print 'Relations: total=', totRel, 'updated=', updatedRel
 print 'Time:',time.time() - t0
 
 #Save Imap, Fmap in match_originalData to be used in next merge

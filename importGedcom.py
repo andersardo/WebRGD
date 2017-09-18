@@ -12,11 +12,9 @@ logging.basicConfig(level=logging.INFO,
 
 import common
 from gedcom.gedcom import Gedcom
-from mergeUtils import mergeOrgDataFamImport
 
-#Previous in importUtil.py
 import re
-#json maps
+#json maps from indataValidering
 namMap = {}
 datMap = {}
 placMap = {}
@@ -55,17 +53,14 @@ def pers_dict(p):
    pid = re.sub('@ INDI','',pid);
    pers['refId'] = 'gedcom_' + pid
    pers['name'] = namestr(p)
-#   (nfn, nsn) = parsergdnname(p)
-#   pers['grpNameGiven'] = nfn
    try:
        pers['grpNameGiven'] = ' '.join(set(namMap[namestr(p)]['F'].split(',')))
-   except: #pass
+   except:
        pers['grpNameGiven'] = ''
        #print 'NAME not mapped F',namestr(p) 
-#   pers['grpNameLast'] = nsn
    try:
        pers['grpNameLast'] = ' '.join(set(namMap[namestr(p)]['E'].split(',')))
-   except: #pass
+   except:
        pers['grpNameLast'] = ''
        #print 'NAME not mapped E',namestr(p) 
    try:
@@ -74,34 +69,18 @@ def pers_dict(p):
        pers['sex'] = 'O'
    if p.birth():
       pers['birth'] = {}
-#      if p.birth().date and p.birth().date in dat: pers['birth']['date'] = datMap[p.birth().date]
       try: pers['birth']['date'] = datMap[p.birth().date]
       except: pass
-#          print 'DATE not mapped', p.birth().date
-#      if p.birth().ndate:
-#         pers['birth']['date'] = p.birth().ndate
       try: pers['birth']['normPlaceUid'] = placMap[p.birth().place]
       except: pass
-#          print 'PLAC not mapped', p.birth().place
-#      if (p.birth().nplace):
-#         fno = parseNplace(p.birth().nplace)
-#         pers['birth']['normPlaceUid'] = fno
       if (p.birth().place):
          pers['birth']['place'] = p.birth().place
-      ##try:
-      ##    pers['birth']['source'] = sourMap[p.birth()._get_value('SOUR')]
-      ##except: pass
       try:
           pers['birth']['source'] = sourMap[p.birth().place+'-'+p.birth()._get_value('SOUR')]
       except:
           try:
               pers['birth']['source'] = sourMap[p.birth()._get_value('SOUR')]
           except: pass
-#          print 'SOUR not mapped', p.birth().source
-#      if (p.birth().nsource):
-#         pers['birth']['source'] = p.birth().nsource
-#      elif (p.birth().source):
-#         pers['birth']['source'] = p.birth().source
    else:
        ###extend by using CHR event if no BIRT available
        for ev in p.other_events:
@@ -127,29 +106,16 @@ def pers_dict(p):
       pers['death']= {}
       try: pers['death']['date'] = datMap[p.death().date]
       except: pass
-#      if p.death().ndate:
-#         pers['death']['date'] = p.death().ndate
       try: pers['death']['normPlaceUid'] = placMap[p.death().place]
       except: pass
-#      if p.death().nplace:
-#         fno = parseNplace(p.death().nplace)
-#         pers['death']['normPlaceUid'] = fno
       if p.death().place:
          pers['death']['place'] = p.death().place
-      ##try:
-      ##    pers['death']['source'] = sourMap[p.death()._get_value('SOUR')]
-      ##except: pass
       try:
           pers['death']['source'] = sourMap[p.death().place+'-'+p.death()._get_value('SOUR')]
       except:
           try:
               pers['death']['source'] = sourMap[p.death()._get_value('SOUR')]
           except: pass
-#          print 'SOUR not mapped', p.death().source
-#      if (p.death().nsource):
-#         pers['death']['source'] = p.death().nsource
-#      elif (p.death().source):
-#         pers['death']['source'] = p.death().source
    else:
        ###extend by using BURI event if no DEAT available
        for ev in p.other_events:
@@ -164,7 +130,6 @@ def pers_dict(p):
                        except: pass
                        pers['death']['place'] = cline.value()
                    elif cline.tag() == 'SOUR':
-                       ##pers['death']['source'] = sourMap[cline.value()]
                        try:
                            pers['death']['source'] = sourMap[pers['death']['place']+'-'+cline.value()]
                        except:
@@ -174,44 +139,38 @@ def pers_dict(p):
    return pers
 
 def fam_dict(fam):
+   """
+    Extract info about a family and relations into separate dicts
+   """
    familj = {'type': 'family'}
+   relations = []
    fid = re.sub('0 @','',str(fam));
    fid = re.sub('@ FAM','',fid);
    familj['refId'] = 'gedcom_' + fid
    if (fam.husband() and fam.husband().pid):
-      familj['husb'] = fam.husband().pid
-   else: familj['husb'] = None
+      #familj['husb'] = fam.husband().pid
+      relations.append({'relTyp': 'husb', 'persId': fam.husband().pid})
    if (fam.wife() and fam.wife().pid):
-      familj['wife'] = fam.wife().pid
-   else: familj['wife'] = None
-   familj['children'] = []
+      #familj['wife'] = fam.wife().pid
+      relations.append({'relTyp': 'wife', 'persId': fam.wife().pid})
+   #familj['children'] = []
    if fam.children():
-       for c in fam.children(): familj['children'].append(c.pid)
-   #save original _id for future use
-   familj['husbOrgId'] = familj['husb']
-   familj['wifeOrgId'] = familj['wife']
-   familj['childrenOrgId'] = list(familj['children'])
+       for c in fam.children():
+           #familj['children'].append(c.pid)
+           relations.append({'relTyp': 'child', 'persId': c.pid})
+   ##save original _id for future use
+   #familj['husbOrgId'] = familj['husb']
+   #familj['wifeOrgId'] = familj['wife']
+   #familj['childrenOrgId'] = list(familj['children'])
    try:
        if fam.marriage():
            familj['marriage'] = {}
            try: familj['marriage']['date'] = datMap[fam.marriage().date]
            except: pass
-#           if fam.marriage().ndate:
-#               familj['marriage']['date'] = fam.marriage().ndate
            if fam.marriage().place:
                familj['marriage']['place'] = fam.marriage().place
            try: familj['marriage']['normPlaceUid'] = placMap[fam.marriage().place]
            except: pass
-#           if (fam.marriage().nplace):
-#               familj['marriage']['normPlaceUid'] = fam.marriage().nplace
-           ##try:
-           ##    familj['marriage']['source'] = sourMap[fam.marriage()._get_value('SOUR')]
-           ##except: pass
-#               print 'SOUR not mapped', fam.marriage().source
-#           if (fam.marriage().nsource):
-#               familj['marriage']['source'] = fam.marriage().nsource
-#           elif (fam.marriage().source):
-#               familj['marriage']['source'] = fam.marriage().source
            try:
               familj['marriage']['source'] = sourMap[fam.marriage().place+'-'+fam.marriage()._get_value('SOUR')]
            except:
@@ -220,8 +179,7 @@ def fam_dict(fam):
               except: pass
    except:
        pass
-   return familj
-###
+   return (familj,relations)
 
 import argparse, time, sys, os, traceback
 parser = argparse.ArgumentParser()
@@ -239,7 +197,7 @@ if not os.path.isfile(fn):
 dbName = user + '_' + os.path.basename(fn).split('.')[0]
 logging.info('Using database %s importing from file %s', dbName, fn)
 
-#Read mappings
+#Read mappings from indataValidering
 import json
 (fndir,tmp) = os.path.split(fn)
 try: namMap = json.load(open(fndir + '/name.dat'))
@@ -250,7 +208,6 @@ try: datMap = json.load(open(fndir + '/date.dat'))
 except: logging.info('ERROR - datumfil saknas')
 try: sourMap = json.load(open(fndir + '/sour.dat'))
 except: logging.info('ERROR - sourcefil saknas')
-##
 
 config = common.init(dbName, dropWorkDB=True, indexes=True)
 persons = config['persons']
@@ -268,24 +225,14 @@ except Exception, e:
     sys.exit()
 logging.info('Time %s',time.time() - t0)
 
-#FIX
-#Uppdatera ursprung - global database
-#UrspId = args.fn (filnamn på GEDfil)
-#UrspDate = NOW
-# Ger U_uid
-#q = "INSERT INTO RGD.ursprung SET UrspDate=NOW(),UrspId='"+args.fn+"'"
-#c.execute(q)
-#U_uid = db.insert_id()
-#U_uid = 7
-#Get id; store Id and fn
-
 contributionFile = fn #TEMP #FIX #Handle versions
-contributionId = common.getRGDid('A')
+contributionId = common.get_id('A')
 config['originalData'].insert({'type': 'admin', 'created': time.time(),
                                'file': contributionFile, 'cId': contributionId})
+
+#modify Gedcom links by adding unique contributionId to them
 noChange = ('INDI', 'FAM', 'FAMS', 'FAMC', 'CHIL')
 patRepl = re.compile(r'@([^@]+)@')
-
 def fixGedcom(l):
 	if l.value().startswith('@') and l.tag() not in noChange:
 		l._value = patRepl.sub('@'+contributionId+r'-\1@', l.value(), 1)
@@ -303,7 +250,6 @@ for (key,rec) in people.record_dict().iteritems():
         gedRecs += rec.gedcom() + "\n"
 config['originalData'].insert({'type': 'gedcomRecords', 'data': [gedRecs]})
 
-#DISABLE??
 #Only accept families with more than 1 member => count family members
 familyMembers = {}
 for fam in people.family_list():
@@ -314,25 +260,14 @@ for fam in people.family_list():
 logging.info('Persons')
 for person in people.individual_list():
     pp = pers_dict(person)
-#check if person without data? FIX?
-#    t=''
-#    for f in ('Nfnamn','Nenamn','namn','NFDate','NFFors','FFors','NDDate','NDFors','DFors'):
-#        if f in pp: t += pp[f]
-#    tst = t.replace('?','').replace('*','').replace('/',' ').replace('(',' ').replace(')',' ').strip()
-#    if not tst:
-#        print 'Not using person', pp['gedcomId']
-#        person.pid = None
-#        continue
     orgData = { 'type': 'person', 'data': [] }
     fixGedcom(person)
     orgData['data'].append({'contributionId': contributionId, 'record': pp,
                              'gedcom': person.gedcom()})
-    pp['RGDid'] = common.getRGDid('P')
+    pp['_id'] = common.get_id('P')
     person.pid = persons.insert( pp )
     orgData['recordId'] = person.pid
     config['originalData'].insert(orgData)
-##    fam = person.get_parent_family()  #Children
-##standard distribution of simplepyged
     fam =  person.get_parent_families()  #Children
     if fam:
 # - FIX to handle list!!
@@ -344,17 +279,20 @@ logging.info('Time %s',time.time() - t0)
 for fam in people.family_list():
 #Redmine 543
 #    if familyMembers[str(fam)] > 1:
-        ff = fam_dict(fam)
+        (ff, relations) = fam_dict(fam)
         orgData = { 'type': 'family', 'data': [] }
         fixGedcom(fam)
         orgData['data'].append({'contributionId': contributionId, 'record': ff,
                                 'gedcom': fam.gedcom()})
-        ff['RGDid'] = common.getRGDid('F')
+        ff['_id'] = common.get_id('F')
         fam.pid = families.insert( ff )
+        for rel in relations:
+            rel['famId'] = ff['_id']
+        config['relations'].insert_many(relations)
         orgData['recordId'] = fam.pid
         config['originalData'].insert(orgData)
 #    else: print 'SkipFam', str(fam), 'with', familyMembers[str(fam)], 'member'
-#logging.info('Time %s',time.time() - t0)
+logging.info('Time %s',time.time() - t0)
 
 logging.info('Cleaning by applying patterns and rules')
 #Find and merge duplicate persons. How? Not done here
@@ -363,25 +301,21 @@ logging.info('Cleaning by applying patterns and rules')
 #  and marriages do not conflict
 logging.info('Merge families where husb and wife are same persons')
 from collections import defaultdict
+from mergeUtils import mergeEvent
 d = defaultdict(set)
-##d[None,None]=set()
-##finds all families
-##for f in families.find({}, {'_id': 1, 'husb': 1, 'wife': 1}):
-#Also finds duplicates where one of Wife,Husb is None.
-#  No dont do that; see mail from Kalle 2014-02-01 KOLLA
-#Rolf: Jag tycker att sammanslagning göres när båda föräldrar är identiska,
-#       dock ej om partner är blank
-#finds families where husb and wife is not None KOLLA!
-for f in families.find({'husb': {'$ne': None}, 'wife': {'$ne': None}},
-                       {'_id': 1, 'husb': 1, 'wife': 1}):
-   d[f['husb'], f['wife']].add(f['_id'])
-##Delete entries where both Wife and Husb is None
-##del(d[None,None])
+##AAFIX
+#for f in config['relations'].find({'husb': {'$ne': None}, 'wife': {'$ne': None}},
+#                       {'_id': 1, 'husb': 1, 'wife': 1}):
+#   d[f['husb'], f['wife']].add(f['_id'])
+for husb in config['relations'].find({'husb': {'$exists': True}}):
+    for wife in config['relations'].find({'$and':
+                        [{'_id': husb['_id']}, {'wife': {'$exists': True}}]}):
+        d[husb['husb'], wife['wife']].add(husb['_id'])
 for s in d.values():
     if len(s)>=2:
       fdubl = list(s)
       #merge all into fdubl[0]
-      F = families.find_one({'_id': fdubl[0]}, {'refId': 1})
+      F = families.find_one({'_id': fdubl[0]}, {'refId': 1, '_id': 1})
       FrefId = F['refId']
       for fd in fdubl:
           if fd == fdubl[0]: continue
@@ -389,33 +323,26 @@ for s in d.values():
           #Enl Rolf: Marr  datum kan vara olika eller blanka
           p1 = families.find_one({'_id': fd})
           logging.info('Merging family %s into %s', p1['refId'], FrefId)
-          config['originalData'].update({'recordId': fdubl[0]},
-                                        {'$push': {'data': 
+          #push orgData to new family
+          config['originalData'].update_one({'recordId': F['_id']},
+                                        {'$push': {'data':
                                                    {'contributionId': contributionId,
                                                     'record': p1 }}})
-          families.remove({'_id': fd})
-          config['originalData'].remove({'recordId': fd})
-      families.update({'_id': fdubl[0]},
-                      mergeOrgDataFamImport(fdubl[0], config['families'],
-                                            config['originalData']))
+          #remove family
+          families.delete_one({'_id': p1['_id']})
+          config['originalData'].delete_one({'recordId': p1['_id']})
+          config['relations'].delete_many({'$and': [{'_id': p1['_id']},
+                                               {'$or': [{'husb': {'$exists': True}},
+                                                        {'wife': {'$exists': True}}]}
+                                           ]})
+          #move children to new family
+          config['relations'].update_many({'_id': p1['_id']},
+                                          {'$set': {'_id': F['_id'], 'famRefId': F['refId']}})
+      #merge all marriage events
+      orgRecord = config['originalData'].find_one({'recordId': F['_id']})
+      families.update_one({'_id': F['_id']}, {'$set':
+                                              {'marriage': mergeEvent('marriage', orgRecord)}})
 logging.info('Time %s',time.time() - t0)
-
-#Redmine 543
-#print 'Delete persons without family'
-#d = set()
-#for f in families.find():
-#   if f['husb']:
-#       d.add(f['husb'])
-#   if f['wife']:
-#       d.add(f['wife'])
-#   for ch in f['children']: d.add(ch)
-#for p in persons.find():
-#    if p['_id'] in d: continue
-#    print 'Deleting person with no family', p['refId'],'(',p['_id'],')'
-#    persons.remove(p['_id'])
-#    config['originalData'].remove({'recordId': p['_id']})
-#print 'Time',time.time() - t0
-
 logging.info('Indexing %s in Lucene', dbName)
 from luceneUtils import setupDir, index
 setupDir(dbName)

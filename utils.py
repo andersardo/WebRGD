@@ -2,9 +2,9 @@
 # This Python file uses the following encoding: utf-8
 
 from matchUtils import matchPers
+from dbUtils import getFamilyFromId
 import common
 import logging
-from bson.objectid import ObjectId
 
 def getIndivid(db, uid):
     if (uid == 'None'): return [None]
@@ -33,27 +33,27 @@ def matchNamnFDate(tind, trgd):
     return False
 
 def matchFam(tFamId, rFamId, conf):
-#KOLLA EVT accept match as optional param and not do everything?
-#    print 'matchFam', tFamId, rFamId
-    #Always keep manual status!
-#    fmatch = conf['fam_matches'].find_one({'workid': tFamId, 'matchid': rFamId})
-#    if fmatch and (fmatch['status'] in ('EjOK','OK')): return fmatch
-#Check when inserting instead!
+    #KOLLA EVT accept match as optional param and not do everything?
     famMatchData = {}
+    famMatchSummary = {}
     famMatchData['workid'] = tFamId
     famMatchData['matchid'] = rFamId
 
     stat = set()
-    tFam = conf['families'].find_one({'_id': tFamId})
-    rFam =conf['match_families'].find_one({'_id': rFamId})
+    ##AAFIX
+    #tFam = conf['families'].find_one({'_id': tFamId})
+    tFam = getFamilyFromId( tFamId, conf['families'], conf['relations'])
+    #rFam =conf['match_families'].find_one({'_id': rFamId})
+    rFam = getFamilyFromId( rFamId, conf['match_families'], conf['match_relations'])
     famMatchData['workRefId'] = tFam['refId']
     famMatchData['matchRefId'] = rFam['refId']
-    famMatchData['marriage'] = {}
-    if 'marriage' in tFam: famMatchData['marriage']['work'] = tFam['marriage']
-    if 'marriage' in rFam: famMatchData['marriage']['match'] = rFam['marriage']
+    #famMatchData['marriage'] = {}
+    #if 'marriage' in tFam: famMatchData['marriage']['work'] = tFam['marriage']
+    #if 'marriage' in rFam: famMatchData['marriage']['match'] = rFam['marriage']
     antPartner = 0
     for partner in ('husb','wife'):
         famMatchData[partner] = {'status': 'notMatched'}
+        famMatchSummary[partner] = {'status': 'notMatched'}
         if (tFam[partner]) and (rFam[partner]):
             antPartner += 1
             st = getMatchPers(tFam[partner],rFam[partner], conf)
@@ -65,6 +65,7 @@ def matchFam(tFamId, rFamId, conf):
                 #              st['pwork']['refId'], st['pmatch']['refId'],st['status'])
                 conf['matches'].insert(st)
             famMatchData[partner] = st
+            famMatchSummary[partner] = st['status']
             if (st['status'] in common.statOK): stat.add('Match')
             elif (st['status'] in common.statManuell): stat.add('Manuell')
             elif (st['status'] in common.statEjOK): stat.add('EjMatch')
@@ -75,13 +76,13 @@ def matchFam(tFamId, rFamId, conf):
     #Children ...
     tmpchilds = tFam['children']  #getChildrenUid('TmpMatch', str(tmpfuid))
     rgdchilds = rFam['children']  #getChildrenUid('RGD', str(rgdfuid))
-#    print '  Ch', tmpchilds, rgdchilds
     rgddone=[]
     tmpdone=[]
     if not tmpchilds: tmpchilds=[]
     if not rgdchilds: rgdchilds=[]
 #checkOK??
     famMatchData['children'] = []
+    famMatchSummary['children'] = set()
     #All matched persons
     for cond in ( [common.statOK,'Match'], [common.statManuell,'Manuell'],
                   [common.statEjOK, 'EjMatch'] ):
@@ -94,7 +95,6 @@ def matchFam(tFamId, rFamId, conf):
                 #FIXif chtmp['sex'] != chrgd['sex']: continue  #FIX
                 st = getMatchPers(iuid,rgdiuid, conf)
                 if (st and (st['status'] in cond[0])):
-#                    print '    OK', st['status']
                     stat.add(cond[1])
                     rgddone.append(rgdiuid)
                     tmpdone.append(iuid)
@@ -106,23 +106,20 @@ def matchFam(tFamId, rFamId, conf):
                         except:
                             st['sort'] = '0'
                     famMatchData['children'].append(st)
+                    famMatchSummary['children'].add(st['status'])
                     break
     #Try to find match
-#    print '  match,NmFd',tmpdone,rgddone 
     for chtmp in tmpchilds:
         iuid = chtmp #['I_uid']
         if iuid in tmpdone: continue
         for chrgd in rgdchilds:
             rgdiuid = chrgd #['I_uid']
             if rgdiuid in rgddone: continue
-##TEST split
             st = getMatchPers(iuid,rgdiuid, conf)
             if (st and (st['status'] == 'split')): continue
-##TEST
             #FIXif chtmp['sex'] != chrgd['sex']: continue  #FIX
             mt = matchPers( conf['persons'].find_one({'_id': iuid}),
                             conf['match_persons'].find_one({'_id': rgdiuid}), conf )
-#            if mt['status'] in common.statOK:
             if mt['status'] in common.statOK.union(common.statManuell):
                 logging.debug('Inserting new unmatched child %s %s %s',
                               mt['status'], mt['pwork']['refId'], mt['pmatch']['refId'])
@@ -140,6 +137,7 @@ def matchFam(tFamId, rFamId, conf):
                     except:
                         mt['sort'] = '0'
                 famMatchData['children'].append(mt)
+                famMatchSummary['children'].add(mt['status'])
                 break
             t = conf['persons'].find_one({'_id': iuid})
             r = conf['match_persons'].find_one({'_id': rgdiuid})
@@ -156,6 +154,7 @@ def matchFam(tFamId, rFamId, conf):
                         sort = '0'
                 famMatchData['children'].append({'status': 'rManuell', 'workid': iuid, 'pwork': t,
                                                  'matchid': rgdiuid, 'pmatch': r, 'sort': sort})
+                famMatchSummary['children'].add('rManuell')
                 #Insert into matches also? Can't do setOKperson if pair not in person matches
                 mt['status'] = 'rManuell'
                 logging.debug('Inserting new name/date matched child %s %s %s',
@@ -190,30 +189,12 @@ def matchFam(tFamId, rFamId, conf):
     elif (('EjMatch' not in stat) and ('Manuell' not in stat) and ('Match' in stat)):
         status = 'Match'
     else: status = 'Manuell'
-    #Reducepattern:
-    if status == 'Manuell':
-        #Only 1 partner
-        if antPartner == 1:
-            #and all children green => status = OK
-#Jag tror också att om det förutom de gröna barnen även fanns vita barn skulle familjen godkännas.
-            allGreen = False
-            for ch in famMatchData['children']:
-                if ch['status'] == 'Match': allGreen = True
-                else:
-                    allGreen = False
-                    break
-            if allGreen:
-##??                status = 'Match'
-                logging.warning('Reduce: Only 1 partner and all children green => status = Match')
-                logging.warning('NOT DONE')
-                #set partner to rOK
-#En liknande situation har vi också pratat om.
-#När alla barnen är gröna eller vita och en förälder matchad grön skulle den andra föräldern bli rOK.
-
     famMatchData['status'] = status
+    famMatchSummary['status'] = status
+    famMatchSummary['children'] = list(famMatchSummary['children'])
+    famMatchData['summary'] = famMatchSummary
     #sort children in birth-order
     famMatchData['children'] = sorted(famMatchData['children'], key=lambda c: c['sort'])
-    #print famMatchData
     return famMatchData
 
 def updateFamMatch(flist, conf):
@@ -259,8 +240,7 @@ def setFamOK(wid, mid, conf, famlist = None, button = False):
                 #logging.debug('SetFamOK - No match for %s %s %s', wid, mid, partner) #byt till pass
         for ch in match.get('children',[]):
             try:  #FIX?
-                famlist.append(['P', ch['pwork']['_id'], ch['pmatch']['_id'],
-                               ch['pwork']['refId'], ch['pmatch']['refId']])
+                famlist.append(['P', ch['workid'], ch['matchid']])
             except:
                 if 'pwork' in ch:
                     pass
@@ -291,13 +271,13 @@ def setFamOK(wid, mid, conf, famlist = None, button = False):
 
 #FIX
 def setOKfamily(wid, mid):
-    return setFamOK(ObjectId(wid), ObjectId(mid), common.config, famlist = None, button = True)
+    return setFamOK(wid, mid, common.config, famlist = None, button = True)
 
 def setEjOKfamily(wid, mid, code='EjOK'):
 #Villkor: inget matchat barn eller båda föräldrarna matchade.
 #Ska testas + evt felmeddelande
     logging.debug('setEjOKfamily %s %s %s', wid, mid, code)    #res =
-    match = common.config['fam_matches'].find_one({'workid': ObjectId(wid), 'matchid': ObjectId(mid)})
+    match = common.config['fam_matches'].find_one({'workid': wid, 'matchid': mid})
     if not match: return ''
     if (('husb' in match) and (match['husb']['status'] in common.statOK) and
         ('wife' in match) and (match['wife']['status'] in common.statOK)):
@@ -310,7 +290,7 @@ def setEjOKfamily(wid, mid, code='EjOK'):
         if ch['status'] in common.statManuell:
             #setEjOKperson calls updateFam
             res += setEjOKperson(str(ch['workid']), str(ch['matchid']), code=code)
-    common.config['fam_matches'].update_one({'workid': ObjectId(wid), 'matchid': ObjectId(mid)}, {'$set': {'status': 'FamEjOK'}})
+    common.config['fam_matches'].update_one({'workid': wid, 'matchid': mid}, {'$set': {'status': 'FamEjOK'}})
     return res
 
 def setOKperson(wid, mid, button = True):
@@ -360,11 +340,11 @@ def setOKperson(wid, mid, button = True):
     return updateFamMatch(flist, common.config)
 
 def setEjOKperson(wid, mid, code='EjOK'):
-    mt = common.config['matches'].find_one({'workid': ObjectId(wid), 'matchid': ObjectId(mid)})
+    mt = common.config['matches'].find_one({'workid': wid, 'matchid': mid})
     if not common.checkStatusUpdate(mt['status'], code): return 'setEjOKperson Update not done'
     logging.debug('setEjOKperson work=%s match=%s code=%s', wid, mid, code)
     common.config['matches'].update_one({'_id': mt['_id']}, {'$set': {'status': code}})
-    indlist = [ObjectId(wid)]
+    indlist = [wid]
     flist = set()
     for id in indlist:  #get list of involved individuals
         for fam in common.config['families'].find({'$or': [{'husb': id}, {'wife': id}, {'children': id}]}, {'_id': True}):
@@ -373,7 +353,7 @@ def setEjOKperson(wid, mid, code='EjOK'):
 
 def kopplaLoss(personId, famId, role):
     #update family
-    fam = common.config['families'].find_one({'_id': ObjectId(famId)})
+    fam = common.config['families'].find_one({'_id': famId})
     #assert fam not None
     if role in ('husb', 'wife'):
         #assert fam[role] == personId
@@ -381,13 +361,13 @@ def kopplaLoss(personId, famId, role):
         fam[role] = None
     elif role == 'child':
         #assert personId in fam['children']
-        fam['children'].remove(ObjectId(personId))
+        fam['children'].remove(personId)
     else: pass  #ERR
-#    common.config['families'].update_one({'_id': ObjectId(famId)}, fam)
-    common.config['families'].replace_one({'_id': ObjectId(famId)}, fam)
+#    common.config['families'].update_one({'_id': famId}, fam)
+    common.config['families'].replace_one({'_id': famId}, fam)
 #??
     #update originalData
-    fam = common.config['originalData'].find_one({'recordId': ObjectId(famId)})
+    fam = common.config['originalData'].find_one({'recordId': famId})
     #assert fam not None
     for rec in fam['data']:
         if role in ('husb', 'wife'):
@@ -395,15 +375,15 @@ def kopplaLoss(personId, famId, role):
             rec['record'][role] = None
         elif role == 'child':
             #assert personId in fam['children']??
-            rec['record']['children'].remove(ObjectId(personId))
+            rec['record']['children'].remove(personId)
         else: pass  #ERR
-#    common.config['originalData'].update_one({'recordId': ObjectId(famId)}, fam)
-    common.config['originalData'].replace_one({'recordId': ObjectId(famId)}, fam)
+#    common.config['originalData'].update_one({'recordId': famId}, fam)
+    common.config['originalData'].replace_one({'recordId': famId}, fam)
 #??
     #update fam_matches
-    famMatch = common.config['fam_matches'].find_one({'workid': ObjectId(famId)})
+    famMatch = common.config['fam_matches'].find_one({'workid': famId})
     flist = set()
-    flist.add(ObjectId(famId))
+    flist.add(famId)
     return updateFamMatch(flist, common.config) #funkar inte - ger fel i fam_matches
 
 def split(wid, mid):
@@ -414,19 +394,19 @@ def split(wid, mid):
       generate famList from wid,mid
       update family matches for famList
     """
-##    common.config['matches'].remove({'workid': ObjectId(wid), 'matchid': ObjectId(mid)})
+##    common.config['matches'].remove({'workid': wid, 'matchid': mid})
 #TEST
-    common.config['matches'].update_one({'workid': ObjectId(wid), 'matchid': ObjectId(mid)},
+    common.config['matches'].update_one({'workid': wid, 'matchid': mid},
                                     {'$set': {'status': 'split'}})
 #TEST
     famList = set()
     for doc in common.config['fam_matches'].find({'$or':
-                [{'husb.workid': ObjectId(wid), 'husb.matchid': ObjectId(mid)},
-                 {'wife.workid': ObjectId(wid), 'wife.matchid': ObjectId(mid)}]}, {'workid': 1}):
+                [{'husb.workid': wid, 'husb.matchid': mid},
+                 {'wife.workid': wid, 'wife.matchid': mid}]}, {'workid': 1}):
         famList.add(doc['workid'])
-    for doc in common.config['fam_matches'].find({'children.workid': ObjectId(wid)}):
+    for doc in common.config['fam_matches'].find({'children.workid': wid}):
         for ch in doc['children']:
-            if 'matchid' in ch and ch['matchid'] == ObjectId(mid):
+            if 'matchid' in ch and ch['matchid'] == mid:
                 famList.add(doc['workid'])
                 break
     logging.debug('split %s %s %s', wid,mid, famList)

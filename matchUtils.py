@@ -5,6 +5,7 @@ from datetime import date
 from svmutil import svm_load_model, svm_predict
 import importlib
 from matchtext import matchtext
+from dbUtils import getFamilyFromChild
 
 mt_tmp = matchtext()
 svmModel = False
@@ -158,7 +159,6 @@ def familySim(pFam, person_list, rgdFam, match_person):
     global _cache
     key = '%s;%s' % (pFam['_id'], rgdFam['_id'])
     if key in _cache:
-#        print 'famSim using cached'
         return _cache[key]
 ##?
     gfSc = 0.0
@@ -262,11 +262,13 @@ def matchPers(p1, rgdP, conf, score = None):
             SVMfeatures = getattr(importlib.import_module('featureSet'), 'personDefault')
             svmModel = svm_load_model('conf/personDefault.model')
     nodeScore = nodeSim(p1, rgdP)
-    pFam = conf['families'].find_one({ 'children': p1['_id']}) #find fam if p in 'children'
-    rgdFam = conf['match_families'].find_one({ 'children': rgdP['_id']})
+    #pFam = conf['families'].find_one({ 'children': p1['_id']}) #find fam if p in 'children'
+    pFam = getFamilyFromChild(p1['_id'], conf['families'], conf['relations'])
+    #rgdFam = conf['match_families'].find_one({ 'children': rgdP['_id']})
+    rgdFam = getFamilyFromChild(rgdP['_id'], conf['match_families'], conf['match_relations'])
     famScore = familySim(pFam, conf['persons'], rgdFam, conf['match_persons']) 
-    cand_matchtxt = mt_tmp.matchtextPerson(rgdP, conf['match_persons'], conf['match_families'])
-    matchtxt = mt_tmp.matchtextPerson(p1, conf['persons'], conf['families'])
+    cand_matchtxt = mt_tmp.matchtextPerson(rgdP, conf['match_persons'], conf['match_relations'])
+    matchtxt = mt_tmp.matchtextPerson(p1, conf['persons'], conf['relations'])
     cosScore = cos(matchtxt, cand_matchtxt)
     if score is None and 'featureSet' in conf:  #score not used by deault
         try:  #Lucene
@@ -294,9 +296,9 @@ def matchPers(p1, rgdP, conf, score = None):
     if svmstat>0.9: status = 'Match'
     matchdata = {}
     matchdata['workid'] = p1['_id']
-    matchdata['pwork'] = p1
+    #matchdata['pwork'] = p1
     matchdata['matchid'] = rgdP['_id']
-    matchdata['pmatch'] = rgdP
+    #matchdata['pmatch'] = rgdP
     matchdata['score'] = score
     matchdata['cosScore'] = cosScore
     matchdata['nodesim'] = nodeScore
