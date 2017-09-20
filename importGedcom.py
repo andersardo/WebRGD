@@ -12,27 +12,9 @@ logging.basicConfig(level=logging.INFO,
 
 import common
 from gedcom.gedcom import Gedcom
+from importUtils import pers_dict, fam_dict, loadMaps
 
 import re
-#json maps from indataValidering
-namMap = {}
-datMap = {}
-placMap = {}
-sourMap = {}
-
-monthmap = {}
-monthmap['JAN'] = '1'
-monthmap['FEB'] = '2'
-monthmap['MAR'] = '3'
-monthmap['APR'] = '4'
-monthmap['MAY'] = '5'
-monthmap['JUN'] = '6'
-monthmap['JUL'] = '7'
-monthmap['AUG'] = '8'
-monthmap['SEP'] = '9'
-monthmap['OCT'] = '10'
-monthmap['NOV'] = '11'
-monthmap['DEC'] = '12'
 
 def namestr(p):
     if (p):
@@ -40,146 +22,6 @@ def namestr(p):
         return fn + ' /' + sn + '/'
     else: return '?'
 
-def parsergdnname(p):
-    #Numeric ids
-   fnid = ' '.join(set(p.rgdfname().split(',')))
-   snid = ' '.join(set(p.rgdename().split(',')))
-   return (fnid, snid)
-
-#@print_timing
-def pers_dict(p):
-   pers = {'type': 'person'}
-   pid = re.sub('0 @','',str(p));
-   pid = re.sub('@ INDI','',pid);
-   pers['refId'] = 'gedcom_' + pid
-   pers['name'] = namestr(p)
-   try:
-       pers['grpNameGiven'] = ' '.join(set(namMap[namestr(p)]['F'].split(',')))
-   except:
-       pers['grpNameGiven'] = ''
-       #print 'NAME not mapped F',namestr(p) 
-   try:
-       pers['grpNameLast'] = ' '.join(set(namMap[namestr(p)]['E'].split(',')))
-   except:
-       pers['grpNameLast'] = ''
-       #print 'NAME not mapped E',namestr(p) 
-   try:
-       pers['sex'] = p.sex()
-   except:
-       pers['sex'] = 'O'
-   if p.birth():
-      pers['birth'] = {}
-      try: pers['birth']['date'] = datMap[p.birth().date]
-      except: pass
-      try: pers['birth']['normPlaceUid'] = placMap[p.birth().place]
-      except: pass
-      if (p.birth().place):
-         pers['birth']['place'] = p.birth().place
-      try:
-          pers['birth']['source'] = sourMap[p.birth().place+'-'+p.birth()._get_value('SOUR')]
-      except:
-          try:
-              pers['birth']['source'] = sourMap[p.birth()._get_value('SOUR')]
-          except: pass
-   else:
-       ###extend by using CHR event if no BIRT available
-       for ev in p.other_events:
-           if ev.tag == 'CHR':
-               pers['birth'] = {}
-               for cline in ev.line.children_lines():
-                   if cline.tag() == 'DATE':
-                       try: pers['birth']['date'] = datMap[cline.value()]
-                       except: pass
-                   elif cline.tag() == 'PLAC':
-                       try: pers['birth']['normPlaceUid'] = placMap[cline.value()]
-                       except: pass
-                       pers['birth']['place'] = cline.value()
-                   elif cline.tag() == 'SOUR':
-                       ##pers['birth']['source'] = sourMap[cline.value()]
-                       try:
-                           pers['birth']['source'] = sourMap[pers['birth']['place']+'-'+cline.value()]
-                       except:
-                           try:
-                               pers['birth']['source'] = sourMap[cline.value()]
-                           except: pass
-   if p.death():
-      pers['death']= {}
-      try: pers['death']['date'] = datMap[p.death().date]
-      except: pass
-      try: pers['death']['normPlaceUid'] = placMap[p.death().place]
-      except: pass
-      if p.death().place:
-         pers['death']['place'] = p.death().place
-      try:
-          pers['death']['source'] = sourMap[p.death().place+'-'+p.death()._get_value('SOUR')]
-      except:
-          try:
-              pers['death']['source'] = sourMap[p.death()._get_value('SOUR')]
-          except: pass
-   else:
-       ###extend by using BURI event if no DEAT available
-       for ev in p.other_events:
-           if ev.tag == 'BURI':
-               pers['death'] = {}
-               for cline in ev.line.children_lines():
-                   if cline.tag() == 'DATE':
-                       try: pers['death']['date'] = datMap[cline.value()]
-                       except: pass
-                   elif cline.tag() == 'PLAC':
-                       try: pers['death']['normPlaceUid'] = placMap[cline.value()]
-                       except: pass
-                       pers['death']['place'] = cline.value()
-                   elif cline.tag() == 'SOUR':
-                       try:
-                           pers['death']['source'] = sourMap[pers['death']['place']+'-'+cline.value()]
-                       except:
-                           try:
-                               pers['death']['source'] = sourMap[cline.value()]
-                           except: pass
-   return pers
-
-def fam_dict(fam):
-   """
-    Extract info about a family and relations into separate dicts
-   """
-   familj = {'type': 'family'}
-   relations = []
-   fid = re.sub('0 @','',str(fam));
-   fid = re.sub('@ FAM','',fid);
-   familj['refId'] = 'gedcom_' + fid
-   if (fam.husband() and fam.husband().pid):
-      #familj['husb'] = fam.husband().pid
-      relations.append({'relTyp': 'husb', 'persId': fam.husband().pid})
-   if (fam.wife() and fam.wife().pid):
-      #familj['wife'] = fam.wife().pid
-      relations.append({'relTyp': 'wife', 'persId': fam.wife().pid})
-   #familj['children'] = []
-   if fam.children():
-       for c in fam.children():
-           #familj['children'].append(c.pid)
-           relations.append({'relTyp': 'child', 'persId': c.pid})
-   ##save original _id for future use
-   #familj['husbOrgId'] = familj['husb']
-   #familj['wifeOrgId'] = familj['wife']
-   #familj['childrenOrgId'] = list(familj['children'])
-   try:
-       if fam.marriage():
-           familj['marriage'] = {}
-           try: familj['marriage']['date'] = datMap[fam.marriage().date]
-           except: pass
-           if fam.marriage().place:
-               familj['marriage']['place'] = fam.marriage().place
-           try: familj['marriage']['normPlaceUid'] = placMap[fam.marriage().place]
-           except: pass
-           try:
-              familj['marriage']['source'] = sourMap[fam.marriage().place+'-'+fam.marriage()._get_value('SOUR')]
-           except:
-              try:
-                  familj['marriage']['source'] = sourMap[fam.marriage()._get_value('SOUR')]
-              except: pass
-   except:
-       pass
-   return (familj,relations)
 
 import argparse, time, sys, os, traceback
 parser = argparse.ArgumentParser()
@@ -197,18 +39,9 @@ if not os.path.isfile(fn):
 dbName = user + '_' + os.path.basename(fn).split('.')[0]
 logging.info('Using database %s importing from file %s', dbName, fn)
 
-#Read mappings from indataValidering
-import json
 (fndir,tmp) = os.path.split(fn)
-try: namMap = json.load(open(fndir + '/name.dat'))
-except: logging.info('ERROR - namnfil saknas')
-try: placMap = json.load(open(fndir + '/plac.dat'))
-except: logging.info('ERROR - platsfil saknas')
-try: datMap = json.load(open(fndir + '/date.dat'))
-except: logging.info('ERROR - datumfil saknas')
-try: sourMap = json.load(open(fndir + '/sour.dat'))
-except: logging.info('ERROR - sourcefil saknas')
-
+errMsg = loadMaps(fndir)
+if errMsg: logging.info(errMsg)
 config = common.init(dbName, dropWorkDB=True, indexes=True)
 persons = config['persons']
 families = config['families']
