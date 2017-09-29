@@ -34,13 +34,13 @@ print 'Doing sanity checks'
 if config['match_originalData'].find_one({'type': 'admin', 'mergedWith': dbName}):
     print mDBname, 'already merged with', dbName, '-- Exiting'
     sys.exit()
-
+"""
 #sanity check - en person kan bara var barn i 1 familj
 for p in config['persons'].find():
     if config['families'].find({'children': p['_id']}).count() > 1:
         print p['_id'],p['refId'],'child in more than one family'
-
-#if status in statManual exists => exit
+"""
+#if status in statManual exists => exit   ???????????
 if config['matches'].find({'status': {'$in': list(common.statManuell)}}).count():
     print 'Person matches with manual status exists'
 if config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).count():
@@ -48,56 +48,42 @@ if config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).cou
 #if contributionId in orgData => multiMerge => exit
 print 'Time:',time.time() - t0
 
-print 'Creating map'
-createMap(config)
+print 'Creating match map persons/families'
+createMap(config)  #Updates Imap, Fmap
 print 'Time:',time.time() - t0
 
 #TEST and quit ON ERRORS???
 
 #LOCK matchDB
-
 #Redo mapping??
+
 config['match_originalData'].insert({'type': 'admin', 'time': time.time(),
                                      'mergedWith': dbName})
-inscnt=0
-updcnt=0
 print 'Merging ...'
 #persons
 """
+copy all work.originalData to match.originalData (covers persons, families, relations)
 for all work.persons
     if matched OK:
-        add to originalData
-        merge originalData to person
+        merge match_originalData records to match_person
     else:
-        copy to originalData
-        copy to person
+        copy to match_person
 """
+recs = config['originalData'].find()
+config['match_originalData'].insert_many(recs)
+inscnt=0
+updcnt=0
 for person in config['persons'].find():
-    workOrgData = config['originalData'].find_one({'recordId': person['_id'], 'type': 'person'})
-#    mt = config['matches'].find_one({'pwork._id': person['_id'],
-#                                     'status': {'$in': list(common.statOK)}})
-#    if mt:
-#        if Imap[person['_id']] != mt['pmatch']['_id']: print 'Imap error A'
     if person['_id'] in Imap:
         updcnt += 1
-#        matchid = mt['pmatch']['_id']
         matchid = Imap[person['_id']]
-        for rec in workOrgData['data']:
-            config['match_originalData'].update({'recordId': matchid},
-                                            {'$push': {'data': rec}})
-            #generate merged record
-            config['match_persons'].update({'_id': matchid}, 
-                                    mergeOrgDataPers(matchid, config['match_persons'],
-                                                     config['match_originalData']) )
+        #generate merged record
+        config['match_persons'].update({'_id': matchid}, 
+                                mergeOrgDataPers(matchid, config['match_persons'],
+                                                 config['match_originalData']) )
     else:
-#        if person['_id'] in Imap: print 'Imap error B'
-        try:
-            config['match_persons'].insert(person)  #Kolla att _id behålls
-            config['match_originalData'].insert(workOrgData)  #Kolla att _id behålls
-            inscnt+=1
-        except:
-            #pass
-            print 'ERROR inserting new person', person['refId']
+        config['match_persons'].insert_one(person)  #Kolla att _id behålls
+        inscnt+=1
 print 'Persons new=',inscnt,'updated=',updcnt
 print 'Time:',time.time() - t0
 
@@ -105,35 +91,26 @@ print 'Time:',time.time() - t0
 """
 for all families
     if matched OK:
-        add to match.originalData
+        merge match_origialData records to match_family
     else:
         copy to match.families
-        copy to match.originalData
-    merge match.originalData to match.families (includes mapping of personids)
 """
 inscnt=0
 updcnt=0
 for family in config['families'].find():
-    #New ignore
+    #New ignore KOLLA FIX
     if family['_id'] in Fignore:
         continue
     #end
-    workOrgData = config['originalData'].find_one({'recordId': family['_id'], 'type': 'family'})
     if family['_id'] in Fmap:
-        matchid = Fmap[family['_id']]
         updcnt += 1
-        for rec in workOrgData['data']:
-            config['match_originalData'].update({'recordId': matchid},
-                                            {'$push': {'data': rec}})
+        matchid = Fmap[family['_id']]
+        config['match_families'].update({'_id': matchid},
+                                mergeOrgDataFam(matchid, config['match_families'],
+                                                 config['match_originalData']) )
     else:
-#        if family['_id'] in Fmap:  print 'Fmap error B'
-        matchid = family['_id']
-        config['match_families'].insert(family)
-        config['match_originalData'].insert(workOrgData)
+        config['match_families'].insert_one(family)
         inscnt += 1
-    config['match_families'].update({'_id': matchid},
-                                    mergeOrgDataFam(matchid, config['match_families'],
-                                                    config['match_originalData']))
 print 'Families new=',inscnt,'updated=',updcnt
 print 'Time:',time.time() - t0
 #Relations
@@ -146,7 +123,7 @@ for all relations
 totRel = 0
 updatedRel = 0
 for rel in config['relations'].find():
-    if rel['famId'] in Fignore: continue
+    if rel['famId'] in Fignore: continue  #Kolla FIX
     if rel['famId'] in Fmap: rel['famId'] = Fmap[rel['famId']]
     if rel['persId'] in Imap: rel['persId'] = Imap[rel['persId']]
     del(rel['_id'])
@@ -155,6 +132,46 @@ for rel in config['relations'].find():
     if res['nModified']: updatedRel += 1
 print 'Relations: total=', totRel, 'updated=', updatedRel
 print 'Time:',time.time() - t0
+#NEW CODE with merging
+totRel = 0
+updatedRel = 0
+for relTyp in ('husb', 'wife', 'child'):
+    mappedRels = set()  #Eler init to rel from match_relations?
+    for rel in config['relations'].find({'typRel': relTyp}):
+        if rel['famId'] in Fignore: continue  #Kolla FIX
+        if rel['famId'] in Fmap:
+            #find All from this cluster in originalData
+            for famuid in reverseFmap[rel['famId']]:
+               tmp  = config['match_originalData'].find({'relation.famId': famuid,
+                                                         'relation.typRel': relTyp})
+               mappedRels.add(Imap[tmp['persId']]) # alt keep track of howmany for auto merge?
+            #add all new to relations
+            for persId in mappedRels:
+                relDict = {'relTyp': relTyp, 'famId': rel['famId'], 'persId': persId}
+                res = config['match_relations'].update(relDict, relDict, upsert=True)
+                totRel += 1
+print 'Relations: total=', totRel, 'updated=', updatedRel
+print 'Time:',time.time() - t0
+
+#SANITY CHECKS
+#can only be child in 1 family
+aggrPipe = [
+    {'$match': {'relTyp': 'child'}},
+    {'$project': {'persId': '$persId', 'count': {'$concat': ['1']}}},
+    {'$group': {'_id': '$persId', 'count': {'$sum': 1}}},
+    {'$match': {'count': {'$gt': 1}}}
+]
+for multiChild in config['match_relations'].aggregate(aggrPipe):
+    print 'Child', multiChild['persId'], 'in', multiChild['count'], 'families'
+#1 husb/wife per family
+for partner in ('husb', 'wife'):
+    aggrPipe = [
+        {'$match': {'relTyp': partner}},
+        {'$project': {'famId': '$famId', 'count': {'$concat': ['1']}}},
+        {'$group': {'_id': '$famId', 'count': {'$sum': 1}}},
+        {'$match': {'count': {'$gt': 1}}}]
+    for multiPartner in config['match_relations'].aggregate(aggrPipe):
+        print 'Family', multiChild['famId'], 'have', multiPartner['count'], partner
 
 #Save Imap, Fmap in match_originalData to be used in next merge
 if '_id' in Imap:

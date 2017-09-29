@@ -7,6 +7,7 @@
 	"death" : {
 		"date" : "17640827",
 		"source" : "*1 Klinte CI:2, Sidan 195",
+        "quality": 1
 		"place" : "Klinte (I)",
 		"normPlaceUid" : "1675"
 	},
@@ -16,6 +17,7 @@
 	"birth" : {
 		"date" : "17050615",
 		"source" : "*4 Fardhem AI:2, Sidan 37"
+        "quality": 4
 	},
 	"grpNameGiven" : "704 6942",
 	"type" : "person",
@@ -26,6 +28,7 @@
 	"_id" : "F_19",
 	"marriage" : {
 		"source" : "Visby Stifts Herdaminne"
+        "quality": 10
 	},
 	"type" : "family",
 	"refId" : "gedcom_F01"

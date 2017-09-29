@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO,
 import common
 from gedcom.gedcom import Gedcom
 from importUtils import pers_dict, fam_dict, loadMaps
+import pickle
 
 import re
 
@@ -90,13 +91,17 @@ for fam in people.family_list():
     if (fam.husband()): familyMembers[str(fam)] += 1
     if (fam.wife()): familyMembers[str(fam)] += 1
 
+#UPDATE Fmap, Imap with identity maps
 logging.info('Persons')
 for person in people.individual_list():
     pp = pers_dict(person)
     orgData = { 'type': 'person', 'data': [] }
     fixGedcom(person)
-    orgData['data'].append({'contributionId': contributionId, 'record': pp,
-                             'gedcom': person.gedcom()})
+    #orgData['data'].append({'contributionId': contributionId, 'record': pp,
+    #                         'gedcom': person.gedcom()})
+    orgData['contributionId'] = contributionId
+    orgData['record'] = pp
+    orgData['gedcom'] = person.gedcom()
     pp['_id'] = common.get_id('P')
     person.pid = persons.insert( pp )
     orgData['recordId'] = person.pid
@@ -115,12 +120,16 @@ for fam in people.family_list():
         (ff, relations) = fam_dict(fam)
         orgData = { 'type': 'family', 'data': [] }
         fixGedcom(fam)
-        orgData['data'].append({'contributionId': contributionId, 'record': ff,
-                                'gedcom': fam.gedcom()})
+        #orgData['data'].append({'contributionId': contributionId, 'record': ff,
+        #                        'gedcom': fam.gedcom()})
+        orgData['contributionId'] = contributionId
+        orgData['record'] = ff
+        orgData['gedcom'] = fam.gedcom()
         ff['_id'] = common.get_id('F')
         fam.pid = families.insert( ff )
         for rel in relations:
             rel['famId'] = ff['_id']
+        orgData['relation'] = relations
         config['relations'].insert_many(relations)
         orgData['recordId'] = fam.pid
         config['originalData'].insert(orgData)
@@ -147,34 +156,42 @@ for husb in config['relations'].find({'husb': {'$exists': True}}):
 for s in d.values():
     if len(s)>=2:
       fdubl = list(s)
+      #generate Fmap
+      Fmap = {}
+      for F in families.find({}, {'_id': 1} ): Fmap[F['_id']] = F['_id']
       #merge all into fdubl[0]
+      marrEvents = []
       F = families.find_one({'_id': fdubl[0]}, {'refId': 1, '_id': 1})
       FrefId = F['refId']
+      #USE for fd in fdubl[1:]:
       for fd in fdubl:
           if fd == fdubl[0]: continue
           #FIX check marriage dates - see pattern notes
           #Enl Rolf: Marr  datum kan vara olika eller blanka
-          p1 = families.find_one({'_id': fd})
-          logging.info('Merging family %s into %s', p1['refId'], FrefId)
+          fam2beMerged = families.find_one({'_id': fd})
+          if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
+          logging.info('Merging family %s into %s', fam2beMerged['refId'], FrefId)
           #push orgData to new family
-          config['originalData'].update_one({'recordId': F['_id']},
-                                        {'$push': {'data':
-                                                   {'contributionId': contributionId,
-                                                    'record': p1 }}})
-          #remove family
-          families.delete_one({'_id': p1['_id']})
-          config['originalData'].delete_one({'recordId': p1['_id']})
-          config['relations'].delete_many({'$and': [{'_id': p1['_id']},
+          #config['originalData'].update_one({'recordId': F['_id']},
+          #                              {'$push': {'data':
+          #                                         {'contributionId': contributionId,
+          #                                          'record': fam2beMerged }}})
+          #remove family KOLLA FIXA
+          families.delete_one({'_id': fam2beMerged['_id']})
+          #config['originalData'].delete_one({'recordId': fam2beMerged['_id']})
+          config['relations'].delete_many({'$and': [{'_id': fam2beMerged['_id']},
                                                {'$or': [{'husb': {'$exists': True}},
                                                         {'wife': {'$exists': True}}]}
                                            ]})
           #move children to new family
-          config['relations'].update_many({'_id': p1['_id']},
+          config['relations'].update_many({'_id': fam2beMerged['_id']},
                                           {'$set': {'_id': F['_id'], 'famRefId': F['refId']}})
       #merge all marriage events
-      orgRecord = config['originalData'].find_one({'recordId': F['_id']})
+      #orgRecord = config['originalData'].find_one({'recordId': F['_id']})
       families.update_one({'_id': F['_id']}, {'$set':
-                                              {'marriage': mergeEvent('marriage', orgRecord)}})
+                                              {'marriage': mergeEvent(marrEvents)}})
+      #SAVE Fmap
+      config['originalData'].insert_one({'type': 'Fmap', 'data': pickle.dumps(Fmap)})
 logging.info('Time %s',time.time() - t0)
 logging.info('Indexing %s in Lucene', dbName)
 from luceneUtils import setupDir, index

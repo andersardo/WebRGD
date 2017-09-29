@@ -30,50 +30,54 @@ def maxdict(d):
         i += 1
     return retval.rstrip()
 
-def merge(items):
+def mergeSimple(items):
     it={}  #use defaultdict?
     for item in items:
         if item in it: it[item] += 1
         else: it[item]=1
     return maxdict(it)
 
-def mergeEvent(eventType, orgDataRec):
+def mergeEvent(events):
+    #FIX Change to use quality
     evDict = {}
     for field in ("date", "source", "place", "normPlaceUid"):
-        ll = []
-        for rec in orgDataRec['data']:
-            if eventType in rec['record']:
-                if field in rec['record'][eventType]:
-                    ll.append(rec['record'][eventType][field])
+        for ev in events:
+            ll = []
+            if field in ev:
+                ll.append(ev[field])
         if ll:
-           evDict[field] = merge(ll)
+           evDict[field] = mergeSimple(ll)
     return evDict
 
-def mergeOrgDataPers(recordid, persons, originalData):
-    persDict = persons.find_one({'_id': recordid})
-    orgDataRec = originalData.find_one({'recordId': recordid, 'type': 'person'})
+def mergeOrgDataPers(personUid, personDB, originalDataDB):
+    #reverseImap matchId -> set(person uids)
+    persDict = {}
+    rawData = defaultdict(list)
+    for uid in reverseImap[personUid]:
+        orgRec = originalDataDB.find({'recordId': personUid}) # evt 'type': 'person'?
+        for field in ('name', 'sex', 'grpNameLast', 'grpNameGiven', 'birth', 'death'):
+            if field in orgRec['record']:
+                rawdata[field].append(orgRec['record'][field])
+    #simple fields
     for field in ('name', 'sex', 'grpNameLast', 'grpNameGiven'):
-        ll = []
-        for rec in orgDataRec['data']:
-            if field in rec['record']:
-                ll.append(rec['record'][field])
-        if ll:
-           persDict[field] = merge(ll)
+        if field in rawData:
+            persDict[field] = mergeSimple(rawData[field])
     #events
     for ev in ('birth', 'death'):
-        persDict[ev] = mergeEvent(ev, orgDataRec)
+        persDict[ev] = mergeEvent(rawData[ev])
     return persDict
 
-def checkPers(partner, orgDataRec):
-    pers = []
-    for rec in orgDataRec['data']:
-        p1 = common.config['match_persons'].find_one({'_id':rec['record'][partner]})
-        if not p1:
-            p1 = common.config['persons'].find_one({'_id':rec['record'][partner]})
-        pers.append(p1)
-    for p in pers:
-        print p['refId']
-    print
+def mergeOrgDataFam(recordid, families, originalData):
+    """ Merge orginalData for 'recordid' into a
+        combined record used in RGD.
+        marriage uses maxdict to determine which value to keep"""
+    rawdataMar = []
+    for uid in reverseFmap[recordid]:
+        orgRec = originalDataDB.find({'recordId': recordid}) # evt 'type': 'person'?
+        if 'marriage' in orgRec['record']:
+            rawdataMar.append(orgRec['record'][field])
+    famDict['marriage'] = mergeEvent(rawdataMar)
+    return famDict
 
 def checkFam(wid,mid):
   #wid, mid family refId 
@@ -106,15 +110,6 @@ def checkFam(wid,mid):
             if famMatchData['status'] in common.statOK.union(common.statManuell):
                 #fam_matches.insert(famMatchData)
                 print 'NY MATCH',famMatchData['workRefId'],famMatchData['workRefId'],famMatchData['status']
-
-def mergeOrgDataFam(recordid, families, originalData):
-    """ Merge orginalData for 'recordid' into a
-        combined record used in RGD.
-        marriage uses maxdict to determine which value to keep"""
-    famDict = families.find_one({'_id': recordid})
-    orgDataRec = originalData.find_one({'recordId': recordid, 'type': 'family'})
-    famDict['marriage'] = mergeEvent('marriage', orgDataRec)
-    return famDict
 
 def createMap(config):
 #?does not work?    global Fmap, Imap
