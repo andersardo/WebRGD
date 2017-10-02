@@ -9,6 +9,8 @@ import pickle
 
 Imap = {}
 Fmap = {}
+reverseImap = defaultdict(set)
+reverseFmap = defaultdict(set)
 Fignore = []
 
 def maxdict(d):
@@ -41,8 +43,8 @@ def mergeEvent(events):
     #FIX Change to use quality
     evDict = {}
     for field in ("date", "source", "place", "normPlaceUid"):
+        ll = []
         for ev in events:
-            ll = []
             if field in ev:
                 ll.append(ev[field])
         if ll:
@@ -54,10 +56,10 @@ def mergeOrgDataPers(personUid, personDB, originalDataDB):
     persDict = {}
     rawData = defaultdict(list)
     for uid in reverseImap[personUid]:
-        orgRec = originalDataDB.find({'recordId': personUid}) # evt 'type': 'person'?
+        orgRec = originalDataDB.find_one({'recordId': personUid}) # evt 'type': 'person'?
         for field in ('name', 'sex', 'grpNameLast', 'grpNameGiven', 'birth', 'death'):
             if field in orgRec['record']:
-                rawdata[field].append(orgRec['record'][field])
+                rawData[field].append(orgRec['record'][field])
     #simple fields
     for field in ('name', 'sex', 'grpNameLast', 'grpNameGiven'):
         if field in rawData:
@@ -72,8 +74,9 @@ def mergeOrgDataFam(recordid, families, originalData):
         combined record used in RGD.
         marriage uses maxdict to determine which value to keep"""
     rawdataMar = []
+    famDict = {}
     for uid in reverseFmap[recordid]:
-        orgRec = originalDataDB.find({'recordId': recordid}) # evt 'type': 'person'?
+        orgRec = originalDataDB.find_one({'recordId': recordid}) # evt 'type': 'person'?
         if 'marriage' in orgRec['record']:
             rawdataMar.append(orgRec['record'][field])
     famDict['marriage'] = mergeEvent(rawdataMar)
@@ -189,6 +192,10 @@ def createMap(config):
                 print 'Personmap husb/wife disagree', match['pwork']['refId'], match['pmatch']['refId']
                 #print '  In fams', famMatch['workrefId'], famMatch['matchrefId']
         #KOLLA OM data i originalData också OK??
+        #reverse maps
+        for pers in Imap.keys(): reverseImap[Imap[pers]].add(pers)
+        for fam  in Fmap.keys(): reverseImap[Fmap[fam]].add(fam)
+            
 
     print 'Matched persons', cnt, 'out of', config['persons'].count(), '; Mappings:', len(Imap)
     return

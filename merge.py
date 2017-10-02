@@ -152,7 +152,7 @@ for relTyp in ('husb', 'wife', 'child'):
                 totRel += 1
 print 'Relations: total=', totRel, 'updated=', updatedRel
 print 'Time:',time.time() - t0
-
+"""
 #SANITY CHECKS
 #can only be child in 1 family
 aggrPipe = [
@@ -172,7 +172,7 @@ for partner in ('husb', 'wife'):
         {'$match': {'count': {'$gt': 1}}}]
     for multiPartner in config['match_relations'].aggregate(aggrPipe):
         print 'Family', multiChild['famId'], 'have', multiPartner['count'], partner
-
+"""
 #Save Imap, Fmap in match_originalData to be used in next merge
 if '_id' in Imap:
     config['match_originalData'].save({'_id': Imap['_id'], 'type': 'Imap', 'data': pickle.dumps(Imap)})
