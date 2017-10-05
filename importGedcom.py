@@ -179,13 +179,13 @@ for s in d.values():
           #remove family KOLLA FIXA
           families.delete_one({'_id': fam2beMerged['_id']})
           #config['originalData'].delete_one({'recordId': fam2beMerged['_id']})
-          config['relations'].delete_many({'$and': [{'_id': fam2beMerged['_id']},
+          config['relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
                                                {'$or': [{'husb': {'$exists': True}},
                                                         {'wife': {'$exists': True}}]}
                                            ]})
-          #move children to new family
-          config['relations'].update_many({'_id': fam2beMerged['_id']},
-                                          {'$set': {'_id': F['_id'], 'famRefId': F['refId']}})
+          #only children in fam2beMerged left - move to new family
+          config['relations'].update_many({'famId': fam2beMerged['_id']},
+                                          {'$set': {'famId': F['_id']}})
       #merge all marriage events
       #orgRecord = config['originalData'].find_one({'recordId': F['_id']})
       families.update_one({'_id': F['_id']}, {'$set':

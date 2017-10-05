@@ -7,8 +7,10 @@ from dbUtils import getFamilyFromId
 from utils import matchFam
 import pickle
 
-Imap = {}
-Fmap = {}
+#Imap = {}
+#Fmap = {}
+Imap = defaultdict(list)
+Fmap = defaultdict(list)
 reverseImap = defaultdict(set)
 reverseFmap = defaultdict(set)
 Fignore = []
@@ -115,7 +117,6 @@ def checkFam(wid,mid):
                 print 'NY MATCH',famMatchData['workRefId'],famMatchData['workRefId'],famMatchData['status']
 
 def createMap(config):
-#?does not work?    global Fmap, Imap
     #creates map work -> match for all statusOK
     #
     cnt=0
@@ -125,26 +126,29 @@ def createMap(config):
     if map:
         Fmap['_id'] = map['_id']
         for (k,v) in pickle.loads(map['data']).iteritems(): Fmap[k] = v
+    else:  #initialize with identity map from match
+        for F in config['match_families'].find({}, {'_id': 1}): Fmap[F['_id']].append(F['_id'])
     for famMatch in config['fam_matches'].find({'status': {'$in': list(common.statOK)}}):
         if famMatch['workid'] in Fignore: continue
         cnt += 1
         if famMatch['workid'] in Fmap and Fmap[famMatch['workid']] != famMatch['matchid']:
             print 'Family', famMatch['workRefId'], 'in dbI matches 2 families in dbII => ignore dbI family'
             print 'WARNING dbI family', famMatch['workRefId'], 'is NOT beeing merged into dbII'
-            del Fmap[famMatch['workid']]
-            Fignore.append(famMatch['workid'])
+            print 'NO IGNORE'
+            #del Fmap[famMatch['workid']]
+            #Fignore.append(famMatch['workid'])
             continue
-        Fmap[famMatch['workid']] = famMatch['matchid']
+        Fmap[famMatch['workid']].append(famMatch['matchid'])
         workOrg = config['originalData'].find_one({'recordId': famMatch['workid'], 'type': 'family'})
         for rec in workOrg['data']:
-            if rec['record']['_id'] in Fmap and Fmap[rec['record']['_id']] != famMatch['matchid']:
-                print famMatch['workRefId'], 'Family dubble map from workOrg'
-            Fmap[rec['record']['_id']] = famMatch['matchid']
+            #if rec['record']['_id'] in Fmap and Fmap[rec['record']['_id']] != famMatch['matchid']:
+            #    print famMatch['workRefId'], 'Family dubble map from workOrg'
+            Fmap[rec['record']['_id']].append(famMatch['matchid'])
         matchOrg = config['match_originalData'].find_one({'recordId': famMatch['matchid'], 'type': 'family'})
         for rec in matchOrg['data']:
-            if rec['record']['_id'] in Fmap and Fmap[rec['record']['_id']] != famMatch['matchid']:
-                print famMatch['matchRefId'], 'Family dubble map from matchOrg'
-            Fmap[rec['record']['_id']] = famMatch['matchid']
+            #if rec['record']['_id'] in Fmap and Fmap[rec['record']['_id']] != famMatch['matchid']:
+            #    print famMatch['matchRefId'], 'Family dubble map from matchOrg'
+            Fmap[rec['record']['_id']].append(famMatch['matchid'])
 
     print 'Matched families', cnt, 'out of', config['families'].count(), '; Mappings:', len(Fmap)
     cnt=0
@@ -154,22 +158,24 @@ def createMap(config):
     if map:
         Imap['_id'] = map['_id']
         for (k,v) in pickle.loads(map['data']).iteritems(): Imap[k] = v
+    else:  #initialize with identity map from match
+        for P in config['match_persons'].find({}, {'_id': 1}): Imap[P['_id']].append(P['_id'])
     for match in config['matches'].find({'status': {'$in': list(common.statOK)}}):
         cnt += 1
         if match['workid'] in match:
             print match['pwork']['refId'], 'Person dubble map'
-        Imap[match['workid']] = match['matchid']
+        Imap[match['workid']].append(match['matchid'])
         workOrg = config['originalData'].find_one({'recordId': match['workid'], 'type': 'person'})
         for rec in workOrg['data']:
-            if rec['record']['_id'] in Imap and Imap[rec['record']['_id']] != match['matchid']:
-                print match['workRefId'], 'Family dubble map from workOrg'
-            Imap[rec['record']['_id']] = match['matchid']
+            #if rec['record']['_id'] in Imap and Imap[rec['record']['_id']] != match['matchid']:
+            #    print match['workRefId'], 'Family dubble map from workOrg'
+            Imap[rec['record']['_id']].append(match['matchid'])
         matchOrg = config['match_originalData'].find_one({'recordId': match['matchid'], 'type': 'person'})
         for rec in matchOrg['data']:
-            if rec['record']['_id'] in Imap and Imap[rec['record']['_id']] != match['matchid']:
-                print match['matchRefId'], 'Family dubble map from matchOrg'
-            Imap[rec['record']['_id']] = match['matchid']
-
+            #if rec['record']['_id'] in Imap and Imap[rec['record']['_id']] != match['matchid']:
+            #    print match['matchRefId'], 'Family dubble map from matchOrg'
+            Imap[rec['record']['_id']].append(match['matchid'])
+        """
         #Find familes that person is child in
         workfam = config['families'].find_one({'children': match['workid']})
         matchfam = config['match_families'].find_one({'children': match['matchid']})
@@ -192,10 +198,15 @@ def createMap(config):
                 print 'Personmap husb/wife disagree', match['pwork']['refId'], match['pmatch']['refId']
                 #print '  In fams', famMatch['workrefId'], famMatch['matchrefId']
         #KOLLA OM data i originalData också OK??
+        """
         #reverse maps
-        for pers in Imap.keys(): reverseImap[Imap[pers]].add(pers)
-        for fam  in Fmap.keys(): reverseImap[Fmap[fam]].add(fam)
-            
+        for pers in Imap.keys():
+            for P in Imap[pers]:
+                reverseImap[P].add(pers)
+        for fam  in Fmap.keys():
+            for F in Fmap[fam]:
+                reverseImap[F].add(fam)
+
 
     print 'Matched persons', cnt, 'out of', config['persons'].count(), '; Mappings:', len(Imap)
     return
