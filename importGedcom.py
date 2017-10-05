@@ -157,8 +157,8 @@ for s in d.values():
     if len(s)>=2:
       fdubl = list(s)
       #generate Fmap
-      Fmap = {}
-      for F in families.find({}, {'_id': 1} ): Fmap[F['_id']] = F['_id']
+      Fmap = defaultdict(list)
+      for F in families.find({}, {'_id': 1} ): Fmap[F['_id']].append(F['_id'])
       #merge all into fdubl[0]
       marrEvents = []
       F = families.find_one({'_id': fdubl[0]}, {'refId': 1, '_id': 1})
@@ -178,6 +178,7 @@ for s in d.values():
           #                                          'record': fam2beMerged }}})
           #remove family KOLLA FIXA
           families.delete_one({'_id': fam2beMerged['_id']})
+          Fmap[fam2beMerged['_id']] = [F['_id']]
           #config['originalData'].delete_one({'recordId': fam2beMerged['_id']})
           config['relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
                                                {'$or': [{'husb': {'$exists': True}},
