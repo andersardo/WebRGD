@@ -128,10 +128,14 @@ for all relations
 totRel = 0
 updatedRel = 0
 for rel in config['relations'].find():
-    if rel['famId'] in Fignore: continue  #Kolla FIX
+    #if rel['famId'] in Fignore: continue  #Kolla FIX
     del(rel['_id'])
-    for mappedFamId in Fmap[rel['famId']]:
-        for mappedPersId in Imap[rel['persId']]:
+    fmaplist = Fmap[rel['famId']]
+    if not fmaplist: fmaplist = [rel['famId']]
+    imaplist = Imap[rel['persId']]
+    if not imaplist: imaplist = [rel['persId']]
+    for mappedFamId in fmaplist:
+        for mappedPersId in imaplist:
             rel['famId'] = mappedFamId
             rel['persId'] = mappedPersId
             res = config['match_relations'].update(rel, rel, upsert=True)
