@@ -145,6 +145,58 @@ logging.info('Merge families where husb and wife are same persons')
 from collections import defaultdict
 from mergeUtils import mergeEvent
 d = defaultdict(set)
+#generate Fmap
+Fmap = defaultdict(list)
+FmapChange = False
+for F in families.find({}, {'_id': 1} ): Fmap[F['_id']].append(F['_id'])
+for husb in config['relations'].find({'relTyp': 'husb'}):
+    for wife in config['relations'].find({'$and':
+                        [{'famId': husb['famId']}, {'relTyp': 'wife'}]}):
+        d[husb['persId'], wife['persId']].add(husb['famId'])
+for s in d.values():
+    if len(s)>=2:
+      FmapChange = True
+      fdubl = list(s)
+      #merge all into fdubl[0]
+      marrEvents = []
+      F = config['families'].find_one({'_id': fdubl[0]}, {'_id': 1})
+      FId = F['_id']
+      #USE for fd in fdubl[1:]:
+      for fd in fdubl:
+          if fd == fdubl[0]: continue
+          #FIX check marriage dates - see pattern notes
+          #Enl Rolf: Marr  datum kan vara olika eller blanka
+          fam2beMerged = config['families'].find_one({'_id': fd})
+          if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
+          print 'Merging family %s into %s', fam2beMerged['_id'], FId
+
+          config['families'].delete_one({'_id': fam2beMerged['_id']})
+          Fmap[fam2beMerged['_id']] = [F['_id']]
+          config['relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
+                                               {'$or': [{'relTyp': 'husb'},
+                                                        {'relTyp': 'wife'}]}
+                                           ]})
+          #only children in fam2beMerged left - move to new family
+          config['relations'].update_many({'famId': fam2beMerged['_id']},
+                                          {'$set': {'famId': F['_id']}})
+          #remove duplicates
+          for ids in config['relations'].aggregate([
+              { "$group": { 
+                  "_id": { "persId": "$persId", "relTyp": "$relTyp", 'famId': '$famId' }, 
+                  "uniqueIds": { "$addToSet": "$_id" },
+                  "count": { "$sum": 1 } 
+                }}, 
+              { "$match": { "count": { "$gt": 1 } } }
+          ]):
+              config['relations'].remove({'_id': ids['uniqueIds'][1]})
+
+      #merge all marriage events
+      config['families'].update_one({'_id': F['_id']}, {'$set':
+                                              {'marriage': mergeEvent(marrEvents)}})
+#SAVE Fmap
+if FmapChange: config['originalData'].insert_one({'type': 'Fmap', 'data': pickle.dumps(Fmap)})
+"""
+OLD
 ##AAFIX
 #for f in config['relations'].find({'husb': {'$ne': None}, 'wife': {'$ne': None}},
 #                       {'_id': 1, 'husb': 1, 'wife': 1}):
@@ -193,6 +245,7 @@ for s in d.values():
                                               {'marriage': mergeEvent(marrEvents)}})
       #SAVE Fmap
       config['originalData'].insert_one({'type': 'Fmap', 'data': pickle.dumps(Fmap)})
+"""
 logging.info('Time %s',time.time() - t0)
 logging.info('Indexing %s in Lucene', dbName)
 from luceneUtils import setupDir, index
