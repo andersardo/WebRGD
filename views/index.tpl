@@ -368,6 +368,24 @@ onmouseout="this.width='397'; this.style='position: reslative;right: 0px;'" />
 </table>
 
 <table style="width: 100%"><tr><td style="vertical-align: top;">
+<h2>7A. Relationseditor - <a href="#Edit">Läs mera</a></h2>
+<p><br><br>
+<form action="/relationsEditor" method="GET">
+Databas
+<select name="workDB">
+<option value="">Välj databas</option>
+
+%for db in dbs:
+    <option>{{db}}</option>'
+%end
+
+</select>
+<p><input type="submit" value="Editera" />
+</form>
+</td></tr>
+</table>
+
+<table style="width: 100%"><tr><td style="vertical-align: top;">
 <h2>8. Skapa GEDCOM fil - <a href="#Skapa">Läs mera</a></h2>
 Skapar GEDCOM fil från en utpekad databas (inkluderar NOTE mm från
 orginal GEDCOM filen/filerna).

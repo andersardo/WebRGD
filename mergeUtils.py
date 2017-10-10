@@ -132,12 +132,13 @@ def createMap(config):
         if famMatch['workid'] in Fignore: continue
         cnt += 1
         if famMatch['workid'] in Fmap and Fmap[famMatch['workid']] != famMatch['matchid']:
-            print 'Family', famMatch['workRefId'], 'in dbI matches 2 families in dbII => ignore dbI family'
-            print 'WARNING dbI family', famMatch['workRefId'], 'is NOT beeing merged into dbII'
+            #print 'Family', famMatch['workRefId'], 'in dbI matches 2 families in dbII => ignore dbI family'
+            #print 'WARNING dbI family', famMatch['workRefId'], 'is NOT beeing merged into dbII'
+            print 'Family', famMatch['workid'], 'in dbI matches', Fmap[famMatch['workid']], famMatch['matchid'], 'in dbII'
             print 'NO IGNORE'
             #del Fmap[famMatch['workid']]
             #Fignore.append(famMatch['workid'])
-            continue
+            #continue
         Fmap[famMatch['workid']].append(famMatch['matchid'])
         workOrg = config['originalData'].find_one({'recordId': famMatch['workid'], 'type': 'family'})
         for rec in workOrg['data']:

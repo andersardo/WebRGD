@@ -561,6 +561,63 @@ def listSkillnad(typ):
         tot = 0
     return bottle.template('listSkillnad', typ = typ, title = tit, page = page,
                            tot = tot, prow=rows, buttons=buttons, difftyp=difftyp)
+
+#Relation editor
+@bottle.route('/relationsEditor')
+@authorize()
+def relationEditor():
+    tit = 'Relations editor'
+    #SANITY CHECKS
+    #can only be child in 1 family
+    childErr = []
+    aggrPipe = [
+        {'$match': {'relTyp': 'child'}},
+        {'$project': {'persId': '$persId', 'famId': '$famId', 'count': {'$concat': ['1']}}},
+        {'$group': {'_id': '$persId', 'count': {'$sum': 1}, 'fams': {'$addToSet': '$famId'}}},
+        {'$match': {'count': {'$gt': 1}}}
+    ]
+    for multiChild in common.config['relations'].aggregate(aggrPipe):
+        #print multiChild
+        #print 'Relation ERROR Child', multiChild['_id'], 'in', multiChild['count'], 'families'
+        persRec = common.config['persons'].find_one({'_id': multiChild['_id']})
+        child = "%s %s" % (persRec['_id'], persRec['name'])
+        #Get alla child relations;
+        for famId in multiChild['fams']:
+            errRow = [child, famId]
+            #print 'famId', famId
+            husbRel = common.config['relations'].find_one({'famId': famId, 'relTyp': 'husb'})
+            #print 'Far', husbRel
+            text = ''
+            if husbRel:
+                persRec = common.config['persons'].find_one({'_id': husbRel['persId']})
+                text = "%s %s" % (persRec['_id'], persRec['name'])
+            errRow.append(text)
+            wifeRel = common.config['relations'].find_one({'famId': famId, 'relTyp': 'wife'})
+            #print 'Mor', wifeRel
+            text = ''
+            if wifeRel:
+                persRec = common.config['persons'].find_one({'_id': wifeRel['persId']})
+                text = "%s %s" % (persRec['_id'], persRec['name'])
+            errRow.append(text)
+            errRow.append('OK button')
+            childErr.append(errRow) 
+            #what if multiple parents in family??
+        childErr.append(['-']) #empty line
+    """
+    #NEW Same parents in several families
+
+    #1 husb/wife per family
+    for partner in ('husb', 'wife'):
+        aggrPipe = [
+            {'$match': {'relTyp': partner}},
+            {'$project': {'famId': '$famId', 'count': {'$concat': ['1']}}},
+            {'$group': {'_id': '$famId', 'count': {'$sum': 1}}},
+            {'$match': {'count': {'$gt': 1}}}]
+        for multiPartner in common.config['relations'].aggregate(aggrPipe):
+            #print 'Relation ERROR Family', multiPartner['_id'], 'have', multiPartner['count'], partner
+    """
+    return bottle.template('listEdit', title = tit, childErr=childErr, famErr = [])
+
 #Likheter
 @bottle.route('/downloadFamMatches')
 @authorize()

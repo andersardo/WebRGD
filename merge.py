@@ -51,6 +51,56 @@ print 'Time:',time.time() - t0
 print 'Creating match map persons/families'
 createMap(config)  #Creates/updates Imap, Fmap
 print 'Time:',time.time() - t0
+print 'Imap'
+print Imap
+print 'Fmap'
+print Fmap
+
+print 'Process flags'
+relIgnore = []
+"""
+###TESTING
+Vid sammanslagning uppstår 4 fall
+Rel1 mot Rel2 (upptäcks i multiMatch, createMap)
+1. dbI.A splitas så att dbI.C1 flyttas till dbII.B, resten slås ihop med dbII.C (split i DBI)
+     flag on dbI.C1 move -> dbII.B, remove match dbI.A -> dbII.B Ignore
+2. A, B, C slås samman (sammanslagning DBII)
+     flag on dbII.B merge -> dbII.C: Detect same family after merge Auto+Warn
+Rel2 mot Rel1 (upptäcks i multiMatch, ej i merge)
+3. B, C, A slås samman (vanlig mappning DBI)
+     -
+4. dbII.A splitas så att dbI.C1 flyttas till dbI.B, resten slås ihop med dbI.C (split DBII)
+     flag on dbII.C1 move -> dbI.B, remove match dbI.B -> dbII.A Ignore
+###TESTING
+
+#Fall 1 
+#Modify Fmap (görs bättre i createMap?) Fmap['F192']=[F197, F199] A=C, B
+Fmap['F_192'].remove('F_199') #Flag Ignore famMatch workFamId -> matchFamId
+#Relationseditor för att fixa C1 in 2 families?
+#eller Flag Ignore Relation C1 (P_419) child dbI.A (F_192)
+relIgnore = [{'persId': 'P_419', 'relTyp': 'child', 'famId': 'F_192'}]
+
+#Fall 2
+#Detect same family after merge Auto+Warn - OK
+
+#Fall 3
+#OK
+
+"""
+#Fall 4
+##Fmap['F_235'].remove('F_228') #Flag Ignore famMatch workFamId -> matchFamId
+Fmap['F_244'].remove('F_237') #Flag Ignore famMatch workFamId -> matchFamId
+##relIgnore = [{'persId': 'P_499', 'relTyp': 'child', 'famId': 'F_228'}]
+relIgnore = [{'persId': 'P_519', 'relTyp': 'child', 'famId': 'F_237'}]
+for k in Fmap.keys():
+    if not Fmap[k]: del(Fmap[k])
+print 'Fixed Fmap', Fmap
+for rel in relIgnore:
+    res = config['match_relations'].remove(rel)
+    print res
+    #if res["nRemoved"] >= 1: print rel, 'Removed'
+
+print 'Time:',time.time() - t0
 
 #TEST and quit ON ERRORS???
 
@@ -101,11 +151,12 @@ inscnt=0
 updcnt=0
 for family in config['families'].find():
     #New ignore KOLLA FIX
-    if family['_id'] in Fignore:
-        continue
+    #if family['_id'] in Fignore:
+    #    continue
     #end
     if family['_id'] in Fmap:
         updcnt += 1
+        print 'Fmap', family['_id'], Fmap[family['_id']]
         matchid = Fmap[family['_id']]
         if len(matchid) == 1:
             config['match_families'].update({'_id': matchid[0]},
@@ -115,6 +166,7 @@ for family in config['families'].find():
             print 'NOT Updating Fmap list longer than one:', matchid
     else:
         config['match_families'].insert_one(family)
+        print 'Finsert', family['_id']
         inscnt += 1
 print 'Families new=',inscnt,'updated=',updcnt
 print 'Time:',time.time() - t0
@@ -130,6 +182,10 @@ updatedRel = 0
 for rel in config['relations'].find():
     #if rel['famId'] in Fignore: continue  #Kolla FIX
     del(rel['_id'])
+    #print rel
+    if rel in relIgnore:
+        print 'IgnoredA', rel
+        continue
     fmaplist = Fmap[rel['famId']]
     if not fmaplist: fmaplist = [rel['famId']]
     imaplist = Imap[rel['persId']]
@@ -191,6 +247,57 @@ for relTyp in ('husb', 'wife', 'child'):
 print 'Relations: total=', totRel, 'updated=', updatedRel
 print 'Time:',time.time() - t0
 """
+
+#Check for duplicate families: Fall 2 relationserror
+#Find and merge families where husb and wife are same
+#  and marriages do not conflict
+from collections import defaultdict
+from mergeUtils import mergeEvent
+d = defaultdict(set)
+#USE db.collection.group???
+for husb in config['match_relations'].find({'relTyp': 'husb'}):
+    for wife in config['match_relations'].find({'$and':
+                        [{'famId': husb['famId']}, {'relTyp': 'wife'}]}):
+        d[husb['persId'], wife['persId']].add(husb['famId'])
+for s in d.values():
+    if len(s)>=2:
+      fdubl = list(s)
+      #merge all into fdubl[0]
+      marrEvents = []
+      F = config['match_families'].find_one({'_id': fdubl[0]}, {'_id': 1})
+      FId = F['_id']
+      #USE for fd in fdubl[1:]:
+      for fd in fdubl:
+          if fd == fdubl[0]: continue
+          #FIX check marriage dates - see pattern notes
+          #Enl Rolf: Marr  datum kan vara olika eller blanka
+          fam2beMerged = config['match_families'].find_one({'_id': fd})
+          if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
+          print 'Merging family %s into %s', fam2beMerged['_id'], FId
+
+          config['match_families'].delete_one({'_id': fam2beMerged['_id']})
+          Fmap[fam2beMerged['_id']] = [F['_id']]
+          config['match_relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
+                                               {'$or': [{'relTyp': 'husb'},
+                                                        {'relTyp': 'wife'}]}
+                                           ]})
+          #only children in fam2beMerged left - move to new family
+          config['match_relations'].update_many({'famId': fam2beMerged['_id']},
+                                          {'$set': {'famId': F['_id']}})
+          #remove duplicates
+          for ids in config['match_relations'].aggregate([
+              { "$group": { 
+                  "_id": { "persId": "$persId", "relTyp": "$relTyp", 'famId': '$famId' }, 
+                  "uniqueIds": { "$addToSet": "$_id" },
+                  "count": { "$sum": 1 } 
+                }}, 
+              { "$match": { "count": { "$gt": 1 } } }
+          ]):
+              config['match_relations'].remove({'_id': ids['uniqueIds'][1]})
+
+      #merge all marriage events
+      config['match_families'].update_one({'_id': F['_id']}, {'$set':
+                                              {'marriage': mergeEvent(marrEvents)}})
 
 #SANITY CHECKS
 #can only be child in 1 family
