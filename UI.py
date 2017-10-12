@@ -769,11 +769,11 @@ def views(typ):
 @authorize()
 def showGraph():
     res = genGraph(bottle.request.query.wid, 
-                    common.config['families'], common.config['persons'], 
+                    common.config['families'], common.config['persons'], common.config['relations'],
                     bottle.request.session['directory'], 'Work family')
     try:
         res += genGraph(bottle.request.query.mid, 
-                    common.config['match_families'], common.config['match_persons'], 
+                    common.config['match_families'], common.config['match_persons'], common.config['match_relations'],
                     bottle.request.session['directory'], 'Match family')
     except: pass
     return res

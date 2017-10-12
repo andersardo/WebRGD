@@ -1,5 +1,5 @@
 import sys, os
-from bson.objectid import ObjectId
+from dbUtils import getFamilyFromId
 
 import codecs, locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8') #sorting??
@@ -52,9 +52,9 @@ def printNode(indId, attrs, persons, gvFil):
     gvFil.write("\n")
     return
 
-def genGraph(centerPersonId, families, persons, directory, title):
+def genGraph(centerPersonId, families, persons, relations, directory, title):
     global mapPersId
-    centerPersonId = ObjectId(centerPersonId)
+    centerPersonId = centerPersonId
     filnamn = directory+'/graph.gv'
     gvFil = open(filnamn, 'wb')
     gvFil = codecs.getwriter('UTF-8')(gvFil)
@@ -66,13 +66,16 @@ def genGraph(centerPersonId, families, persons, directory, title):
     persList = set()
     famList = []
     partnerList = []
-    for f in families.find({'$or': [{'husb': centerPersonId},
-                                    {'wife':  centerPersonId} ]}):
-        famList.append(f)
+    #for f in families.find({'$or': [{'husb': centerPersonId},
+    #                                {'wife':  centerPersonId} ]}):
+    #NoParents = True
+    #for f in families.find({'children': centerPersonId}):
+    #    NoParents = False
+    #    famList.append(f)
     NoParents = True
-    for f in families.find({'children': centerPersonId}):
-        NoParents = False
-        famList.append(f)
+    for f in relations.find({'persId': centerPersonId}):
+        famList.append(getFamilyFromId(f['famId'], families, relations))
+        if f['relTyp'] == 'child': NoParents = False
     if NoParents: 
         dummyFam['children'] = [centerPersonId]
         famList.append(dummyFam)
