@@ -27,21 +27,24 @@ function syncload(url, where) {
   request.send(null);
   if (request.status === 200) {
        where.innerHTML = request.responseText;
-//FIX!! Test on return ERR => alert
   }
 }
+//FIX!! Test on return ERR => alert
+
 function doAction(args) {
 //FIX better handling of args
     var mid = args.mid || ''
     var fid = args.fid || ''
     var role = args.role || ''
-    var fltext = args.fltext || ''
+    var pid = args.pid || ''
+    var workFam = args.workFam || ''
+    var matchFam = args.matchFam || ''
     if (args.where == 'visa') {
       document.getElementById('verif').innerHTML = ''
       document.getElementById('res').innerHTML = ''
     }
     if (args.what.indexOf('/actions') == 0) {
-      syncload(args.what + '?wid='+args.wid+'&mid='+mid+'&fid='+fid+'&role='+role+'&fltext='+fltext,document.getElementById(args.where));
+      syncload(args.what + '?wid='+args.wid+'&mid='+mid+'&fid='+fid+'&role='+role+'&pid='+pid+'&workFam='+workFam+'&matchFam='+matchFam,document.getElementById(args.where));
       window.location.reload(true);
     } else {
       load(args.what + '?wid='+args.wid+'&mid='+mid+'&fid='+fid+'&role='+role,document.getElementById(args.where));

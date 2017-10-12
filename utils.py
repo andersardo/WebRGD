@@ -316,8 +316,10 @@ def setOKperson(wid, mid, button = True):
                 #   insert minimum fam_match med status 'candidate' - svårt!!
                 #   it gets updated later by updateFamMatch
                 for role in ('husb', 'wife', 'children'):
-                    tFam = common.config['families'].find({role: wid}, {'_id': 1} )
-                    rFam = common.config['match_families'].find({role: mid}, {'_id': 1} )
+                    #tFam = common.config['families'].find({role: wid}, {'_id': 1} )
+                    tFam = common.config['relations'].find({'persId': wid, 'relTyp': role})
+                    #rFam = common.config['match_families'].find({role: mid}, {'_id': 1} )
+                    rFam = common.config['match_relations'].find({'persId': mid, 'relTyp': role})
                     for f in tFam:
                         for ff in rFam:
                             if not common.config['fam_matches'].find_one({'workid': f['_id'], 'matchid': ff['_id']}):
@@ -335,8 +337,10 @@ def setOKperson(wid, mid, button = True):
         return 'No status changing updates'
     flist = set()
     for id in indlist:  #get list of involved individuals
-        for fam in common.config['families'].find({'$or': [{'husb': id}, {'wife': id}, {'children': id}]}, {'_id': True}):
-            flist.add(fam['_id'])
+        #for fam in common.config['families'].find({'$or': [{'husb': id}, {'wife': id}, {'children': id}]}, {'_id': True}):
+        #    flist.add(fam['_id'])
+        for fam in common.config['relations'].find({'persId': id}, {'famId': True}):
+            flist.add(fam['famId'])
     return updateFamMatch(flist, common.config)
 
 def setEjOKperson(wid, mid, code='EjOK'):
@@ -347,10 +351,12 @@ def setEjOKperson(wid, mid, code='EjOK'):
     indlist = [wid]
     flist = set()
     for id in indlist:  #get list of involved individuals
-        for fam in common.config['families'].find({'$or': [{'husb': id}, {'wife': id}, {'children': id}]}, {'_id': True}):
-            flist.add(fam['_id'])
+        #for fam in common.config['families'].find({'$or': [{'husb': id}, {'wife': id}, {'children': id}]}, {'_id': True}):
+        #    flist.add(fam['_id'])
+        for fam in common.config['relations'].find({'persId': id}, {'famId': True}):
+            flist.add(fam['famId'])
     return updateFamMatch(flist, common.config)
-
+"""
 def kopplaLoss(personId, famId, role):
     #update family
     fam = common.config['families'].find_one({'_id': famId})
@@ -385,7 +391,7 @@ def kopplaLoss(personId, famId, role):
     flist = set()
     flist.add(famId)
     return updateFamMatch(flist, common.config) #funkar inte - ger fel i fam_matches
-
+"""
 def split(wid, mid):
     """ Precondition personmatch in status statEjOK
     Parameters: wid workid, mid matchid for persons

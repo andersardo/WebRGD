@@ -86,13 +86,20 @@ relIgnore = [{'persId': 'P_419', 'relTyp': 'child', 'famId': 'F_192'}]
 #Fall 3
 #OK
 
-"""
 #Fall 4
 ##Fmap['F_235'].remove('F_228') #Flag Ignore famMatch workFamId -> matchFamId
 Fmap['F_244'].remove('F_237') #Flag Ignore famMatch workFamId -> matchFamId
 ##relIgnore = [{'persId': 'P_499', 'relTyp': 'child', 'famId': 'F_228'}]
 relIgnore = [{'persId': 'P_519', 'relTyp': 'child', 'famId': 'F_237'}]
-for k in Fmap.keys():
+"""
+for flag in config['flags'].find():
+    if flag['typ'] == 'IgnoreRelation':
+        relIgnore.append({'persId': flag['persId'], 'relTyp': flag['relTyp'], 'famId': flag['famId']})
+    elif flag['typ'] == 'IgnoreFamilyMatch':
+        Fmap[flag['workFam']].remove(flag['matchFam'])
+    else:
+        print 'Unknown flag:', flag
+for k in Fmap.keys(): #delete empty maps
     if not Fmap[k]: del(Fmap[k])
 print 'Fixed Fmap', Fmap
 for rel in relIgnore:

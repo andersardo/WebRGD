@@ -4,8 +4,8 @@ from collections import OrderedDict
 import codecs, time, logging, os.path
 
 from uiUtils import listPersons, listFamilies, personView, familyView, famDisp
-from uiUtils import listPersonSkillnad, listFamiljeSkillnad, getFlags, addFlag
-from utils import setOKfamily, setEjOKfamily, setOKperson, setEjOKperson, kopplaLoss, split
+from uiUtils import listPersonSkillnad, listFamiljeSkillnad, ignoreRelation, getFlags#, addFlag
+from utils import setOKfamily, setEjOKfamily, setOKperson, setEjOKperson, split#, kopplaLoss
 from uiUtils import dbfind,familyViewAll
 from workFlow import workFlowUI, doUpload, cleanUp, getDBselect, listOldLogs
 from graphUtils import genGraph
@@ -799,11 +799,12 @@ def act2():
 def act3():
     return setEjOKperson(bottle.request.query.wid, bottle.request.query.mid)
 
+"""
 @bottle.route('/actions/kopplaLoss')
 @authorize()
 def act4():
     return kopplaLoss(bottle.request.query.wid, bottle.request.query.fid, bottle.request.query.role)
-
+"""
 @bottle.route('/actions/split')
 @authorize()
 def actSplit():
@@ -813,6 +814,13 @@ def actSplit():
 @authorize()
 def act5():
     return addFlag(bottle.request.query.wid, bottle.request.query.fid, bottle.request.query.fltext)
+
+@bottle.route('/actions/ignoreRelation')
+@authorize()
+def act5():
+    return ignoreRelation(bottle.request.query.pid, bottle.request.query.fid,
+                          bottle.request.query.role,
+                          bottle.request.query.workFam, bottle.request.query.matchFam)
 
 #################ADMIN################
 @bottle.route('/oldLogs')

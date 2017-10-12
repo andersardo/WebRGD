@@ -50,7 +50,7 @@ def printNode(indId, attrs, persons, gvFil):
 #FIX URLs in graph for matches (mid)???
     gvFil.write(ind['_id'] + '[URL="/graph?wid='+str(ind['_id'])+'" target=_blank, label=<'+lab2+'>, '+attrs+'];')
     gvFil.write("\n")
-    return        
+    return
 
 def genGraph(centerPersonId, families, persons, directory, title):
     global mapPersId

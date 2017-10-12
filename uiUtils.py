@@ -29,35 +29,48 @@ def persDisp(p):
     else:
         return ['-','-','-']
 
-def persMatchDisp(role, pm, famId = ''):
+def persMatchDisp(role, pm, workfamId = None, matchfamId = None):
 #FIX color dep status
-    args = {'where': 'verif', 'what': '/actions/kopplaLoss', 'role': role}
-    flagArgs = {'where': 'verif', 'what': '/view/flags',
-                'role': role, 'fid': str(famId)}
-    flags = ''
-    edit = ''
+    ignargs = {'where': 'res', 'what': '/actions/ignoreRelation', 'role': role,
+               'workFam': str(workfamId), 'matchFam': str(matchfamId)}
+    ign1 = ''
+    ign2 = ''
     if role in ('husb', 'wife', 'child'):
         try:
-            args['wid'] = str(pm['pwork']['_id'])
-            args['fid'] = str(famId)
-            edit = '<button onclick="doAction('+str(args)+')">KL</button>'
+            ignargs['pid'] = str(pm['pwork']['_id'])
+            ignargs['fid'] = str(workfamId)
+            flag = common.config['flags'].find_one({"typ" : "IgnoreRelation",
+                                                    'persId': ignargs['pid'], 'relTyp': role,
+                                                    'famId': ignargs['fid']})
+            if flag: ign1 = '<b>Ignorerad i db I</b>'
+            else:
+                ign1 = '<button onclick="doAction('+str(ignargs)+')">Ignorera i db I</button>'
         except: pass
         try:
-            flagArgs['wid'] = str(pm['pwork']['_id'])
+            ignargs['pid'] = str(pm['pmatch']['_id'])
+            ignargs['fid'] = str(matchfamId)
+            flag = common.config['flags'].find_one({"typ" : "IgnoreRelation",
+                                                    'persId': ignargs['pid'], 'relTyp': role,
+                                                    'famId': ignargs['fid']})
+            if flag: ign2 = '<b>Ignorerad i db II</b>'
+            else:
+                ign2 = '<button onclick="doAction('+str(ignargs)+')">Ignorera i db II</button>'
         except: pass
-        flags = '<button onclick="doAction('+str(flagArgs)+')">Flags</button>'
+        """
         #TMP
         try:
             graphArgs = {'where': 'graph', 'what': '/graph', 'role': role, 
                          'wid': str(pm['pwork']['_id']), 'mid': str(pm['pmatch']['_id'])}
-            flags += '<button onclick="doAction('+str(graphArgs)+')">Graph</button>'
-        except: pass            
+            edit += '<button onclick="doAction('+str(graphArgs)+')">Graph</button>'
+        except: pass
         #TMP
-    else:
-        graphArgs = {'where': 'graph', 'what': '/graph', 'role': role, 
-                     'wid': str(pm['pwork']['_id']), 'mid': str(pm['pmatch']['_id'])}
-        edit = '<button onclick="doAction('+str(graphArgs)+')">Graph</button>'
-    cell1 = '<br/>'.join([role, edit, flags])
+        """
+    #else:
+    #    graphArgs = {'where': 'graph', 'what': '/graph', 'role': role, 
+    #                 'wid': str(pm['pwork']['_id']), 'mid': str(pm['pmatch']['_id'])}
+    #    edit = '<button onclick="doAction('+str(graphArgs)+')">Graph</button>'
+    #cell1 = '<br/>'.join([role, edit, flags])
+    cell1 = '<br/>'.join([role, ign1, ign2])
     txt = [cell1, pm['status']]
     if 'pwork' in pm:
         txt.extend(persDisp(pm['pwork']))
@@ -72,7 +85,14 @@ def persMatchDisp(role, pm, famId = ''):
     if (role == 'child') and (pm['status'] in common.statEjOK):
         args['what'] = '/actions/split'
         persButton += '<br><button onclick="doAction('+str(args)+')">Split</button>'
-    txt.extend([persButton])
+    edit = ''
+    try:
+        graphArgs = {'where': 'graph', 'what': '/graph', 'role': role, 
+                     'wid': str(pm['pwork']['_id']), 'mid': str(pm['pmatch']['_id'])}
+        edit = '<button onclick="doAction('+str(graphArgs)+')">Graph</button>'
+    except:
+        pass
+    txt.extend([persButton + '<br/>' + edit])
     try: txt.extend(persDisp(pm['pmatch']))
     except: txt.extend(['-','_','-'])
     return txt
@@ -81,12 +101,14 @@ def famDisp( tmpfid, rgdfid, match = None ):
     if not match:
         match = common.config['fam_matches'].find_one({'workid': ObjectId(tmpfid), 'matchid': ObjectId(rgdfid)})
     tab = []
+    tab.append(['','','db I='+common.config['workDB'],'','',
+                '','db II='+common.config['matchDB'],'',''])
     tab.append(['Roll', u'Status', u'Namn/refId', u'Född', u'Död', '', u'Namn/refId', u'Född', u'Död'])
 #    import pprint
 #    pp = pprint.PrettyPrinter(indent=4)
 #    pp.pprint(match)
     for role in ('husb', 'wife'):
-        try: tab.append(persMatchDisp(role, match[role], match['workid']))
+        try: tab.append(persMatchDisp(role, match[role], match['workid'], match['matchid']))
 #        except: pass
         except Exception,e:
 #            print 'Except in famDisp', e
@@ -100,14 +122,21 @@ def famDisp( tmpfid, rgdfid, match = None ):
     marr = ['Marriage', match['status'], match['workRefId']]
     try: marr.append(eventDisp(match['marriage']['work']))
     except: marr.append('-')
-    marr.extend(['-', '', match['matchRefId']])
+    flag = common.config['flags'].find_one({"typ" : "IgnoreFamilyMatch",
+                                            "workFam" : match['workid'],
+                                            "matchFam" : match['matchid']})
+    print flag
+    if flag: ign = '<b>Familjematch ingnorerad</b>'
+    else: ign = ''
+    #marr.extend(['-', '<button onclick="doAction('+str(args)+')">Ignore Fam Match</button>', match['matchRefId']])
+    marr.extend(['-', ign])
     try: marr.append(eventDisp(match['marriage']['match']))
     except: marr.append('-')
     marr.append('')
     tab.append(marr)
     tab.append(['','','','','','','','',''])
     for ch in match['children']:
-        tab.append(persMatchDisp('child', ch, match['workid']))
+        tab.append(persMatchDisp('child', ch, match['workid'], match['matchid']))
     return tab
 
 ##########NEW
@@ -211,7 +240,7 @@ def familyViewAll(skipAnt=0):
         visa = tmp[1][6]
         m = re.search(r"\'wid\': \'([^']+)\',", visa)
         if m:
-            wid = ObjectId(m.group(1))
+            wid = m.group(1)
         else: print 'No wid in DB1'
     else:
         (tmp, tmp1) = listFamilies(filter, {'DB1': '', 'DB2': 'checked'}, page=1, limit=1)
@@ -242,16 +271,16 @@ def familyViewAll(skipAnt=0):
 def familyView(wid, mid):
     res = []
     if wid and mid:
-        matches = common.config['fam_matches'].find({'workid': ObjectId(wid), 'matchid': ObjectId(mid)})
+        matches = common.config['fam_matches'].find({'workid': wid, 'matchid': mid})
     elif wid:
         # multilista => only statOK and statManuell
 #        matches = common.config['fam_matches'].find({'workid': ObjectId(wid)})
-        matches = common.config['fam_matches'].find({'$and': [{'workid': ObjectId(wid)},
+        matches = common.config['fam_matches'].find({'$and': [{'workid': wid},
                 {'status': {'$in': list(common.statOK.union(common.statManuell))}}]})
     elif mid:
         # multilista => only statOK and statManuell
 #        matches = common.config['fam_matches'].find({'matchid': ObjectId(mid)})
-        matches = common.config['fam_matches'].find({'$and': [{'matchid': ObjectId(mid)},
+        matches = common.config['fam_matches'].find({'$and': [{'matchid': mid},
                 {'status': {'$in': list(common.statOK.union(common.statManuell))}}]})
     else: matches = []
     for fmatch in matches:
@@ -304,6 +333,7 @@ def listPersons(filters, multi, page=1, limit=10):
     aggrPipe.append({'$skip': start})
     aggrPipe.append({'$limit': limit})
     for match in matches.aggregate(aggrPipe):
+        print match
 #FIX id, refId, namn, sum, född. död, visa
         if match['count'] == '1':
             args['wid'] = str(match['wid'])
@@ -340,14 +370,14 @@ def personView(wid, mid):
 #        matches = common.config['matches'].find({'workid': ObjectId(wid)})
 ##
     if wid and mid:
-        matches = common.config['matches'].find({'workid': ObjectId(wid), 'matchid': ObjectId(mid)})
+        matches = common.config['matches'].find({'workid': wid, 'matchid': mid})
     elif wid:
         # multilista => only statOK and statManuell
-        matches = common.config['matches'].find({'$and': [{'workid': ObjectId(wid)},
+        matches = common.config['matches'].find({'$and': [{'workid': wid},
                 {'status': {'$in': list(common.statOK.union(common.statManuell))}}]})
     elif mid:
         # multilista => only statOK and statManuell
-        matches = common.config['matches'].find({'$and': [{'matchid': ObjectId(mid)},
+        matches = common.config['matches'].find({'$and': [{'matchid': mid},
                 {'status': {'$in': list(common.statOK.union(common.statManuell))}}]})
     else: matches = []
 ##
@@ -362,41 +392,47 @@ def personView(wid, mid):
         ftab = []
         #Match exists children?
         #print 'children'
-        fmatch = common.config['fam_matches'].find_one({'children.pwork._id': ObjectId(wid), 'children.pmatch._id': mid})
+        fmatch = common.config['fam_matches'].find_one({'children.pwork._id': wid, 'children.pmatch._id': mid})
         if fmatch: ftab = famDisp(None, None, fmatch)
         else:  #HUSB
             #print 'husb'
-            fmatch = common.config['fam_matches'].find_one({'husb.pwork._id': ObjectId(wid), 'husb.pmatch._id': mid})
+            fmatch = common.config['fam_matches'].find_one({'husb.pwork._id': wid, 'husb.pmatch._id': mid})
             if fmatch: ftab = famDisp(None, None, fmatch)
             else:  #WIFE
                 #print 'wife',wid,mid
-                fmatch = common.config['fam_matches'].find_one({'wife.pwork._id': ObjectId(wid), 'wife.pmatch._id': mid})
+                fmatch = common.config['fam_matches'].find_one({'wife.pwork._id': wid, 'wife.pmatch._id': mid})
                 if fmatch: ftab = famDisp(None, None, fmatch)
                 else:
                     #print 'matchchild'
-                    wfamid = common.config['families'].find_one({'children': ObjectId(wid)}, {'_id': True})
-                    mfamid = common.config['match_families'].find_one({'children': mid}, {'_id': True})
+                    #wfamid = common.config['families'].find_one({'children': ObjectId(wid)}, {'_id': True})
+                    wfamid = common.config['relations'].find_one({'relTyp': 'child', 'persId': wid})
+                    #mfamid = common.config['match_families'].find_one({'children': mid}, {'_id': True})
+                    mfamid = common.config['match_relations'].find_one({'relTyp': 'child', 'persId': wid})
                     if wfamid and mfamid:
                         try:
-                            fmatch = matchFam(wfamid['_id'], mfamid['_id'], common.config)
+                            fmatch = matchFam(wfamid['famId'], mfamid['famId'], common.config)
                             ftab = famDisp(None, None, fmatch)
                         except: pass
                     else:
                         #print 'matchhusb'
-                        wfamid = common.config['families'].find_one({'husb': ObjectId(wid)}, {'_id': True})
-                        mfamid = common.config['match_families'].find_one({'husb': mid}, {'_id': True})
+                        #wfamid = common.config['families'].find_one({'husb': ObjectId(wid)}, {'_id': True})
+                        #mfamid = common.config['match_families'].find_one({'husb': mid}, {'_id': True})
+                        wfamid = common.config['relations'].find_one({'relTyp': 'husb', 'persId': wid})
+                        mfamid = common.config['match_relations'].find_one({'relTyp': 'husb', 'persId': wid})
                         if wfamid and mfamid:
                             try:
-                                fmatch = matchFam(wfamid['_id'], mfamid['_id'], common.config)
+                                fmatch = matchFam(wfamid['famId'], mfamid['famId'], common.config)
                                 ftab = famDisp(None, None, fmatch)
                             except: pass
                         else:
                             #print 'matchwife'
-                            wfamid = common.config['families'].find_one({'wife': ObjectId(wid)}, {'_id': True})
-                            mfamid = common.config['match_families'].find_one({'wife': mid}, {'_id': True})
+                            #wfamid = common.config['families'].find_one({'wife': ObjectId(wid)}, {'_id': True})
+                            #mfamid = common.config['match_families'].find_one({'wife': mid}, {'_id': True})
+                            wfamid = common.config['relations'].find_one({'relTyp': 'wife', 'persId': wid})
+                            mfamid = common.config['match_relations'].find_one({'relTyp': 'wife', 'persId': wid})
                             if wfamid and mfamid:
                                 try:
-                                    fmatch = matchFam(wfamid['_id'], mfamid['_id'], common.config)
+                                    fmatch = matchFam(wfamid['famId'], mfamid['famId'], common.config)
                                     ftab = famDisp(None, None, fmatch)
                                 except: pass
 
@@ -417,10 +453,20 @@ def getFlags(personId, famId, role):
         flags.append([flag['personid'],'',flag['famid'],flag['text']])
     return flags
 
+"""
 def addFlag(personId, famId, fltext):
     common.config['flags'].insert({'workid': ObjectId(personId), 'personid': personId,
                                    'famid': famId,'text': fltext})
     return getFlags(personId, famId, '')
+"""
+def ignoreRelation(persId, famId, role, workFam=None, matchFam=None):
+    common.config['flags'].insert_one({'typ': 'IgnoreRelation', 'persId': persId, 'relTyp': role,
+                                   'famId': famId})
+    res = 'Flagga: IgnoreRelation person=%s roll=%s familj=%s<br>' % (persId, role, famId)
+    common.config['flags'].insert_one({'typ': 'IgnoreFamilyMatch', 'workFam': workFam,
+                                   'matchFam': matchFam})
+    res += 'Flagga: IgnoreFamilyMatch %s -> %s<br>' % (workFam, matchFam)
+    return res
 
 #Skillnad
 def nameDiff(work, match):
