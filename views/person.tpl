@@ -1,11 +1,11 @@
 %if prow:
   <h2>Person</h2>
   <table border=1>
-  %if prow[1] in ('Match', 'OK', 'rOK'):
-    <tr bgcolor="#50FF50">
-  %elif prow[1] in ('EjMatch', 'EjOK', 'rEjOK'):
+  %if ('EjMatch' in prow[4]) or ('EjOK' in prow[4]):
     <tr bgcolor="#FF5050">
-  %elif prow[1] in ('Manuell', 'rManuell'):
+  %elif ('Match' in prow[4]) or ('OK' in prow[4]):
+    <tr bgcolor="#50FF50">
+  %elif 'Manuell' in prow[4]:
     <tr bgcolor="#FFFF50">
   %else:
     <tr>

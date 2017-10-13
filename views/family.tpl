@@ -2,11 +2,13 @@
 <hr>
 <table border=1>
 %for r in rows:
-  %if r[1] in ('Match', 'OK', 'rOK'):
-    <tr bgcolor="#50FF50">
-  %elif r[1] in ('EjMatch', 'EjOK', 'rEjOK'):
+  %if ('EjMatch' in r[4]) or ('EjOK' in r[4]):
     <tr bgcolor="#FF5050">
-  %elif r[1] in ('Manuell', 'rManuell'):
+  %elif 'notMatched' in r[4]:
+    <tr bgcolor="#FFFFFF">
+  %elif ('Match' in r[4]) or ('OK' in r[4]):
+    <tr bgcolor="#50FF50">
+  %elif 'Manuell' in r[4]:
     <tr bgcolor="#FFFF50">
   %else:
     <tr>

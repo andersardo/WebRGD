@@ -87,7 +87,7 @@ def pers_dict(p):
    pers = {'type': 'person'}
    pid = re.sub('0 @','',str(p));
    pid = re.sub('@ INDI','',pid);
-   pers['refId'] = 'gedcom_' + pid
+   pers['refId'] = pid
    pers['name'] = namestr(p)
    try:
        pers['grpNameGiven'] = ' '.join(set(namMap[namestr(p)]['F'].split(',')))
@@ -127,7 +127,7 @@ def fam_dict(fam):
    relations = []
    fid = re.sub('0 @','',str(fam));
    fid = re.sub('@ FAM','',fid);
-   familj['refId'] = 'gedcom_' + fid
+   familj['refId'] = fid
    if (fam.husband() and fam.husband().pid):
       relations.append({'relTyp': 'husb', 'persId': fam.husband().pid})
    if (fam.wife() and fam.wife().pid):

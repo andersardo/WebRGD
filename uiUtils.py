@@ -42,9 +42,9 @@ def persMatchDisp(role, pm, workfamId = None, matchfamId = None):
             flag = common.config['flags'].find_one({"typ" : "IgnoreRelation",
                                                     'persId': ignargs['pid'], 'relTyp': role,
                                                     'famId': ignargs['fid']})
-            if flag: ign1 = '<b>Ignorerad i db I</b>'
+            if flag: ign1 = '<b>Ignorerad</b>'
             else:
-                ign1 = '<button onclick="doAction('+str(ignargs)+')">Ignorera i db I</button>'
+                ign1 = '<button onclick="doAction('+str(ignargs)+')">Ignorera relation</button>'
         except: pass
         try:
             ignargs['pid'] = str(pm['pmatch']['_id'])
@@ -52,26 +52,13 @@ def persMatchDisp(role, pm, workfamId = None, matchfamId = None):
             flag = common.config['flags'].find_one({"typ" : "IgnoreRelation",
                                                     'persId': ignargs['pid'], 'relTyp': role,
                                                     'famId': ignargs['fid']})
-            if flag: ign2 = '<b>Ignorerad i db II</b>'
+            if flag: ign2 = '<b>Ignorerad</b>'
             else:
-                ign2 = '<button onclick="doAction('+str(ignargs)+')">Ignorera i db II</button>'
+                ign2 = '<button onclick="doAction('+str(ignargs)+')">Ignorera relation</button>'
         except: pass
-        """
-        #TMP
-        try:
-            graphArgs = {'where': 'graph', 'what': '/graph', 'role': role, 
-                         'wid': str(pm['pwork']['_id']), 'mid': str(pm['pmatch']['_id'])}
-            edit += '<button onclick="doAction('+str(graphArgs)+')">Graph</button>'
-        except: pass
-        #TMP
-        """
-    #else:
-    #    graphArgs = {'where': 'graph', 'what': '/graph', 'role': role, 
-    #                 'wid': str(pm['pwork']['_id']), 'mid': str(pm['pmatch']['_id'])}
-    #    edit = '<button onclick="doAction('+str(graphArgs)+')">Graph</button>'
-    #cell1 = '<br/>'.join([role, edit, flags])
-    cell1 = '<br/>'.join([role, ign1, ign2])
-    txt = [cell1, pm['status']]
+    #cell1 = '<br/>'.join([role.capitalize(), ign1, ign2])
+    #txt = [cell1, pm['status']]
+    txt = [ign1]
     if 'pwork' in pm:
         txt.extend(persDisp(pm['pwork']))
     else:
@@ -80,8 +67,7 @@ def persMatchDisp(role, pm, workfamId = None, matchfamId = None):
     args =  {'where': 'visa', 'what': '/view/persons', 'wid': '', 'mid': ''}
     if 'pwork' in pm: args['wid'] = str(pm['pwork']['_id'])
     if 'pmatch' in pm: args['mid'] = str(pm['pmatch']['_id'])
-    persButton = '<button onclick="doAction('+str(args)+')">View</button>'
-#    if pm['status'] in common.statEjOK:
+    persButton = '<button onclick="doAction('+str(args)+')">Visa</button>'
     if (role == 'child') and (pm['status'] in common.statEjOK):
         args['what'] = '/actions/split'
         persButton += '<br><button onclick="doAction('+str(args)+')">Split</button>'
@@ -89,24 +75,23 @@ def persMatchDisp(role, pm, workfamId = None, matchfamId = None):
     try:
         graphArgs = {'where': 'graph', 'what': '/graph', 'role': role, 
                      'wid': str(pm['pwork']['_id']), 'mid': str(pm['pmatch']['_id'])}
-        edit = '<button onclick="doAction('+str(graphArgs)+')">Graph</button>'
+        edit = '<button onclick="doAction('+str(graphArgs)+')">Graf</button>'
     except:
         pass
-    txt.extend([persButton + '<br/>' + edit])
+    #txt.extend([persButton + '<br/>' + edit])
+    txt.extend(['<br/>'.join([role.capitalize()+'/ '+pm['status'], persButton, edit])])
     try: txt.extend(persDisp(pm['pmatch']))
     except: txt.extend(['-','_','-'])
+    txt.extend([ign2])
     return txt
 
 def famDisp( tmpfid, rgdfid, match = None ):
     if not match:
         match = common.config['fam_matches'].find_one({'workid': ObjectId(tmpfid), 'matchid': ObjectId(rgdfid)})
     tab = []
-    tab.append(['','','db I='+common.config['workDB'],'','',
-                '','db II='+common.config['matchDB'],'',''])
-    tab.append(['Roll', u'Status', u'Namn/refId', u'Född', u'Död', '', u'Namn/refId', u'Född', u'Död'])
-#    import pprint
-#    pp = pprint.PrettyPrinter(indent=4)
-#    pp.pprint(match)
+    tab.append(['', '<b>'+common.config['workDB'].split('_', 1)[1]+'</b>','','',
+                '', '<b>'+common.config['matchDB'].split('_', 1)[1]+'</b>','','',''])
+    tab.append(['', u'Namn/refId', u'Född', u'Död', '', u'Namn/refId', u'Född', u'Död', ''])
     for role in ('husb', 'wife'):
         try: tab.append(persMatchDisp(role, match[role], match['workid'], match['matchid']))
 #        except: pass
@@ -119,19 +104,20 @@ def famDisp( tmpfid, rgdfid, match = None ):
             try: txt.extend(persDisp(match[role]['pmatch']))
             except: txt.extend(['-','_','-'])
             tab.append(txt)
-    marr = ['Marriage', match['status'], match['workRefId']]
+    marr = ['', match['workRefId']]
     try: marr.append(eventDisp(match['marriage']['work']))
     except: marr.append('-')
     flag = common.config['flags'].find_one({"typ" : "IgnoreFamilyMatch",
                                             "workFam" : match['workid'],
                                             "matchFam" : match['matchid']})
-    print flag
-    if flag: ign = '<b>Familjematch ingnorerad</b>'
-    else: ign = ''
+    ign = 'Marriage/ '+match['status']
+    if flag: ign += '<br><b>Ingnorerad</b>'
+    else: ign += ''
     #marr.extend(['-', '<button onclick="doAction('+str(args)+')">Ignore Fam Match</button>', match['matchRefId']])
-    marr.extend(['-', ign])
+    marr.extend(['', ign, match['matchRefId']])
     try: marr.append(eventDisp(match['marriage']['match']))
     except: marr.append('-')
+    marr.append('')
     marr.append('')
     tab.append(marr)
     tab.append(['','','','','','','','',''])
