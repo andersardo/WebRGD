@@ -376,7 +376,6 @@ def lists(typ):
 @authorize()
 def search():
     gedid = bottle.request.query.gedid
-    if not gedid.startswith('gedcom_'): gedid = 'gedcom_'+gedid
     if bottle.request.query.databas == 'work':
         p = common.config['persons'].find_one({'refId': gedid}, {'_id': 1})
         if p:

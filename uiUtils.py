@@ -551,7 +551,7 @@ def listPersonSkillnad(page=1, limit=10, diffType=None):
             row2 = persDisp(persMatch['pmatch'])
 #Code below depends on order of what persMatch returns
 #0=name, 1=birth, 2=death
-            if persMatch['pwork']['name'].replace('*','').replace('/',' ').replace('(',' ').replace(')',' ') == persMatch['pmatch']['name'].replace('*','').replace('/',' ').replace('(',' ').replace(')',' '):        
+            if persMatch['pwork']['name'].replace('*','').replace('/',' ').replace('(',' ').replace(')',' ') == persMatch['pmatch']['name'].replace('*','').replace('/',' ').replace('(',' ').replace(')',' '):
                 row.append(row1[0])
             else:
                 row.append('<b>' + row1[0] + '</b>')
@@ -567,7 +567,8 @@ def listPersonSkillnad(page=1, limit=10, diffType=None):
 
             if persMatch['pwork']['name'].replace('*','').replace('/',' ').replace('(',' ').replace(')',' ') == persMatch['pmatch']['name'].replace('*','').replace('/',' ').replace('(',' ').replace(')',' '):
 #                row.append('')
-                row.append(row2[0].split('gedcom_',1)[1]) #Need gedcomId
+                #row.append(row2[0].split('gedcom_',1)[1]) #Need gedcomId
+                row.append(row2[0]) #Need gedcomId
             else:
                 row.append(row2[0])
             if eventDiff(persMatch['pwork'], persMatch['pmatch'], ('birth',) ):
