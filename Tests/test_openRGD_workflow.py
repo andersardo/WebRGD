@@ -34,7 +34,14 @@ class openRGD_workflow(unittest.TestCase):
     def step01_ladda_upp(self):
         #Find 2 good small gedcoms without problems
         self.driver.find_element_by_name("gedcomfile").clear()
-        self.driver.find_element_by_name("gedcomfile").send_keys("/home/anders/work/RGD/Examples/Rel1.ged")
+        self.driver.find_element_by_name("gedcomfile").send_keys("/home/anders/work/RGD/RGDdev/Tests/gedcom1.ged")
+        self.driver.find_element_by_css_selector("input[type=\"submit\"]").click()
+        self.assertEqual(True, u"uploaded successfully" in self.driver.find_element_by_tag_name("BODY").text)
+        self.assertEqual(True, u"Resultatlänkar" in self.driver.find_element_by_tag_name("BODY").text)
+        self.assertEqual(True, u"Klar" in self.driver.find_element_by_tag_name("BODY").text)
+        self._back2start()
+        self.driver.find_element_by_name("gedcomfile").clear()
+        self.driver.find_element_by_name("gedcomfile").send_keys("/home/anders/work/RGD/RGDdev/Tests/gedcom2.ged")
         self.driver.find_element_by_css_selector("input[type=\"submit\"]").click()
         self.assertEqual(True, u"uploaded successfully" in self.driver.find_element_by_tag_name("BODY").text)
         self.assertEqual(True, u"Resultatlänkar" in self.driver.find_element_by_tag_name("BODY").text)
@@ -42,77 +49,77 @@ class openRGD_workflow(unittest.TestCase):
         self._back2start()
 
     def step02_dubblett(self):
-        Select(self.driver.find_element_by_name("workDB")).select_by_visible_text("aatest_Rel1")
+        Select(self.driver.find_element_by_name("workDB")).select_by_visible_text("aatest_gedcom1")
         self.driver.find_element_by_css_selector("form[name=\"xlDubl\"] > p > input[type=\"submit\"]").click()
         self.assertEqual(True, u"Resultat i RGDXL.txt" in self.driver.find_element_by_tag_name("BODY").text)
         self._back2start()
 
-    def step02_A_alt_dubblett(self):
-        Select(self.driver.find_element_by_css_selector("form[name=\"listDubl\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_Rel1")
+    def step02a_alt_dubblett(self):
+        Select(self.driver.find_element_by_css_selector("form[name=\"listDubl\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_gedcom1")
         self.driver.find_element_by_css_selector("form[name=\"listDubl\"] > p > input[type=\"submit\"]").click()
         self.assertEqual(True, u"Visa listan" in self.driver.find_element_by_tag_name("BODY").text)
         self._back2start()
 
     def step04_matchning(self):
-        Select(self.driver.find_element_by_xpath("(//select[@name='workDB'])[3]")).select_by_visible_text("aatest_Rel1")
-        Select(self.driver.find_element_by_name("matchDB")).select_by_visible_text("aatest_Rel2")
+        Select(self.driver.find_element_by_xpath("(//select[@name='workDB'])[3]")).select_by_visible_text("aatest_gedcom1")
+        Select(self.driver.find_element_by_name("matchDB")).select_by_visible_text("aatest_gedcom2")
         self.driver.find_element_by_xpath("//input[@value='Matcha!']").click()
         self.assertEqual(True, u"Matching All done" in self.driver.find_element_by_tag_name("BODY").text)
         self._back2start()
 
     def step05_manuell_matchning(self):
-        Select(self.driver.find_element_by_css_selector("form[name=\"manualMatch\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_Rel1")
+        Select(self.driver.find_element_by_css_selector("form[name=\"manualMatch\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_gedcom1")
         for i in range(60):
             try:
                 if self.is_element_present(By.CSS_SELECTOR, "#db2manualMatch > select[name=\"matchDB\"]"): break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
-        Select(self.driver.find_element_by_css_selector("#db2manualMatch > select[name=\"matchDB\"]")).select_by_visible_text("aatest_Rel2")
+        Select(self.driver.find_element_by_css_selector("#db2manualMatch > select[name=\"matchDB\"]")).select_by_visible_text("aatest_gedcom2")
         self.driver.find_element_by_css_selector("#db2manualMatch > p > input[type=\"submit\"]").click()
         self.assertEqual(True, u"RGD Familjelista" in self.driver.find_element_by_tag_name("BODY").text)
         self._back2start()
 
     def step06_skillnader(self):
-        Select(self.driver.find_element_by_css_selector("form[name=\"listSkillnad\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_Rel1")
+        Select(self.driver.find_element_by_css_selector("form[name=\"listSkillnad\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_gedcom1")
         for i in range(60):
             try:
                 if self.is_element_present(By.CSS_SELECTOR, "#db2listSkillnad > select[name=\"matchDB\"]"): break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
-        Select(self.driver.find_element_by_css_selector("#db2listSkillnad > select[name=\"matchDB\"]")).select_by_visible_text("aatest_Rel2")
+        Select(self.driver.find_element_by_css_selector("#db2listSkillnad > select[name=\"matchDB\"]")).select_by_visible_text("aatest_gedcom2")
         self.driver.find_element_by_css_selector("#db2listSkillnad > p > input[type=\"submit\"]").click()
         self.assertEqual(True, u"RGD Skillnad Personlista" in self.driver.find_element_by_tag_name("BODY").text)
         self._back2start()
 
-    def step06_A_likheter(self):
-        Select(self.driver.find_element_by_css_selector("form[name=\"famMatches\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_Rel1")
+    def step06a_likheter(self):
+        Select(self.driver.find_element_by_css_selector("form[name=\"famMatches\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_gedcom1")
         for i in range(60):
             try:
                 if self.is_element_present(By.CSS_SELECTOR, "#db2famMatches > select[name=\"matchDB\"]"): break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
-        Select(self.driver.find_element_by_css_selector("#db2famMatches > select[name=\"matchDB\"]")).select_by_visible_text("aatest_Rel2")
+        Select(self.driver.find_element_by_css_selector("#db2famMatches > select[name=\"matchDB\"]")).select_by_visible_text("aatest_gedcom2")
         self.driver.find_element_by_css_selector("#db2famMatches > p > input[type=\"submit\"]").click()
 
     def step07_sammanslagning(self):
-        Select(self.driver.find_element_by_css_selector("form[name=\"merge\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_Rel1")
+        Select(self.driver.find_element_by_css_selector("form[name=\"merge\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_gedcom1")
         for i in range(60):
             try:
                 if self.is_element_present(By.CSS_SELECTOR, "#db2merge > select[name=\"matchDB\"]"): break
             except: pass
             time.sleep(1)
         else: self.fail("time out")
-        Select(self.driver.find_element_by_css_selector("#db2merge > select[name=\"matchDB\"]")).select_by_visible_text("aatest_Rel2")
+        Select(self.driver.find_element_by_css_selector("#db2merge > select[name=\"matchDB\"]")).select_by_visible_text("aatest_gedcom2")
         self.driver.find_element_by_css_selector("#db2merge > p > input[type=\"submit\"]").click()
         #FIX!!
-        self.assertEqual(True, u"Avvakta programmet: merge.py" in self.driver.find_element_by_tag_name("BODY").text)
+        self.assertEqual(True, u"Indexing" in self.driver.find_element_by_tag_name("BODY").text)
         self._back2start()
 
     def step08_gedcom(self):
-        Select(self.driver.find_element_by_xpath("(//select[@name='workDB'])[8]")).select_by_visible_text("aatest_Rel1")
+        Select(self.driver.find_element_by_xpath("(//select[@name='workDB'])[8]")).select_by_visible_text("aatest_gedcom1")
         self.driver.find_element_by_xpath("//input[@value='Ladda ner']").click()
 
     def step99_logout(self):
@@ -126,10 +133,6 @@ class openRGD_workflow(unittest.TestCase):
         for name in sorted(dir(self)):
             if name.startswith("step"):
                 yield name, getattr(self, name) 
-
-    def Atest_logout(self):
-        self.step00_login()
-        self.step99_logout()
 
     def test_steps(self):
         for name, step in self._steps():
@@ -159,7 +162,7 @@ class openRGD_workflow(unittest.TestCase):
                 alert.dismiss()
             return alert_text
         finally: self.accept_next_alert = True
-    
+
     def tearDown(self):
         self.driver.quit()
         self.assertEqual([], self.verificationErrors)
