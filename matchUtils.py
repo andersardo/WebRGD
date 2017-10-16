@@ -15,7 +15,7 @@ _cache = {}
 
 def cos(l1,l2):
     """ Similarity between two vectors = cosine for the angle between the vectors:
-	cosine  = ( V1 * V2 ) / ||V1|| x ||V2|| 
+	cosine  = ( V1 * V2 ) / ||V1|| x ||V2||
 	Vectors expressed as strings, split on blankspace, assume boolean weights  """
     v1 = l1.split()
     v2 = l2.split()
@@ -30,6 +30,7 @@ def compName(n1, n2):
         return None if any of n1, n2 is empty
         can be used on names, normalised names
     """
+    if (not n1) or (not n2): return None
     nn1 = n1.strip().split()
     nn2 = n2.strip().split()
     if (not nn1) or (not nn2): return None

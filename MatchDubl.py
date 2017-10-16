@@ -26,7 +26,7 @@ if dbName != mDBname:
 t0 = time.time()
 print 'Letar efter dubbletter i databas', dbName
 
-#Read Kalles long file 
+#Read Kalles long file
 kdubl  = {}
 dubl = []
 ks = 0
@@ -35,39 +35,6 @@ ant = 0
 antboth = 0
 minks = 1000000
 maxks = 0
-
-"""
-import traceback
-try:
-    xl = codecs.open(workdir+'/'+dbName.split('_',1)[1]+'/RGDXL.txt', "r", "utf-8")
-    for l in xl.readlines():
-        l = l.rstrip()
-        if i == 1: (ks,t) = l.split(':')
-        if i == 2:
-            (id1,n1) = l.split(',', 1) 
-        if i == 3:
-            (id2,n2) = l.split(',', 1) 
-        if i == 4:
-            if l.rstrip(): print 'Out of sync', l
-            minks = int(ks)
-            if int(ks)>maxks: maxks = int(ks)
-            i = 0
-            ant += 1
-            kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = {'XL': int(ks), 'gedId1': id1, 'gedId2': id2,
-                         'namn1': n1, 'namn2': n2}
-            #kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = int(ks)
-        i += 1
-    print 'Hittat', len(kdubl), 'kandidater i RGDXL.txt'
-    if maxks == 0: maxks = 1
-except Exception, e:
-#    print '<h1>Fatalt fel</h1>'
-#    exc_type, exc_value, exc_traceback = sys.exc_info()
-#    traceback.print_exception(exc_type, exc_value, exc_traceback)
-    maxks = 1
-    minks = 0
-    print 'Cant find the file', dbName.split('_',1)[1]+'/RGDXL.txt'
-##    sys.exit()
-"""
 #New structureded list
 import json, traceback
 try:
@@ -75,21 +42,17 @@ try:
     kdublTmp = json.load(open(workdir+'/'+dbName.split('_',1)[1]+'/dbxl.dat'))
     #while testing - FIX so that kdublTmp is not needed.
     for (key, val) in kdublTmp.iteritems():
-        (id1,id2) = key.split(';')        
+        (id1,id2) = key.split(';')
         kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = {}
         kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])]['XL'] = val
     maxks = max(kdublTmp.values())
     if maxks == 0: maxks = 1
     minks = min(kdublTmp.values())
-    print 'Hittat', len(kdubl), 'kandidater i dbxl.dat'    
-except Exception, e:                                                                            
-#    logging.error('<h1>Fatalt fel vid import av Gedcom</h1>')
-#    exc_type, exc_value, exc_traceback = sys.exc_info()
-#    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    print 'Hittat', len(kdubl), 'kandidater i dbxl.dat'
+except Exception, e:
     maxks = 1 
     minks = 0
     print 'Cant find the file', dbName.split('_',1)[1]+'/dbxl.dat'
-#
 
 #KOLLA imports
 import common
@@ -97,7 +60,6 @@ from matchUtils import *
 from utils import matchFam, setFamOK
 from matchtext import matchtext
 from luceneUtils import setupDir, search
-from bson.objectid import ObjectId
 
 mt_tmp = matchtext()
 
@@ -210,9 +172,7 @@ for p in person_list.find().batch_size(50):
         print 'No matchtextdata',p['_id'],p['refId']
         continue       ##########FIX!!!!!!!!!!
     candidates = search(matchtxt, p['sex'], 10) #Lucene search
-#    sc = 0
     for (candId,score) in candidates:
-        candId = ObjectId(candId)
         if (candId == p['_id']):
             #same person - insert dummy match med status EjOK
             matches.insert({'workid': p['_id'], 'matchid': p['_id'], 'status': 'EjOK'})
@@ -232,7 +192,6 @@ for p in person_list.find().batch_size(50):
 
         matchant += 1
         candidate = match_person.find_one({'_id': candId})
-#        matchdata = matchPers(p, candidate, config, score/8.0) #?? range of Lucene scores?
         if not birthDateOK(p, candidate, 10):
             #print 'Skip birthdates not OK'
             continue
@@ -331,7 +290,6 @@ print u'Utrensade ur databasen, men i RGDXL', antnf
 ant = 0
 for mt in matches.find({'status': 'dubl'}):
     sortV = mt['Match'] / maxSortVal
-##    matches.update({'_id': mt['_id']}, {'$set': {'Match': sortV}})
     matches.update({'_id': mt['_id']}, {'$set': {'Match': sortV}})
     ant += 1
 print 'Normalized', ant, 'records'

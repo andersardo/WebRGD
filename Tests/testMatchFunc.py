@@ -8,7 +8,7 @@ from utils import matchNamnFDate
 from matchUtils import cos, compName, dateSim, strSim, eventSim, nodeSim
 from matchUtils import compValEq, compValNeq, compValInte
 from matchUtils import compDValEq, compDValNeq, compDValInte, compValAlla
-from matchUtils import svmfeatures, antFeaturesNorm
+#from matchUtils import svmfeatures, antFeaturesNorm
 
 import random
 import unittest

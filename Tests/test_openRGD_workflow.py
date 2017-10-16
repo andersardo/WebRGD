@@ -32,7 +32,6 @@ class openRGD_workflow(unittest.TestCase):
         self.assertEqual(True, u"Startsida - arbetsflöde" in self.driver.find_element_by_tag_name("BODY").text)
 
     def step01_ladda_upp(self):
-        #Find 2 good small gedcoms without problems
         self.driver.find_element_by_name("gedcomfile").clear()
         self.driver.find_element_by_name("gedcomfile").send_keys("/home/anders/work/RGD/RGDdev/Tests/gedcom1.ged")
         self.driver.find_element_by_css_selector("input[type=\"submit\"]").click()
@@ -105,6 +104,13 @@ class openRGD_workflow(unittest.TestCase):
         self.driver.find_element_by_css_selector("#db2famMatches > p > input[type=\"submit\"]").click()
 
     def step07_sammanslagning(self):
+        self.driver.get(self.base_url)
+        for i in range(60):
+            try:
+                 if self.is_element_present(By.CSS_SELECTOR, "form[name=\"merge\"] > select[name=\"workDB\"]"): break
+            except: pass
+            time.sleep(1)
+        else: self.fail("time out")
         Select(self.driver.find_element_by_css_selector("form[name=\"merge\"] > select[name=\"workDB\"]")).select_by_visible_text("aatest_gedcom1")
         for i in range(60):
             try:
@@ -114,7 +120,6 @@ class openRGD_workflow(unittest.TestCase):
         else: self.fail("time out")
         Select(self.driver.find_element_by_css_selector("#db2merge > select[name=\"matchDB\"]")).select_by_visible_text("aatest_gedcom2")
         self.driver.find_element_by_css_selector("#db2merge > p > input[type=\"submit\"]").click()
-        #FIX!!
         self.assertEqual(True, u"Indexing" in self.driver.find_element_by_tag_name("BODY").text)
         self._back2start()
 
@@ -132,7 +137,11 @@ class openRGD_workflow(unittest.TestCase):
     def _steps(self):
         for name in sorted(dir(self)):
             if name.startswith("step"):
-                yield name, getattr(self, name) 
+                yield name, getattr(self, name)
+
+    def stest(self):
+        self.step00_login()
+        self.step07_sammanslagning()
 
     def test_steps(self):
         for name, step in self._steps():
