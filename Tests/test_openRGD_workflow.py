@@ -11,7 +11,7 @@ class openRGD_workflow(unittest.TestCase):
     def setUp(self):
         self.driver = webdriver.Chrome()
         self.driver.implicitly_wait(5)
-        self.base_url = "https://rgd.dis.se:8088/"
+        self.base_url = "http://localhost:8084/"
         self.verificationErrors = []
         self.accept_next_alert = True
 

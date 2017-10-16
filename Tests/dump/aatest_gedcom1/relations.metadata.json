@@ -1,0 +1,1 @@
+{"options":{},"indexes":[{"v":2,"key":{"_id":1},"name":"_id_","ns":"aatest_gedcom1.relations"},{"v":2,"key":{"relTyp":1},"name":"relTyp_1","ns":"aatest_gedcom1.relations"},{"v":2,"key":{"famId":1},"name":"famId_1","ns":"aatest_gedcom1.relations"},{"v":2,"key":{"persId":1},"name":"persId_1","ns":"aatest_gedcom1.relations"}]}

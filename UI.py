@@ -263,13 +263,13 @@ def runprog(prog):
         #check parameters FIX
         if bottle.request.query.workDB == bottle.request.query.matchDB:
 #            cmd = ['python', 'matchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB]
-            cmd = ['python', 'testMatchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB, bottle.request.session['directory']]
+            cmd = ['python', 'MatchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB, bottle.request.session['directory']]
         else:
             cmd = ['python', 'match.py', bottle.request.query.workDB, bottle.request.query.matchDB]
 #            if bottle.request.session['activeUser'] == 'tester':
 #                cmd = ['python', 'matchFam.py', bottle.request.query.workDB, bottle.request.query.matchDB]
     elif prog == 'matchDublExp':
-        cmd = ['python', 'testMatchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB, bottle.request.session['directory']]
+        cmd = ['python', 'MatchDubl.py', bottle.request.query.workDB, bottle.request.query.matchDB, bottle.request.session['directory']]
     elif prog == 'xldubl':
         cmd = ['python', 'runDubbtestx.py', bottle.request.query.workDB, bottle.request.session['directory']]
     elif prog == 'sanity':
