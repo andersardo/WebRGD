@@ -31,7 +31,7 @@ mDBname = os.path.basename(matchDB).split('.')[0]
 #KOLLA imports
 from matchUtils import *
 from dbUtils import getFamilyFromId
-from utils import matchFam, setFamOK, setEjOKfamily
+from utils import matchFam, setFamOK, setEjOKfamily, setOKperson
 from matchtext import matchtext
 from luceneUtils import setupDir, search
 
@@ -63,13 +63,13 @@ dubltmp = defaultdict(list)
 dbltmpNs = defaultdict(float)
 
 ant=0
-#for p in person_list.find():
-for p in person_list.find().batch_size(100):
+for p in person_list.find({}, no_cursor_timeout=True):
     matchtxt = mt_tmp.matchtextPerson(p, person_list, config['relations'])
     if not matchtxt:
         logging.error('No matchtextdata for %s, %s',p['_id'],p['refId'])
         continue       ##########FIX!!!!!!!!!!
-    candidates = search(matchtxt, p['sex'], 3) #Lucene search
+    candidates = search(matchtxt, p['sex'], 2) #Lucene search
+    #Om inga kandidat-matcher? Inget problem dom är inte Match
     sc = 0
     for (kid,score) in candidates:
         if (score> sc): sc = score
@@ -84,6 +84,8 @@ for p in person_list.find().batch_size(100):
         if  matchdata['status'] in common.statOK.union(common.statManuell):
             dubltmp[p['_id']].append(candidate['_id'])
             dbltmpNs[p['_id'], candidate['_id']] = matchdata['nodesim']
+        #break if Match
+        if matchdata['status'] == 'Match': break
         #break if score is less than 1/3 of max score
         if (sc/score > 3.0): break
 logging.info('%d person matchings inserted', ant)
@@ -332,14 +334,12 @@ else:
     svmFamModel = svm_load_model('conf/famBaseline.model')
 antChanged = 0
 antSVM = 0
-for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
-    #Why use refID and not _id?
-    #work = config['families'].find_one({'refId': fmatch['workRefId']})
+#for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
+#Test all family matches gives better results
+for fmatch in config['fam_matches'].find().batch_size(50):
     work = getFamilyFromId(fmatch['workid'] , config['families'], config['relations'])
-    #match = config['match_families'].find_one({'refId': fmatch['matchRefId']})
     match = getFamilyFromId(fmatch['matchid'], config['match_families'], config['match_relations'])
-    #AA GET CHILDREN
-#Run through children and change 'EjMatch' for unreasonable matches to 'split'
+    #Run through children and change 'EjMatch' for unreasonable matches to 'split'
     changes = False
     for mt in config['matches'].find({'$and': [
               {'status': {'$in': list(common.statEjOK)}},
@@ -371,4 +371,25 @@ for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManu
         antSVM += 1
 logging.info('%d families updated after split; %d set to OK by SVM', antChanged, antSVM)
 logging.info('Time %s',time.time() - t0)
+
+#Rule:
+#  if all children Green
+#     and 1 partner Green and 1 partner Yellow
+#   set family to OK
+logging.info('Fix fams manual')
+antFixed = 0
+for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}):
+    husb = fmatch['summary']['husb']
+    wife = fmatch['summary']['wife']
+    if type(husb) is dict or type(wife) is dict: continue
+    if not set(fmatch['summary']['children']).difference(common.statOK): 
+        if husb in common.statOK and wife in common.statManuell:
+            setOKperson(fmatch['wife']['workid'], fmatch['wife']['matchid'])
+            antFixed += 1
+        elif husb in common.statManuell and wife in common.statOK:
+            setOKperson(fmatch['husb']['workid'], fmatch['husb']['matchid'])
+            antFixed += 1
+logging.info('%d family matchings Manuell -> OK', antFixed)
+logging.info('Time %s',time.time() - t0)
+
 logging.info('Matching All done')

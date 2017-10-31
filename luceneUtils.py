@@ -50,7 +50,7 @@ def index(personDB, relationDB):
 
     mt = matchtext()
 
-    for p in personDB.find():
+    for p in personDB.find({}, no_cursor_timeout=True):
         matchtxt = mt.matchtextPerson(p, personDB, relationDB)
         doc = Document()
         doc.add(Field('uid',str(p['_id']), StringField.TYPE_STORED))
