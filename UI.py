@@ -664,6 +664,7 @@ def downloadFamMatches():
         head = True
         line = False
         for r in rows:
+            print r
             #remove html-code for buttons
             r[0] = r[0][0:4]
             if r[0]=='chil': r[0]='child'
@@ -703,6 +704,52 @@ def downloadFamMatches():
                 CSV.writerow([s.replace('<br/>', "\n").rstrip().encode("utf-8") for s in r])
         if fileFormat != 'xlsx':
             CSV.writerow(['#####', '#####', '#####', '#####', '#####', '|', '#####', '#####', '#####'])
+    #List matched persons without families
+    for persmatch in common.config['matches'].find({'status':
+                          {'$in': list(common.statOK.union(common.statManuell))}}):
+        if (common.config['relations'].find_one({'persId': persmatch['workid']}) or
+           common.config['match_relations'].find_one({'persId': persmatch['matchid']})): continue
+        rows = []
+        rows.append(['', u'Namn/refId', u'Född', u'Död', '', u'Namn/refId', u'Född', u'Död', ''])
+        rows.append = persMatchDisp(None, persmatch)
+        head = True
+        line = False
+        for r in rows:
+            #remove html-code for buttons
+            r[0] = ''
+            r[5] = '|' #separator between workDB and matchDB
+            if fileFormat == 'xlsx':
+                rowVals = []
+                for val in r:
+                    if val == '|':
+                        cell = WriteOnlyCell(ws, value='')
+                        cell.border = Border(top=thin, left=thick, right=thick, bottom=thin)
+                    else:
+                        cell = WriteOnlyCell(ws,
+                                value=val.replace('<br/>', "\n").rstrip().encode("utf-8"))
+                        cell.alignment = Alignment(wrapText=True)
+                        cell.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+                    if head:
+                        cell.font = Font(bold=True)
+                        cell.border = Border(top=thick, left=thin, right=thin, bottom=thick)
+                        cell.fill = greyFill
+                    elif line:
+                        if val == '|':
+                            cell.border = Border(top=thick, left=thick, right=thick, bottom=thin)
+                        else:
+                            cell.border = Border(top=thick, left=thin, right=thin, bottom=thin)
+                    if r[1] in ('Match', 'OK', 'rOK'): cell.fill = greenFill
+                    elif r[1] in ('Manuell', 'rManuell'):  cell.fill = yellowFill
+                    elif r[1] in ('EjMatch', 'EjOK', 'rEjOK'):  cell.fill = redFill
+                    rowVals.append(cell)
+                head = False
+                line = False
+                ws.append(rowVals)
+            else:
+                CSV.writerow([s.replace('<br/>', "\n").rstrip().encode("utf-8") for s in r])
+        if fileFormat != 'xlsx':
+            CSV.writerow(['#####', '#####', '#####', '#####', '#####', '|', '#####', '#####', '#####'])
+    #
     if fileFormat == 'xlsx':
         #doesn't really work?
         for i, column_width in enumerate([8,10,25,25,25,1,25,25,25]):

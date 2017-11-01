@@ -134,6 +134,7 @@ def getFamilyFromId(famId, familyDB, relationsDB):
     from a familyId
     """
     famRecord = familyDB.find_one({'_id': famId})
+    if famRecord is None: return None
     famRecord['husb'] = None
     famRecord['wife'] = None
     famRecord['children'] = []

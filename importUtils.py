@@ -71,9 +71,14 @@ def _handleEvent(ev):
                 try:
                     res['source'] = sourMap[cline.value()]
                 except: pass
-    if 'source' in res and res['source'].startswith('*'):
-        res ['quality'] = int(res['source'][1])
-    else: res ['quality'] = 10
+    #if 'source' in res and res['source'].startswith('*'):
+    #    res ['quality'] = int(res['source'][1])
+    #else: res ['quality'] = 10
+    try:
+        if res['source'].startswith('*'):
+            res ['quality'] = int(res['source'][1])
+    except:
+        res ['quality'] = 10
     return res
 
 """
