@@ -3,7 +3,7 @@
 from collections import OrderedDict
 import codecs, time, logging, os.path
 
-from uiUtils import listPersons, listFamilies, personView, familyView, famDisp
+from uiUtils import listPersons, listFamilies, personView, familyView, famDisp, persMatchDisp
 from uiUtils import listPersonSkillnad, listFamiljeSkillnad, ignoreRelation, getFlags#, addFlag
 from utils import setOKfamily, setEjOKfamily, setOKperson, setEjOKperson, split#, kopplaLoss
 from uiUtils import dbfind,familyViewAll
@@ -623,8 +623,9 @@ def relationEditor():
 def downloadFamMatches():
     import StringIO
     output = StringIO.StringIO()
+    done = set()
     fileFormat = bottle.request.query.fileFormat
-    titleRow = ['','',bottle.request.query.workDB,'','','',bottle.request.query.matchDB,'','']
+    titleRow = [bottle.request.query.workDB,'','','',bottle.request.query.matchDB,'','']
     if fileFormat == 'xlsx':
         from openpyxl import Workbook
         from openpyxl.writer.write_only import WriteOnlyCell
@@ -661,68 +662,95 @@ def downloadFamMatches():
     for fmatch in common.config['fam_matches'].find({'status':
                           {'$in': list(common.statOK.union(common.statManuell))}}):
         rows = famDisp(None, None, fmatch)
-        head = True
         line = False
+        lines=0
         for r in rows:
-            print r
+            lines += 1
+            if lines == 1: continue
+            try:
+                k1 = r[1].split('<br/>')[1]
+            except:
+                k1 = ''
+            try:
+                k2 = r[5].split('<br/>')[1]
+            except:
+                k2 = ''
+            key = k1+';'+k2
+            done.add(key)
             #remove html-code for buttons
-            r[0] = r[0][0:4]
-            if r[0]=='chil': r[0]='child'
-            elif r[0]=='Marr': r[0]='Marriage'
-            elif r[0]=='':
+            try:
+                r[4] = r[4].split('<')[0]
+            except:
+                pass
+            if r == ['', '', '', '', '', '', '', '', '']:
                 line = True
                 if fileFormat == 'xlsx': continue
-            r[5] = '|' #separator between workDB and matchDB
             if fileFormat == 'xlsx':
                 rowVals = []
-                for val in r:
-                    if val == '|':
-                        cell = WriteOnlyCell(ws, value='')
+                i=0
+                green = False
+                yellow = False
+                red = False
+                if r[4].endswith(('EjMatch', 'EjOK', 'rEjOK')): red = True
+                elif r[4].endswith(('Manuell', 'rManuell')): yellow = True
+                elif r[4].endswith(('Match', 'OK', 'rOK')): green = True
+                for val in r[1:8]:
+                    i+=1
+                    if i == 4: #separator between workDB and matchDB
+                        cell = WriteOnlyCell(ws, value=val)
                         cell.border = Border(top=thin, left=thick, right=thick, bottom=thin)
                     else:
                         cell = WriteOnlyCell(ws,
                                 value=val.replace('<br/>', "\n").rstrip().encode("utf-8"))
                         cell.alignment = Alignment(wrapText=True)
                         cell.border = Border(top=thin, left=thin, right=thin, bottom=thin)
-                    if head:
+                    if lines <=2: #head
                         cell.font = Font(bold=True)
                         cell.border = Border(top=thick, left=thin, right=thin, bottom=thick)
                         cell.fill = greyFill
                     elif line:
-                        if val == '|':
+                        if i == 4: #separator between workDB and matchDB
                             cell.border = Border(top=thick, left=thick, right=thick, bottom=thin)
                         else:
                             cell.border = Border(top=thick, left=thin, right=thin, bottom=thin)
-                    if r[1] in ('Match', 'OK', 'rOK'): cell.fill = greenFill
-                    elif r[1] in ('Manuell', 'rManuell'):  cell.fill = yellowFill
-                    elif r[1] in ('EjMatch', 'EjOK', 'rEjOK'):  cell.fill = redFill
+                    if green: cell.fill = greenFill
+                    elif yellow:  cell.fill = yellowFill
+                    elif red:  cell.fill = redFill
                     rowVals.append(cell)
-                head = False
-                line = False
+                #line = False
                 ws.append(rowVals)
             else:
                 CSV.writerow([s.replace('<br/>', "\n").rstrip().encode("utf-8") for s in r])
         if fileFormat != 'xlsx':
             CSV.writerow(['#####', '#####', '#####', '#####', '#####', '|', '#####', '#####', '#####'])
     #List matched persons without families
+    print done
     for persmatch in common.config['matches'].find({'status':
                           {'$in': list(common.statOK.union(common.statManuell))}}):
-        if (common.config['relations'].find_one({'persId': persmatch['workid']}) or
-           common.config['match_relations'].find_one({'persId': persmatch['matchid']})): continue
+        if persmatch['pwork']['refId']+';'+persmatch['pmatch']['refId'] in done: continue
         rows = []
         rows.append(['', u'Namn/refId', u'Född', u'Död', '', u'Namn/refId', u'Född', u'Död', ''])
-        rows.append = persMatchDisp(None, persmatch)
+        rows.append(persMatchDisp('Person', persmatch))
         head = True
-        line = False
         for r in rows:
             #remove html-code for buttons
-            r[0] = ''
-            r[5] = '|' #separator between workDB and matchDB
+            try:
+                r[4] = r[4].split('<')[0]
+            except:
+                pass
             if fileFormat == 'xlsx':
                 rowVals = []
-                for val in r:
-                    if val == '|':
-                        cell = WriteOnlyCell(ws, value='')
+                i=0
+                green = False
+                yellow = False
+                red = False
+                if r[4].endswith(('EjMatch', 'EjOK', 'rEjOK')): red = True
+                elif r[4].endswith(('Manuell', 'rManuell')): yellow = True
+                elif r[4].endswith(('Match', 'OK', 'rOK')): green = True
+                for val in r[1:8]:
+                    i+=1
+                    if i==4: #separator between workDB and matchDB
+                        cell = WriteOnlyCell(ws, value=val)
                         cell.border = Border(top=thin, left=thick, right=thick, bottom=thin)
                     else:
                         cell = WriteOnlyCell(ws,
@@ -733,14 +761,9 @@ def downloadFamMatches():
                         cell.font = Font(bold=True)
                         cell.border = Border(top=thick, left=thin, right=thin, bottom=thick)
                         cell.fill = greyFill
-                    elif line:
-                        if val == '|':
-                            cell.border = Border(top=thick, left=thick, right=thick, bottom=thin)
-                        else:
-                            cell.border = Border(top=thick, left=thin, right=thin, bottom=thin)
-                    if r[1] in ('Match', 'OK', 'rOK'): cell.fill = greenFill
-                    elif r[1] in ('Manuell', 'rManuell'):  cell.fill = yellowFill
-                    elif r[1] in ('EjMatch', 'EjOK', 'rEjOK'):  cell.fill = redFill
+                    if green: cell.fill = greenFill
+                    elif yellow:  cell.fill = yellowFill
+                    elif red:  cell.fill = redFill
                     rowVals.append(cell)
                 head = False
                 line = False
