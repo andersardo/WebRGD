@@ -178,6 +178,7 @@ def combined():
 @authorize()
 def download():
     import subprocess
+    bottle.response.set_header("Content-Type", "application/octet-stream")
     bottle.response.headers.append("Expires:", "0")
     bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
     bottle.response.headers.replace("Content-Type:", "application/force-download")
@@ -195,8 +196,9 @@ def getfile():
          ( not os.path.isfile(fn) ) or  ( '..' in fn ) ):
         return 'File not found: ' + os.path.basename(fn)
     if fn.endswith('.zip'):
+        bottle.response.set_header("Content-Type", "application/octet-stream")
         bottle.response.headers.append("Expires:", "0")
-        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
+        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0")
         bottle.response.headers.replace("Content-Type:", "application/force-download")
         bottle.response.headers.append("Content-Type:", "application/octet-stream")
         bottle.response.headers.append("Content-Type:", "application/download")
@@ -207,8 +209,9 @@ def getfile():
         f.close()
 	return mess
     elif fn.endswith('.CSV'):
+        bottle.response.set_header("Content-Type", "application/octet-stream")
         bottle.response.headers.append("Expires:", "0")
-        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
+        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0")
         bottle.response.headers.replace("Content-Type:", "application/force-download")
         bottle.response.headers.append("Content-Type:", "application/octet-stream")
         bottle.response.headers.append("Content-Type:", "application/download")
@@ -219,7 +222,7 @@ def getfile():
         f.close()
 	return mess
     else:
-        bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")        
+        bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")
         bottle.response.content_type = 'text/html; charset=UTF-8'
         f = codecs.open(fn, "r", "utf-8")
 #        mess = '<pre>' + f.read() + '</pre>'
@@ -724,7 +727,6 @@ def downloadFamMatches():
         if fileFormat != 'xlsx':
             CSV.writerow(['#####', '#####', '#####', '#####', '#####', '|', '#####', '#####', '#####'])
     #List matched persons without families
-    print done
     for persmatch in common.config['matches'].find({'status':
                           {'$in': list(common.statOK.union(common.statManuell))}}):
         if persmatch['pwork']['refId']+';'+persmatch['pmatch']['refId'] in done: continue
@@ -779,6 +781,7 @@ def downloadFamMatches():
             ws.column_dimensions[get_column_letter(i+1)].width = (column_width + 2) * 1.2
         wb.save(output)
     #Download
+    bottle.response.set_header("Content-Type", "application/octet-stream")
     bottle.response.headers.append("Expires:", "0")
     bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
     bottle.response.headers.replace("Content-Type:", "application/force-download")
@@ -786,6 +789,8 @@ def downloadFamMatches():
     bottle.response.headers.append("Content-Type:", "application/download")
     filn = 'RGD_' + bottle.request.query.workDB + '-' + bottle.request.query.matchDB + '.' + fileFormat
     bottle.response.headers.append("Content-Disposition:", 'attachment; filename='+filn)
+    #for (h,v) in bottle.response.iter_headers():
+    #    print h,v
     return output.getvalue()
 
 @bottle.route('/viewNext')
