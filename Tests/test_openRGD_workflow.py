@@ -9,9 +9,11 @@ import unittest, time, re
 
 class openRGD_workflow(unittest.TestCase):
     def setUp(self):
-        self.driver = webdriver.Chrome()
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless") #No display during tests
+        self.driver = webdriver.Chrome(chrome_options=options)
         self.driver.implicitly_wait(5)
-        self.base_url = "http://localhost:8084/"
+        self.base_url = "http://localhost:8083/"
         self.verificationErrors = []
         self.accept_next_alert = True
 

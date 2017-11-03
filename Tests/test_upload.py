@@ -10,9 +10,11 @@ from pymongo import MongoClient
 
 class openRGD_workflow(unittest.TestCase):
     def setUp(self):
-        self.driver = webdriver.Chrome()
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless") #No display during tests
+        self.driver = webdriver.Chrome(chrome_options=options)
         self.driver.implicitly_wait(5)
-        self.base_url = "http://localhost:8084/"
+        self.base_url = "http://localhost:8083/"
         self.verificationErrors = []
         self.accept_next_alert = True
         self.driver.get(self.base_url + 'login')
@@ -39,14 +41,11 @@ class openRGD_workflow(unittest.TestCase):
         self.assertEqual(True, u"RGDK.CSV - Saknade källor" in resultPage)
         self.assertEqual(True, u"Indexing aatest_gedcom1 in Lucene" in resultPage)
         self.assertEqual(True, u"Klar" in resultPage)
-        """
-        Testa innehåll i filer??? Problem med datum!
         self.driver.get(self.base_url + 'getFile?fil=./files/aatest/gedcom1/Log')
-        print self.driver.find_element_by_tag_name("BODY").text
-        print '##########################################################################'
-        self.driver.get(self.base_url + 'getFile?fil=./files/aatest/gedcom1/RGDN.txt')
-        print self.driver.find_element_by_tag_name("BODY").text
-        """
+        resultPage = self.driver.find_element_by_tag_name("BODY").text
+        self.assertTrue('Filen ./RGD9Z.GED har skapats' in resultPage)
+        self.assertTrue('ALLT KLART' in resultPage)
+        #self.driver.get(self.base_url + 'getFile?fil=./files/aatest/gedcom1/RGDN.txt')
 
     def is_element_present(self, how, what):
         try: self.driver.find_element(by=how, value=what)

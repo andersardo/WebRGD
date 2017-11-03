@@ -1,1 +1,5 @@
+#One testcase
 $ python -m unittest Tests.testuiUtilsFunc
+
+#All
+$ python -m unittest discover

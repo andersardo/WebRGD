@@ -132,7 +132,6 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertFalse(eventDiff(p5, p6, ['birth','death']))
         self.assertTrue(eventDiff(p6, p1, ['birth','death']))
         self.assertTrue(eventDiff(p6, p1, ['death','birth']))
-        print '========'
         self.assertFalse(eventDiff(p6, p1, ['death']))
         self.assertTrue(eventDiff(p6, p1, ['birth']))
        
