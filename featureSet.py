@@ -203,3 +203,35 @@ def famBaseline(work, match, config):
     #cos-sim fammatchtext - kanske inte - barn ofta olika!
     return [0.0 if v is None else v for v in features]
     #return cleanupVect(features)
+
+def famExtended(work, match, config):
+    features = famBaseline(work, match, config)
+    #husb, wife: childfam status none,red,yellow,green
+    green = 0.0
+    yellow = 0.0
+    red = 0.0
+    for partner in ('husb', 'wife'):
+        #find family where partner child
+        try:
+            #work
+            #wife.workid ger ObjectId: work[partner]['workid']
+            #db.families.findOne({'children': ObjectId("58b456c77077b94d64947818")})
+            tFam = config['families'].find_one({'children': work[partner]['workid']})
+            workFamId = tFam['_id']
+            #samma för match
+            tFam = config['match_families'].find_one({'children': work[partner]['matchid']})
+            matchFamId = tFam['_id']
+            #get status for fam-match
+            fmatch = config['fam_matches'].find_one({'workid': workFamId, 'matchid': matchFamId})
+            if fmatch['status'] in common.statOK: green += 0.5
+            elif fmatch['status'] in common.statManuell: yellow += 0.5
+            elif fmatch['status'] in common.statEjOK: red += 0.5
+        except:
+            pass
+    features.append(green)
+    features.append(yellow)
+    features.append(red)
+    #for children use status families where they are husb,wife
+    #average over childstatus - white,green,yellow,red
+    return [0.0 if v is None else v for v in features]
+
