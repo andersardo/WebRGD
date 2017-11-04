@@ -128,6 +128,7 @@ def getFamilyFromChild(childId, familyDB, relationsDB):
             #elif 'child' in member: famRecord['children'].append(member['child'])
         return famRecord
     else: return None
+
 def getFamilyFromId(famId, familyDB, relationsDB):
     """
     Build a full family record (husb,wife,marriage,children)

@@ -20,7 +20,7 @@ class matchtext:
         pass
 
     def luceneFix(self, text):
-        for c in '+-&|!(){}[]^"~*?:':
+        for c in '+-&|!(){}[]^"~*?:,.':
             text = text.replace(c,'')
         return text.strip()
 
