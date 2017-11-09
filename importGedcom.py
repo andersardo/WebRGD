@@ -158,8 +158,12 @@ for s in d.values():
       FmapChange = True
       fdubl = list(s)
       #merge all into fdubl[0]
-      marrEvents = []
-      F = config['families'].find_one({'_id': fdubl[0]}, {'_id': 1})
+      #F = config['families'].find_one({'_id': fdubl[0]}, {'_id': 1})
+      F = config['families'].find_one({'_id': fdubl[0]}) #need marriage
+      if 'marriage'in F:
+          marrEvents = [F['marriage']]
+      else:
+          marrEvents = []
       FId = F['_id']
       #USE for fd in fdubl[1:]:
       for fd in fdubl:
@@ -168,7 +172,7 @@ for s in d.values():
           #Enl Rolf: Marr  datum kan vara olika eller blanka
           fam2beMerged = config['families'].find_one({'_id': fd})
           if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
-          print 'Merging family %s into %s', fam2beMerged['_id'], FId
+          print 'Merging family %s into %s' % (fam2beMerged['_id'], FId)
 
           config['families'].delete_one({'_id': fam2beMerged['_id']})
           Fmap[fam2beMerged['_id']] = [F['_id']]
