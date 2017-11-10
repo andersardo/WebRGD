@@ -46,9 +46,9 @@ def matchFam(tFamId, rFamId, conf):
     rFam = getFamilyFromId( rFamId, conf['match_families'], conf['match_relations'])
     famMatchData['workRefId'] = tFam['refId']
     famMatchData['matchRefId'] = rFam['refId']
-    #famMatchData['marriage'] = {}
-    #if 'marriage' in tFam: famMatchData['marriage']['work'] = tFam['marriage']
-    #if 'marriage' in rFam: famMatchData['marriage']['match'] = rFam['marriage']
+    famMatchData['marriage'] = {}
+    if 'marriage' in tFam: famMatchData['marriage']['work'] = tFam['marriage']
+    if 'marriage' in rFam: famMatchData['marriage']['match'] = rFam['marriage']
     antPartner = 0
     for partner in ('husb','wife'):
         famMatchData[partner] = {'status': 'notMatched'}
