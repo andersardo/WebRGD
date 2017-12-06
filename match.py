@@ -64,7 +64,7 @@ dbltmpNs = defaultdict(float)
 
 ant=0
 for p in person_list.find({}, no_cursor_timeout=True):
-    matchtxt = mt_tmp.matchtextPerson(p, person_list, config['relations'])
+    matchtxt = mt_tmp.matchtextPerson(p, person_list, fam_list, config['relations'])
     if not matchtxt:
         logging.error('No matchtextdata for %s, %s',p['_id'],p['refId'])
         continue       ##########FIX!!!!!!!!!!
@@ -137,6 +137,7 @@ logging.info('%d Multimatch individer (tvillingar/syskon) fixade', ant)
 logging.info('Time %s',time.time() - t0)
 
 #Ta bort individ med status Manuell om finns OK och  nodeSim < 0 och SVM < 0.5
+###BEHÖVS INTE 0 I HELA FACIT
 ant=0
 for mt in matches.find({'status': {'$in': list(common.statOK)}}, {'_id': 1, 'workid': 1}):
     for check in matches.find({'status': {'$in': list(common.statManuell)}, 'workid': mt['workid'],
@@ -153,7 +154,7 @@ logging.info('Time %s',time.time() - t0)
 ant = 0
 fams = set()
 for match in  matches.find({'status': {'$in': list(common.statOK.union(common.statManuell))}}):
-    for role in ('husb', 'wife', 'children'):
+    for role in ('husb', 'wife', 'child'):
         tFam = []
         rFam = []
         #tFam = fam_list.find({role: match['workid']}, {'_id': 1, 'marriage.date': 1} )
@@ -334,9 +335,9 @@ else:
     svmFamModel = svm_load_model('conf/famBaseline.model')
 antChanged = 0
 antSVM = 0
-#for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
-#Test all family matches gives better results
-for fmatch in config['fam_matches'].find().batch_size(50):
+for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
+###Test all family matches gives slightly worse results
+##for fmatch in config['fam_matches'].find().batch_size(50):
     work = getFamilyFromId(fmatch['workid'] , config['families'], config['relations'])
     match = getFamilyFromId(fmatch['matchid'], config['match_families'], config['match_relations'])
     #Run through children and change 'EjMatch' for unreasonable matches to 'split'

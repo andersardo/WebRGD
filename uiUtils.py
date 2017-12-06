@@ -319,7 +319,7 @@ def listPersons(filters, multi, page=1, limit=10):
     aggrPipe.append({'$skip': start})
     aggrPipe.append({'$limit': limit})
     for match in matches.aggregate(aggrPipe):
-        print match
+        #print match
 #FIX id, refId, namn, sum, född. död, visa
         if match['count'] == '1':
             args['wid'] = str(match['wid'])

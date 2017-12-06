@@ -10,7 +10,7 @@ Lucene supports escaping special characters that are part of the query syntax.
 To escape these character use the \ before the character.
 str.translate does not work on Unicode objects
 """
-from dbUtils import getFamilyFromChild
+from dbUtils import getFamilyFromChild, getFamilyFromId
 class matchtext:
     """
     calculates the text representation used for initial selection of match-kandidates
@@ -76,11 +76,11 @@ class matchtext:
         return mtxt.strip()
 
     ###########################
-    def matchtextPerson(self, p, personDB, relationDB):
+    def matchtextPerson(self, p, personDB, familyDB, relationDB):
             matchtext = self.personText(p)
             #Add father and mother
             try:
-                fam = getFamilyFromChild(p['_id'], personDB, relationDB)
+                fam = getFamilyFromChild(p['_id'], familyDB, relationDB)
                 if fam:
                     mtxt = set()
                     if fam['husb']:

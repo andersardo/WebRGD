@@ -74,6 +74,7 @@ def parseGedcom(ged,frag):
 def gedcomNoRGD(self):
     """ Return GEDCOM code for this line and all of its sub-lines """
     result = unicode(self)
+    #print 'gedcomNoRGD', result
     plac = ''
     for e in self.children_lines():
         if e.tag() in ('PLAC'): plac = e.value()
@@ -138,7 +139,9 @@ def gedPrintMergeEvent(events):
     #print 'gedPrintMergeEvent', events
     #for evtag in events.keys():  #Evt sort order?
     for evtag in ('BIRT', 'CHR', 'DEAT', 'BURI', 'MARR'):
+        #print 'Doing', evtag
         if not evtag in events: continue
+        #print 'gedPrintMerge', evtag, len(events[evtag])
         if len(events[evtag]) == 1: print gedcomNoRGD(events[evtag][0])
         else:
             #make dict with quality as key and list of events as value
@@ -181,6 +184,7 @@ def gedPrintMergeEvent(events):
             for cline in useEvent.children_lines():
                 if cline.tag() == 'DATE': cline._value = Qdate  #HACK
             print gedcomNoRGD(useEvent)
+    #print 'Exit'
 
 def gedPrintUniqueEvent(events):
     #print 'gedPrintUniqueEvent'
@@ -243,7 +247,8 @@ for ind in config['persons'].find({}):
     mapPersId[ind['_id']] = ind['_id']
     #basedata
     print "0 @"+str(ind['_id'])+"@ INDI"  #USE refId or _id???? FIX
-    print "1 SEX "+ind['sex']
+    try: print "1 SEX "+ind['sex']
+    except: print "1 SEX U"
     printTag("1 NAME",ind['name'])
     try: birth[ind['_id']] = ind['birth']['date']
     except:  birth[ind['_id']] = 0
@@ -297,7 +302,7 @@ for ind in config['persons'].find({}):
                     continue
 ##                elif tag.tag() in ('CHR', 'BURI'):
                 elif tag.tag() in ('BIRT', 'CHR', 'DEAT', 'BURI'):
-                    #print '1 NOTE openRGD Merge ', tag.tag()
+                    print '1 NOTE openRGD Merge ', tag.tag()
                     if tag.tag() in gedMergeEvent:
                         gedMergeEvent[tag.tag()].append(tag)
                     else:

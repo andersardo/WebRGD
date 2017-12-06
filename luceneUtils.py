@@ -41,7 +41,7 @@ def setupDir(dbName):
     except Exception, e:
         pass
 
-def index(personDB, relationDB):
+def index(personDB, familyDB, relationDB):
     #config = IndexWriterConfig(Version.LUCENE_CURRENT, analyzer)
     config = IndexWriterConfig(analyzer)
     config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
@@ -51,7 +51,7 @@ def index(personDB, relationDB):
     mt = matchtext()
 
     for p in personDB.find({}, no_cursor_timeout=True):
-        matchtxt = mt.matchtextPerson(p, personDB, relationDB)
+        matchtxt = mt.matchtextPerson(p, personDB, familyDB, relationDB)
         doc = Document()
         doc.add(Field('uid',str(p['_id']), StringField.TYPE_STORED))
         doc.add(Field('sex',str(p['sex']), StringField.TYPE_STORED))

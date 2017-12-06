@@ -321,9 +321,7 @@ def setOKperson(wid, mid, button = True):
                     rFam = common.config['match_relations'].find({'persId': mid, 'relTyp': role})
                     for f in tFam:
                         for ff in rFam:
-                            #if not common.config['fam_matches'].find_one({'workid': f['_id'], 'matchid': ff['_id']}):
                             if not common.config['fam_matches'].find_one({'workid': f['famId'], 'matchid': ff['famId']}):
-                                #common.config['fam_matches'].insert_one(matchFam(f['_id'], ff['_id'], common.config))
                                 common.config['fam_matches'].insert_one(matchFam(f['famId'], ff['famId'], common.config))
                            #Check multifam-resolution From match.py
                 ##TEST

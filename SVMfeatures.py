@@ -7,6 +7,7 @@ from collections import defaultdict
 from matchtext import matchtext
 from luceneUtils import search, setupDir, index
 mt_tmp = matchtext()
+from dbUtils import getFamilyFromChild
 
 #FIX! Normalization factor Lucene score
 norm = {'kalle_testp1': 8.7, 'kalle_testp2': 5.1, 'kalle_testp3': 8.6,
@@ -146,8 +147,11 @@ def svmbaseline(tmp,rgd, conf, score):
         else: features.extend([0,0,1,0,0,1,0,0,1])
     if not score:
     #Lucene score use cos instead due to problems running Java in Bootle
-        matchtxt = mt_tmp.matchtextPerson(tmp, conf['persons'], conf['families'])
-        cand_matchtxt = mt_tmp.matchtextPerson(rgd, conf['match_persons'], conf['match_families'])
+        #matchtxt = mt_tmp.matchtextPerson(tmp, conf['persons'], conf['families'])
+        matchtxt = mt_tmp.matchtextPerson(tmp, conf['persons'], conf['families'], conf['relations'])
+        #cand_matchtxt = mt_tmp.matchtextPerson(rgd, conf['match_persons'], conf['match_families'])
+        cand_matchtxt = mt_tmp.matchtextPerson(rgd, conf['match_persons'], conf['match_families'],
+                                               conf['match_relations'])
         score = cos(matchtxt, cand_matchtxt) * 8.0
 #        candidates = search(matchtxt, tmp['sex'], ant=30,config=common.config) #Lucene search
 #        score = 0.0
@@ -157,11 +161,14 @@ def svmbaseline(tmp,rgd, conf, score):
 #                break
 #        if score == 0.0: score = 0.01 #??
     features.append(score / 8.0) #from earlier match.py
+    #features.append(score / 200.0) #Lucene 6
 #nodeSim
     features.append(nodeSim(tmp, rgd))
 #familySim
-    workFam = conf['families'].find_one({ 'children': tmp['_id']})
-    matchFam = conf['match_families'].find_one({ 'children': rgd['_id']})
+    #workFam = conf['families'].find_one({ 'children': tmp['_id']})
+    workFam = getFamilyFromChild(tmp['_id'], conf['families'], conf['relations'])
+    #matchFam = conf['match_families'].find_one({ 'children': rgd['_id']})
+    matchFam = getFamilyFromChild(rgd['_id'], conf['match_families'], conf['match_relations'])
     features.append(familySim(workFam, conf['persons'], matchFam, conf['match_persons']))
 
     return cleanupVect(features)

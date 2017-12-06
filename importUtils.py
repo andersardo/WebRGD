@@ -76,9 +76,9 @@ def _handleEvent(ev):
     #else: res ['quality'] = 10
     try:
         if res['source'].startswith('*'):
-            res ['quality'] = int(res['source'][1])
+            res['quality'] = int(res['source'][1])
     except:
-        res ['quality'] = 10
+        res['quality'] = 10
     return res
 
 """

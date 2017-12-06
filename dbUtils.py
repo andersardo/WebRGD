@@ -118,6 +118,11 @@ def getFamilyFromChild(childId, familyDB, relationsDB):
     """
     family = relationsDB.find_one({'relTyp': 'child', 'persId': childId})
     if family:
+        return getFamilyFromId(family['famId'], familyDB, relationsDB)
+    else:
+        return None
+    """
+    if family:
         famRecord = familyDB.find_one({'_id': family['famId']})
         famRecord['children'] = []
         for member in relationsDB.find({'famId': family['famId']}):
@@ -128,6 +133,7 @@ def getFamilyFromChild(childId, familyDB, relationsDB):
             #elif 'child' in member: famRecord['children'].append(member['child'])
         return famRecord
     else: return None
+    """
 
 def getFamilyFromId(famId, familyDB, relationsDB):
     """
