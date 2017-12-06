@@ -8,7 +8,7 @@ import sys
 import common
 from pymongo import MongoClient
 from matchtext import matchtext
-from featureSet import personDefault, famExtended, famBaseline, baseline
+from featureSet import personDefault, famExtended, baseline
 from matchUtils import nodeSim, familySim, cos
 from dbUtils import getFamilyFromId, getFamilyFromChild
 from luceneUtils import search, setupDir, index
@@ -60,6 +60,8 @@ class Facit:
         self.OK = {'person': {}, 'family': {}}
         self.config = config
         self.mt_tmp = matchtext()
+        self.tensordata = []
+        self.tensorlabels = []
 
     def runCommand(self, cmd):
         print 'OScmd:', cmd
@@ -241,13 +243,16 @@ class Facit:
             cosScore = cos(matchtxt, cand_matchtxt)
             feat = personDefault(p1, rgdP, self.config, None, nodeScore,
                            famScore, cosScore, matchtxtLen=len(matchtxt.split()))
-
+            self.tensordata.append(feat)
+            self.tensorlabels.append([1])
+            """
             #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
             self.Facit['traindata'].update(
                 {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
                 {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
                  'type': 'person', 'status': 'Facit', 'SVMvector': self.SVMvect(feat, '+1')
                 }, upsert=True)
+            """
         return len(self.OK['person'])
 
     def genTrainDataMiss(self):
@@ -278,7 +283,9 @@ class Facit:
                 cosScore = cos(matchtxt, cand_matchtxt)
                 feat = personDefault(p1, rgdP, self.config, None, nodeScore,
                                famScore, cosScore, matchtxtLen=len(matchtxt.split()))
-
+                self.tensordata.append(feat)
+                self.tensorlabels.append([0])
+                """
                 #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
                 ant += 1
                 self.Facit['traindata'].update(
@@ -286,6 +293,7 @@ class Facit:
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
                      'type': 'person', 'status': 'Miss', 'SVMvector': self.SVMvect(feat, '-1')
                     }, upsert=True)
+                """
         return ant
 
     def genTrainDataRandom(self, ant):
@@ -333,7 +341,9 @@ class Facit:
                 cosScore = cos(matchtxt, cand_matchtxt)
                 feat = personDefault(p1, rgdP, self.config, None, nodeScore,
                                famScore, cosScore, matchtxtLen=len(matchtxt.split()))
-
+                self.tensordata.append(feat)
+                self.tensorlabels.append([0])
+                """
                 #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
                 tot+=1
                 self.Facit['traindata'].update(
@@ -341,6 +351,7 @@ class Facit:
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
                      'type': 'person', 'status': 'RandomEjOK', 'SVMvector': self.SVMvect(feat, '-1')
                     }, upsert=True)
+                """
         return tot
 
     def genTrainDataNotTested(self, ant=5000):
@@ -378,23 +389,26 @@ class Facit:
                                                        self.config['families'],
                                                        self.config['relations'])
                 cosScore = cos(matchtxt, cand_matchtxt)
+                tot+=1
                 feat = personDefault(p1, rgdP, self.config, None, nodeScore,
                                      famScore, cosScore, matchtxtLen=len(matchtxt.split()))
-
+                self.tensordata.append(feat)
+                self.tensorlabels.append([0])
+                """
                 #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
-                tot+=1
                 self.Facit['traindata'].update(
                      {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
                      {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
                      'type': 'person', 'status': 'NotTested', 'SVMvector': self.SVMvect(feat, '-1')
                   }, upsert=True)
+                """
                 if tot >= antToDo: return tot
                 continue
         return tot
 
     def genFamTrainDataFacit(self):
         """
-        Generate default (famExtended, famBaseline) feature vectors for pairs from dbI and dbII
+        Generate default (famExtended) feature vectors for pairs from dbI and dbII
         Facit determines which are OK, positive examples
         """
         from collections import defaultdict
@@ -435,8 +449,7 @@ class Facit:
                     continue
             fII = getFamilyFromId(rgdP['_id'], self.config['match_families'],
                                      self.config['match_relations'])
-            #feat = famExtended(fI, fII, self.config)
-            feat = famBaseline(fI, fII, self.config)
+            feat = famExtended(fI, fII, self.config)
             if not feat: continue
             if fix:
                 print 'Org', okPair, 'Inserting new', fI['refId'], fII['refId']
@@ -455,7 +468,7 @@ class Facit:
 
     def genFamTrainDataMiss(self):
         """
-        Generate default (famExtended, famBaseline) feature vectors for pairs from dbI and dbII
+        Generate default (famExtended) feature vectors for pairs from dbI and dbII
         Matches not found in Facit and Manual matches define these negative examples
         """
         ant = 0
@@ -467,8 +480,7 @@ class Facit:
                                      self.config['relations'])
                 fII = getFamilyFromId(match['matchid'], self.config['match_families'],
                                      self.config['match_relations'])
-                #feat = famExtended(fI, fII, self.config)
-                feat = famBaseline(fI, fII, self.config)
+                feat = famExtended(fI, fII, self.config)
                 if not feat: continue
                 ant += 1
                 self.Facit['famtraindata'].update(
@@ -507,8 +519,7 @@ class Facit:
                 fII = getFamilyFromId(match['matchid'], self.config['match_families'],
                                      self.config['match_relations'])
                 #print 'Fam', fI['refId'], fII['refId']
-                #feat = famExtended(fI, fII, self.config)
-                feat = famBaseline(fI, fII, self.config)
+                feat = famExtended(fI, fII, self.config)
                 if not feat: continue
                 #print 'Feat OK'
                 tot+=1
@@ -547,8 +558,7 @@ class Facit:
                                      self.config['relations'])
                 fII = getFamilyFromId(f2['_id'], self.config['match_families'],
                                      self.config['match_relations'])
-                #feat = famExtended(fI, fII, self.config)
-                feat = famBaseline(fI, fII, self.config)
+                feat = famExtended(fI, fII, self.config)
                 if not feat: continue
                 tot+=1
                 self.Facit['famtraindata'].update(
@@ -571,6 +581,9 @@ class Facit:
         for ex in self.Facit['traindata'].find(query, {'SVMvector': True}, no_cursor_timeout=True):
             traindata += ex['SVMvector']+"\n"
         return traindata
+
+    def getTraindataTensor(self, query = {}):
+        return (self.tensordata, self.tensorlabels)
 
     def prMiss(self, match, reason):
         print reason
