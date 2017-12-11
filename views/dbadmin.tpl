@@ -46,6 +46,36 @@ Visa information<input type="radio" name="action" value="info" checked="checked"
 
 <p><input type="submit" value="GO" />
 </form>
+
+<h2>Databas debug</h2>
+<p>
+<form action="/DBdebug" method="GET">
+DatabasI
+<select name="workDB">
+<option value="">Välj databas</option>
+
+%for db in dbs:
+    <option>{{db}}</option>'
+%end
+
+</select>
+DatabasII
+<select name="matchDBDB">
+<option value="">Välj databas</option>
+
+%for db in dbs:
+    <option>{{db}}</option>'
+%end
+
+</select>
+<br/>
+Visa dbI familj:
+<input type="text" name="workFam" value=""/>
+dbII familj:
+<input type="text" name="matchFam" value=""/>
+<p><input type="submit" value="GO" />
+</form>
+
 %if role == 'admin' or role == 'user':
 <h2>Inställningar</h2>
 <ul>

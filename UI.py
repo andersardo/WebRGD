@@ -943,6 +943,21 @@ def dbaction():
                            user=bottle.request.session['activeUser'],
                            role=aaa.current_user.role)
 
+#########################DEBUG
+@bottle.route('/DBdebug')
+@authorize()
+def dbdebug():
+    import debugUtils
+    if not bottle.request.query.workDB or not bottle.request.query.matchDB:
+        mess = 'Ingen databas vald'
+    #workFam = bottle.request.query.workFam
+    #matchFam = bottle.request.query.matchFam
+    workFam = common.config['families'].find_one({'refId': bottle.request.query.workFam})
+    matchFam = common.config['match_families'].find_one({'refId': bottle.request.query.matchFam})
+    match = debugUtils.DmatchFam(workFam['_id'], matchFam['_id'], common.config)
+    tab = famDisp(workFam['_id'], matchFam['_id'], match)
+    return bottle.template('family', rows=tab, wfid=workFam['_id'], mfid=matchFam['_id'], buttons=None)
+
 ######################TEST
 @bottle.route('/databases/<what>/<DB1>')
 def dbs(what, DB1):

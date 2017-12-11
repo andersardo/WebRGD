@@ -87,7 +87,8 @@ def persMatchDisp(role, pm, workfamId = None, matchfamId = None):
 
 def famDisp( tmpfid, rgdfid, match = None ):
     if not match:
-        match = common.config['fam_matches'].find_one({'workid': ObjectId(tmpfid), 'matchid': ObjectId(rgdfid)})
+        #match = common.config['fam_matches'].find_one({'workid': ObjectId(tmpfid), 'matchid': ObjectId(rgdfid)})
+        match = common.config['fam_matches'].find_one({'workid': tmpfid, 'matchid': rgdfid})
     tab = []
     tab.append(['', '<b>'+common.config['workDB'].split('_', 1)[1]+'</b>','','',
                 '', '<b>'+common.config['matchDB'].split('_', 1)[1]+'</b>','','',''])
