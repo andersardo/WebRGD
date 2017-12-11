@@ -13,7 +13,8 @@ class openRGD_workflow(unittest.TestCase):
         options.add_argument("--headless") #No display during tests
         self.driver = webdriver.Chrome(chrome_options=options)
         self.driver.implicitly_wait(5)
-        self.base_url = "http://localhost:8083/"
+        #self.base_url = "http://localhost:8083/"
+        self.base_url = "http://dis8.dis.se:8286/"
         self.verificationErrors = []
         self.accept_next_alert = True
 
@@ -152,6 +153,7 @@ class openRGD_workflow(unittest.TestCase):
                 step()
             except Exception as e:
                 self.fail("{} failed ({}: {})".format(step, type(e), e))
+                pass
 
     def is_element_present(self, how, what):
         try: self.driver.find_element(by=how, value=what)

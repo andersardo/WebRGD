@@ -8,7 +8,7 @@ import sys
 import common
 from pymongo import MongoClient
 from matchtext import matchtext
-from featureSet import personDefault, famExtended, baseline
+from featureSet import personDefault, famExtended#, baseline
 from matchUtils import nodeSim, familySim, cos
 from dbUtils import getFamilyFromId, getFamilyFromChild
 from luceneUtils import search, setupDir, index

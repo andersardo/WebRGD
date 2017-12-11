@@ -90,7 +90,7 @@ for p in person_list.find({}, no_cursor_timeout=True):
         if (sc/score > 3.0): break
 logging.info('%d person matchings inserted', ant)
 logging.info('Time %s',time.time() - t0)
-
+"""
 #Mönster för att upplösa multimatch för individer
 #Flera OK matchindivid i tmp; alla i samma familj
 #Välj den individmatch med högst nodeSim och samma födelsedatum
@@ -137,7 +137,7 @@ logging.info('%d Multimatch individer (tvillingar/syskon) fixade', ant)
 logging.info('Time %s',time.time() - t0)
 
 #Ta bort individ med status Manuell om finns OK och  nodeSim < 0 och SVM < 0.5
-###BEHÖVS INTE 0 I HELA FACIT
+###BEHÖVS INTE endast 2 I HELA FACIT
 ant=0
 for mt in matches.find({'status': {'$in': list(common.statOK)}}, {'_id': 1, 'workid': 1}):
     for check in matches.find({'status': {'$in': list(common.statManuell)}, 'workid': mt['workid'],
@@ -149,7 +149,7 @@ for mt in matches.find({'status': {'$in': list(common.statOK)}}, {'_id': 1, 'wor
         ant += 1
 logging.info('%d Individer med status Manuell => rEjOK fixade', ant)
 logging.info('Time %s',time.time() - t0)
-
+"""
 #Families match-status calculated from person match-status => No SVM
 ant = 0
 fams = set()
@@ -335,9 +335,9 @@ else:
     svmFamModel = svm_load_model('conf/famBaseline.model')
 antChanged = 0
 antSVM = 0
-for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
-###Test all family matches gives slightly worse results
-##for fmatch in config['fam_matches'].find().batch_size(50):
+##for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
+###Test all family matches gives better results
+for fmatch in config['fam_matches'].find().batch_size(50):
     work = getFamilyFromId(fmatch['workid'] , config['families'], config['relations'])
     match = getFamilyFromId(fmatch['matchid'], config['match_families'], config['match_relations'])
     #Run through children and change 'EjMatch' for unreasonable matches to 'split'

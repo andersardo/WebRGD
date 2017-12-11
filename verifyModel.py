@@ -8,7 +8,7 @@ import sys
 import common
 from pymongo import MongoClient
 from matchtext import matchtext
-from featureSet import personDefault, famExtended, famBaseline, baseline
+from featureSet import personDefault, famExtended, famBaseline   #, baseline
 from matchUtils import nodeSim, familySim, cos
 from dbUtils import getFamilyFromId, getFamilyFromChild
 from luceneUtils import search, setupDir, index
@@ -410,33 +410,38 @@ class Facit:
             matchMap['_id'] = map['_id']
             for (k,v) in pickle.loads(map['data']).iteritems(): matchMap[k] = v
         ant=0
+        print 'workMap', len(workMap)
+        print 'matchMap', len(matchMap)
         for okPair in self.OK['family']:
             (pI, pII) = okPair.split(';')
             fix = False
             p1 = self.config['families'].find_one({'refId': pI})
             if not p1:
                 fix = True
-                orig = self.config['originalData'].find_one({'type': 'family', 'record.refId': pI}, {"recordId" : 1})
+                orig = self.config['originalData'].find_one({'type': 'family', 'data.record.refId': pI}, {"recordId" : 1})
                 try:
                     p1 = self.config['families'].find_one({'_id': workMap[orig['recordId']][0]})
                 except: p1 = None
                 if not p1:
-                    print 'Not found', pI
+                    print 'Not found pI', pI
                     continue
             fI = getFamilyFromId(p1['_id'], self.config['families'],
                                      self.config['relations'])
             rgdP = self.config['match_families'].find_one({'refId': pII})
             if not rgdP:
                 fix = True
-                orig = self.config['match_originalData'].find_one({'type': 'family', 'record.refId': pII}, {"recordId" : 1})
-                rgdP = self.config['match_families'].find_one({'_id': matchMap[orig['recordId']][0]})
+                orig = self.config['match_originalData'].find_one({'type': 'family', 'data.record.refId': pII}, {"recordId" : 1})
+                try:
+                    rgdP = self.config['match_families'].find_one({'_id': matchMap[orig['recordId']][0]})
+                except:
+                    rgdP = None
                 if not rgdP:
-                    print 'Not Found', pII
+                    print 'Not Found pII', pII
                     continue
             fII = getFamilyFromId(rgdP['_id'], self.config['match_families'],
                                      self.config['match_relations'])
-            #feat = famExtended(fI, fII, self.config)
-            feat = famBaseline(fI, fII, self.config)
+            feat = famExtended(fI, fII, self.config)
+            #feat = famBaseline(fI, fII, self.config)
             if not feat: continue
             if fix:
                 print 'Org', okPair, 'Inserting new', fI['refId'], fII['refId']
@@ -467,8 +472,8 @@ class Facit:
                                      self.config['relations'])
                 fII = getFamilyFromId(match['matchid'], self.config['match_families'],
                                      self.config['match_relations'])
-                #feat = famExtended(fI, fII, self.config)
-                feat = famBaseline(fI, fII, self.config)
+                feat = famExtended(fI, fII, self.config)
+                #feat = famBaseline(fI, fII, self.config)
                 if not feat: continue
                 ant += 1
                 self.Facit['famtraindata'].update(
@@ -507,8 +512,8 @@ class Facit:
                 fII = getFamilyFromId(match['matchid'], self.config['match_families'],
                                      self.config['match_relations'])
                 #print 'Fam', fI['refId'], fII['refId']
-                #feat = famExtended(fI, fII, self.config)
-                feat = famBaseline(fI, fII, self.config)
+                feat = famExtended(fI, fII, self.config)
+                #feat = famBaseline(fI, fII, self.config)
                 if not feat: continue
                 #print 'Feat OK'
                 tot+=1
@@ -547,8 +552,8 @@ class Facit:
                                      self.config['relations'])
                 fII = getFamilyFromId(f2['_id'], self.config['match_families'],
                                      self.config['match_relations'])
-                #feat = famExtended(fI, fII, self.config)
-                feat = famBaseline(fI, fII, self.config)
+                feat = famExtended(fI, fII, self.config)
+                #feat = famBaseline(fI, fII, self.config)
                 if not feat: continue
                 tot+=1
                 self.Facit['famtraindata'].update(

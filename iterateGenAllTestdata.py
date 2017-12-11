@@ -32,6 +32,6 @@ for (workDB, matchDB) in (('kalle_KalleA', 'kalle_demomatch'), ('kalle_KalleI', 
 #facit = Facit(config)
 query = {'status': 'Miss'}
 #query = {}
-train = open('TrainDataAll20171204L6_5Miss.data', 'wb')
+train = open('TrainDataAll20171208MissL6_5.data', 'wb')
 train.write(facit.getTraindata(query))
 train.close()

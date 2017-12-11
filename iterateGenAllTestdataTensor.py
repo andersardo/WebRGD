@@ -34,6 +34,6 @@ for (workDB, matchDB) in (('kalle_KalleA', 'kalle_demomatch'), ('kalle_KalleI', 
     print workDB, matchDB, 'antRandomEjOK=', antRandomEjOK, 'NotTested=', antNotTested
     print
 
-train = open('TensorDataAll20171206PersDef.data', 'wb')
+train = open('TensorDataAll20171208PersDef.data', 'wb')
 train.write(json.dumps((data,labels)))
 train.close()

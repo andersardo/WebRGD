@@ -13,13 +13,13 @@ for (workDB, matchDB) in (('kalle_KalleA', 'kalle_demomatch'), ('kalle_KalleI', 
                           ('kalle_testp4', 'kalle_testp5'), ('kalle_testp3', 'kalle_testp5'),
                           ('kalle_testp3', 'kalle_testp4'), ('kalle_testp1', 'kalle_testp5'),
                           ('vallon_B_jan_SAFP_22', 'vallon_A_stig_SAFP_22') ):
+    print workDB, matchDB
     config = common.init(workDB, matchDBName = matchDB)
     facit = Facit(config)
     facit.getFacit()
     antOK = facit.genFamTrainDataFacit()
-    antMiss = facit.genFamTrainDataMiss()
-    print workDB, matchDB, 'antMiss=', antMiss
-    #continue
+    #antMiss = facit.genFamTrainDataMiss()
+    continue
     skip = int((antOK-antMiss)*2)
     if skip < 1: skip = 1
     print 'antOK=', antOK, 'antMiss=', antMiss, 'R=', skip
@@ -31,7 +31,7 @@ for (workDB, matchDB) in (('kalle_KalleA', 'kalle_demomatch'), ('kalle_KalleI', 
 #config = common.init('kalle_KalleA', matchDBName = 'kalle_demomatch')
 #facit = Facit(config)
 query = {'status': 'Miss'}
-query = {}
-train = open('TrainDataAll20171205L6_5Fam.data', 'wb')
+#query = {}
+train = open('TrainDataAll20171208L6_5FamMiss.data', 'wb')
 train.write(facit.getTraindata(query))
 train.close()

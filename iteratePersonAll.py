@@ -12,7 +12,7 @@ for (workDB, matchDB) in (('kalle_KalleA', 'kalle_demomatch'), ('kalle_KalleI', 
                           ('kalle_testp1', 'kalle_testp2'), ('kalle_testp1', 'kalle_testp4'),
                           ('kalle_testp4', 'kalle_testp5'), ('kalle_testp3', 'kalle_testp5'),
                           ('kalle_testp3', 'kalle_testp4'), ('kalle_testp1', 'kalle_testp5'),
-                          ('vallon_B_jan_SAFP_11', 'vallon_A_stig_SAFP_11') ):
+                          ('vallon_B_jan_SAFP_22', 'vallon_A_stig_SAFP_22') ):
 
     if workDB in done: continue
     config = common.init(workDB, matchDBName = matchDB)
@@ -36,12 +36,12 @@ for (workDB, matchDB) in (('kalle_KalleA', 'kalle_demomatch'), ('kalle_KalleI', 
                           ('kalle_testp1', 'kalle_testp2'), ('kalle_testp1', 'kalle_testp4'),
                           ('kalle_testp4', 'kalle_testp5'), ('kalle_testp3', 'kalle_testp5'),
                           ('kalle_testp3', 'kalle_testp4'), ('kalle_testp1', 'kalle_testp5'),
-                          ('vallon_B_jan_SAFP_11', 'vallon_A_stig_SAFP_11') ):
+                          ('vallon_B_jan_SAFP_22', 'vallon_A_stig_SAFP_22') ):
     config = common.init(workDB, matchDBName = matchDB)
     facit = Facit(config)
     facit.getFacit()
-    res = facit.verify(doMatch=True)
-    #res = facit.verify(doMatch=True, famFeature='famExtended')
+    #res = facit.verify(doMatch=True)
+    res = facit.verify(doMatch=True, famFeature='famExtended')
     #res = facit.verify(doMatch=True, persFeature='baseline')
     #res = facit.verify(doMatch=False, famFeature='famExtended')
     partResult[workDB+';'+matchDB] = res
@@ -74,31 +74,3 @@ for k in partResult.keys():
     totFel = felOK + missadeOK
     print '  fel matchade OK=', felOK, 'missade OK=', missadeOK, 'Tot=',totFel, '(', totFel*100.0/partResult[k]['Facit'], '%)'
     print
-
-
-"""
-for (workDB, matchDB) in (('kalle_KalleA', 'kalle_demomatch'), ('kalle_KalleI', 'kalle_demomatch'),
-                          ('kalle_KalleG', 'kalle_demomatch'), ('kalle_KochL', 'kalle_demomatch'),
-                          ('kalle_testp1', 'kalle_testp2'), ('kalle_testp1', 'kalle_testp4'),
-                          ('kalle_testp4', 'kalle_testp5'), ('kalle_testp3', 'kalle_testp5'),
-                          ('kalle_testp3', 'kalle_testp4'), ('kalle_testp1', 'kalle_testp5'),
-                          ('vallon_B_jan_SAFP_22', 'vallon_A_stig_SAFP_22') ):
-    config = common.init(workDB, matchDBName = matchDB)
-    facit = Facit(config)
-    facit.getFacit()
-    #antOK = facit.genTrainDataFacit()
-    antMiss = facit.genTrainDataMiss()
-    print workDB, matchDB, 'antMiss=', antMiss
-    #skip = int((antOK-antMiss)*2)
-    #if skip < 1: skip = 1
-    #print 'antOK=', antOK, 'antMiss=', antMiss, 'R=', skip
-    #antNotTested = facit.genTrainDataNotTested()
-    #print workDB, matchDB, 'NotTested=', antNotTested
-config = common.init('kalle_KalleA', matchDBName = 'kalle_demomatch')
-facit = Facit(config)
-query = {'status': 'Miss'}
-query = {}
-train = open('TrainDataAll20171120.data', 'wb')
-train.write(facit.getTraindata(query))
-train.close()
-"""
