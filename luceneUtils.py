@@ -59,13 +59,13 @@ def index(personDB, familyDB, relationDB):
         writer.addDocument(doc)
 
     #Family matchtext
-    #for f in fam_list.find():
-    #    matchtxt = mt.matchtextFamily(f, person_list)
-    #    doc = Document()
-    #    doc.add(Field('uid',str(f['_id']), StringField.TYPE_STORED))
-    #    doc.add(Field('sex','FAM', StringField.TYPE_STORED))
-    #    doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
-    #    writer.addDocument(doc)
+    for f in familyDB.find():
+        matchtxt = mt.matchtextFamily(f, familyDB, personDB, relationDB)
+        doc = Document()
+        doc.add(Field('uid',str(f['_id']), StringField.TYPE_STORED))
+        doc.add(Field('sex','FAM', StringField.TYPE_STORED))
+        doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
+        writer.addDocument(doc)
 
     writer.commit()
     writer.close()

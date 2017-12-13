@@ -94,8 +94,8 @@ class matchtext:
             return self.luceneFix(matchtext)
 
     ###########################
-    #Not used
-    """
+    #Not used?
+
     def familyText(self, fam):
         if 'marriage' in fam:
             mtxt = self.eventText(fam['marriage'], 'M')
@@ -103,20 +103,21 @@ class matchtext:
             mtxt = ''
         return mtxt
     ###########################
-    def matchtextFamily(self, fam, pers_list):
-            matchtext = self.familyText(fam)
-            mtxt = set()
-            #Add HUSB o WIFE
-            if fam['husb']:
-                for item in self.personText(pers_list.find_one({'_id': fam['husb']})).split():
-                    mtxt.add('HUSB'+item)
-            if fam['wife']:
-                for item in self.personText(pers_list.find_one({'_id': fam['wife']})).split():
-                    mtxt.add('WIFE'+item)
-            #Add children
-            for ch in fam['children']:
-                for item in self.personText(pers_list.find_one({'_id': ch})).split():
-                    mtxt.add('CHILD' + item)
-            matchtext += ' ' + ' '.join(mtxt)
-            return self.luceneFix(matchtext)
-    """
+    def matchtextFamily(self, family, familyDB, pers_list, relations):
+        fam = getFamilyFromId(family['_id'], familyDB, relations)
+        matchtext = self.familyText(fam)
+        mtxt = set()
+        #Add HUSB o WIFE
+        if fam['husb']:
+            for item in self.personText(pers_list.find_one({'_id': fam['husb']})).split():
+                mtxt.add('HUSB'+item)
+        if fam['wife']:
+            for item in self.personText(pers_list.find_one({'_id': fam['wife']})).split():
+                mtxt.add('WIFE'+item)
+        #Add children
+        for ch in fam['children']:
+            for item in self.personText(pers_list.find_one({'_id': ch})).split():
+                mtxt.add('CHILD' + item)
+        matchtext += ' ' + ' '.join(mtxt)
+        return self.luceneFix(matchtext)
+

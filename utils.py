@@ -15,8 +15,6 @@ def getIndivid(db, uid):
 def getMatchPers(wid, mid, conf):
     if ((wid is None) or (mid is None)): return None
     pmatch = conf['matches'].find_one({'workid': wid, 'matchid': mid})
-#    if pmatch:     print '  getMatchPers', uid, rgduid, pmatch['status']
-#    else:     print '  getMatchPers', uid, rgduid, 'NoMatch'
     return pmatch
 
 def matchNamnFDate(tind, trgd):

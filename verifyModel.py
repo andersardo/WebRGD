@@ -5,6 +5,8 @@
 """
 import os
 import sys
+from collections import defaultdict
+import pickle
 import common
 from pymongo import MongoClient
 from matchtext import matchtext
@@ -60,6 +62,8 @@ class Facit:
         self.OK = {'person': {}, 'family': {}}
         self.config = config
         self.mt_tmp = matchtext()
+        self.workMap = {}
+        self.matchMap = {}
 
     def runCommand(self, cmd):
         print 'OScmd:', cmd
@@ -79,6 +83,47 @@ class Facit:
 
     def loadDB(self, path, name):
         self.runCommand('mongorestore --drop --db '+name+' '+path)
+
+    def tSnabb(self):
+        setupDir(self.dbII)  #lucene
+        antOK=0
+        tot=0
+        foundOK = {}
+        for fam in self.config['families'].find({}, no_cursor_timeout=True):
+            tot+=1
+            #print 'Fam', fam['refId'], fam['_id']
+            matchtxt = self.mt_tmp.matchtextFamily(fam, self.config['families'],
+                                                   self.config['persons'],
+                                                   self.config['relations'])
+            if not matchtxt:
+                logging.error('No matchtextdata for %s, %s',fam['_id'],fam['refId'])
+                continue       ##########FIX!!!!!!!!!!
+            antS=2
+            candidates = search(matchtxt, 'FAM', antS) #Lucene search
+            for c in candidates:
+                f = self.config['match_families'].find_one({'_id': c[0]})
+                score = c[1]
+                if fam['refId'] == 'F9577': print fam['refId'], score, f['refId']
+                keys = [fam['refId']+';'+f['refId']]
+                try: keys.append(self.workMap[fam['refId']]+';'+f['refId'])
+                except: pass
+                try: keys.append(fam['refId']+';'+self.matchMap[f['refId']])
+                except: pass
+                try: keys.append(self.workMap[fam['refId']]+';'+self.matchMap[f['refId']])
+                except: pass
+                found = False
+                if fam['refId'] == 'F279': print c[0], keys
+                for key in keys:
+                    if key in self.OK['family']:
+                        print score, key, 'OK'
+                        foundOK[key] = score
+                        antOK+=1
+                        found = True
+                        #??break
+                if not found: print score, keys, 'NO'
+        print 'Sum', antS, len(self.OK['family']), antOK, 'tot=', tot
+        for k in self.OK['family'].keys():
+            if k not in foundOK: print k
 
     def updateFacit(self):
         """
@@ -110,9 +155,45 @@ class Facit:
             #self.OK[f['type']][f['dbIgedcomID']+';'+f['dbIIgedcomID']] = 1
             self.OK[f['type']][f['dbIgedcomID'].replace('gedcom_', '')+';'+f['dbIIgedcomID'].replace('gedcom_', '')] = 1
         print 'Facit: persons=', len(self.OK['person']), 'families=', len(self.OK['family'])
+        #Fix merged families!
+        wMap = {}
+        mMap = {}
+        map = self.config['originalData'].find_one({'type': 'Fmap'})
+        if map:
+            for (k,v) in pickle.loads(map['data']).iteritems():
+                if k != v[0]:
+                    #get refId
+                    f = self.config['originalData'].find_one({'type': 'family', 'recordId': k})
+                    fMap = self.config['originalData'].find_one({'type': 'family', 'recordId': v[0]})
+                    wMap[f['data'][0]['record']['refId']] = fMap['data'][0]['record']['refId']
+                    #if len(f['data'])>1: print 'wf',len(f['data'])
+                    #if len(fMap['data'])>1: print 'wfMap',len(fMap['data'])
+                    #if (f['data'][0]['record']['refId'] == 'F15' or
+                    #   f['data'][0]['record']['refId'] == 'F16' or
+                    #   fMap['data'][0]['record']['refId'] == 'F15' or
+                    #   fMap['data'][0]['record']['refId'] == 'F16'):
+                    #    print f['data'][0]['record']['refId'], wMap[f['data'][0]['record']['refId']]
+        map = self.config['match_originalData'].find_one({'type': 'Fmap'})
+        if map:
+            for (k,v) in pickle.loads(map['data']).iteritems():
+                if k != v[0]:
+                    #get refId
+                    f = self.config['match_originalData'].find_one({'type': 'family', 'recordId': k})
+                    fMap = self.config['match_originalData'].find_one({'type': 'family', 'recordId': v[0]})
+                    mMap[f['data'][0]['record']['refId']] = fMap['data'][0]['record']['refId']
+                    #if len(f['data'])>1: print 'mf',len(f['data'])
+                    #if len(fMap['data'])>1: print 'mfMap',len(fMap['data'])
+                    #if (f['data'][0]['record']['refId'] == '1-1383' or
+                    #   f['data'][0]['record']['refId'] == '1-6078' or
+                    #   fMap['data'][0]['record']['refId'] == '1-1383' or
+                    #   fMap['data'][0]['record']['refId'] == '1-6078'):
+                    #    print f['data'][0]['record']['refId'], mMap[f['data'][0]['record']['refId']]
+        self.workMap = {v: k for k, v in wMap.iteritems()}
+        self.matchMap = {v: k for k, v in mMap.iteritems()}
+        #print self.matchMap['1-1383']
         return
 
-    def verify(self, doMatch=True, persFeature= '', famFeature=''):
+    def verify(self, doMatch=True, persFeature= '', famFeature='', command='match'):
         #NEEDS reload of gedcom???
         print '  Doing', self.dbI, self.dbII
         if doMatch:
@@ -121,7 +202,11 @@ class Facit:
                 featureOpt += ' --featureset ' + persFeature
             if famFeature:
                 featureOpt += ' --famfeatureset ' + famFeature
-            self.runCommand('python match.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+            if command == 'match':
+                self.runCommand('python match.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+            elif  command == 'famMatch':
+                #self.runCommand('python -m cProfile -o prof.cprof matchSnabb.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+                self.runCommand('python -m cProfile famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
         doneOK = []
         antOK=0
         antMan=0
@@ -397,8 +482,6 @@ class Facit:
         Generate default (famExtended, famBaseline) feature vectors for pairs from dbI and dbII
         Facit determines which are OK, positive examples
         """
-        from collections import defaultdict
-        import pickle
         workMap = defaultdict(list)
         matchMap = defaultdict(list)
         map = self.config['originalData'].find_one({'type': 'Fmap'})
