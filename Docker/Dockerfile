@@ -18,7 +18,7 @@ RUN echo "mysql-server-5.5 mysql-server/root_password_again password rgd" | debc
 # Några standardpaket
 RUN apt-get update && apt-get install -y \
         locales supervisor libsvm-dev python-libsvm openssl \
-        python-setuptools python-dev gcc g++ make wget graphviz \
+        python-setuptools python-dev build-essential gcc g++ make wget graphviz \
 	mongodb-org mysql-server mysql-client php5-cli php5-mysql \
 	openjdk-8-jdk-headless openjdk-8-jdk \
         openjdk-8-jre-headless openjdk-8-jre \

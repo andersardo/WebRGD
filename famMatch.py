@@ -71,7 +71,7 @@ for fam in config['families'].find({}, no_cursor_timeout=True):
     candidates = search(matchtxt, 'FAM', 2) #Lucene search
     sc = 0
     for c in candidates:
-        if c[1] < 70.0: break  #breakoff score point for considering family match
+        if c[1] < 45.0: break  #breakoff score point for considering family match
         if (sc/c[1] > 2.0): break
         if (c[1]> sc): sc = c[1]
         #famMatchData = matchFam(fam['_id'], c[0], config)
@@ -96,6 +96,7 @@ for pId in doPersons:
     sc = 0
     for (kid,score) in candidates:
         #?? use breakoff score 50 ??
+        if score < 35.0: break  #breakoff score point for considering  match
         if (score> sc): sc = score
         candidate = match_person.find_one({'_id': kid})
         matchdata = matchPers(p, candidate, config, score)

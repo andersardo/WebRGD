@@ -40,9 +40,7 @@ for (workDB, matchDB) in (('kalle_KalleA', 'kalle_demomatch'), ('kalle_KalleI', 
     config = common.init(workDB, matchDBName = matchDB)
     facit = Facit(config)
     facit.getFacit()
-    #res = facit.verify(doMatch=True)
-    res = facit.verify(doMatch=True, famFeature='famExtended')
-    #res = facit.verify(doMatch=True, persFeature='baseline')
+    res = facit.verify(doMatch=True, famFeature='famExtended', command='famMatch')
     #res = facit.verify(doMatch=False, famFeature='famExtended')
     partResult[workDB+';'+matchDB] = res
     result['ant'] += 1

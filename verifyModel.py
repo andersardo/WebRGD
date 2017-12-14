@@ -206,7 +206,7 @@ class Facit:
                 self.runCommand('python match.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
             elif  command == 'famMatch':
                 #self.runCommand('python -m cProfile -o prof.cprof matchSnabb.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
-                self.runCommand('python -m cProfile famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+                self.runCommand('python famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
         doneOK = []
         antOK=0
         antMan=0
