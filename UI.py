@@ -13,6 +13,7 @@ import conf.config, common
 #print conf.config
 
 import bottle
+from bottle import response
 from beaker.middleware import SessionMiddleware
 from cork import Cork
 from bson.objectid import ObjectId
@@ -178,14 +179,14 @@ def combined():
 @authorize()
 def download():
     import subprocess
-    bottle.response.set_header("Content-Type", "application/octet-stream")
-    bottle.response.headers.append("Expires:", "0")
-    bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
-    bottle.response.headers.replace("Content-Type:", "application/force-download")
-    bottle.response.headers.append("Content-Type:", "application/octet-stream")
-    bottle.response.headers.append("Content-Type:", "application/download")
     filn = 'RGD_' + bottle.request.query.workDB + '.GED'
-    bottle.response.headers.append("Content-Disposition:", 'attachment; filename='+filn)
+    response.add_header('Expires', '0')
+    response.add_header('Cache-Control', "must-revalidate, post-check=0, pre-check=0")
+    response.set_header('Content-Type', "application/force-download")
+    response.add_header('Content-Type', "application/octet-stream")
+    response.add_header('Content-Type', "application/download")
+    response.add_header('Content-Disposition', 'attachment; filename='+filn)
+    response.add_header('Content-Transfer-Encoding', 'binary')
     return subprocess.check_output(['python','exportGedcom.py', bottle.request.query.workDB])
 
 @bottle.route('/getFile')
@@ -196,34 +197,31 @@ def getfile():
          ( not os.path.isfile(fn) ) or  ( '..' in fn ) ):
         return 'File not found: ' + os.path.basename(fn)
     if fn.endswith('.zip'):
-        bottle.response.set_header("Content-Type", "application/octet-stream")
-        bottle.response.headers.append("Expires:", "0")
-        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0")
-        bottle.response.headers.replace("Content-Type:", "application/force-download")
-        bottle.response.headers.append("Content-Type:", "application/octet-stream")
-        bottle.response.headers.append("Content-Type:", "application/download")
-        bottle.response.headers.append("Content-Disposition:", 'attachment; filename=all.zip')
-        bottle.response.headers.append("Content-Transfer-Encoding:", "binary");
+        response.add_header('Expires', '0')
+        response.add_header('Cache-Control', "must-revalidate, post-check=0, pre-check=0")
+        response.set_header('Content-Type', "application/force-download")
+        response.add_header('Content-Type', "application/octet-stream")
+        response.add_header('Content-Type', "application/download")
+        response.add_header('Content-Disposition', 'attachment; filename=all.zip')
+        response.add_header('Content-Transfer-Encoding', 'binary')
         f = codecs.open(fn, "r")
         mess = f.read()
         f.close()
 	return mess
     elif fn.endswith('.CSV'):
-        bottle.response.set_header("Content-Type", "application/octet-stream")
-        bottle.response.headers.append("Expires:", "0")
-        bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0")
-        bottle.response.headers.replace("Content-Type:", "application/force-download")
-        bottle.response.headers.append("Content-Type:", "application/octet-stream")
-        bottle.response.headers.append("Content-Type:", "application/download")
-        bottle.response.headers.append("Content-Disposition:", 'attachment; filename=RGDK.CSV')
-        bottle.response.headers.append("Content-Transfer-Encoding:", "binary");
+        response.add_header('Expires', '0')
+        response.add_header('Cache-Control', "must-revalidate, post-check=0, pre-check=0")
+        response.set_header('Content-Type', "application/force-download")
+        response.add_header('Content-Type', "application/octet-stream")
+        response.add_header('Content-Type', "application/download")
+        response.add_header('Content-Disposition', 'attachment; filename=RGDK.CSV')
+        response.add_header('Content-Transfer-Encoding', 'binary')
         f = codecs.open(fn, "r")
         mess = f.read()
         f.close()
 	return mess
     else:
-        bottle.response.headers.replace("Content-Type:", "text/html; charset=UTF-8")
-        bottle.response.content_type = 'text/html; charset=UTF-8'
+        response.set_header('Content-Type', "text/html; charset=UTF-8")
         f = codecs.open(fn, "r", "utf-8")
 #        mess = '<pre>' + f.read() + '</pre>'
         mess = f.read()
@@ -781,16 +779,14 @@ def downloadFamMatches():
             ws.column_dimensions[get_column_letter(i+1)].width = (column_width + 2) * 1.2
         wb.save(output)
     #Download
-    bottle.response.set_header("Content-Type", "application/octet-stream")
-    bottle.response.headers.append("Expires:", "0")
-    bottle.response.headers.append("Cache-Control:", "must-revalidate, post-check=0, pre-check=0") 
-    bottle.response.headers.replace("Content-Type:", "application/force-download")
-    bottle.response.headers.append("Content-Type:", "application/octet-stream")
-    bottle.response.headers.append("Content-Type:", "application/download")
     filn = 'RGD_' + bottle.request.query.workDB + '-' + bottle.request.query.matchDB + '.' + fileFormat
-    bottle.response.headers.append("Content-Disposition:", 'attachment; filename='+filn)
-    #for (h,v) in bottle.response.iter_headers():
-    #    print h,v
+    response.add_header('Expires', '0')
+    response.add_header('Cache-Control', "must-revalidate, post-check=0, pre-check=0")
+    response.set_header('Content-Type', "application/force-download")
+    response.add_header('Content-Type', "application/octet-stream")
+    response.add_header('Content-Type', "application/download")
+    response.add_header('Content-Disposition', 'attachment; filename='+filn)
+    response.add_header('Content-Transfer-Encoding', 'binary')
     return output.getvalue()
 
 @bottle.route('/viewNext')
