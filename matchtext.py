@@ -10,7 +10,7 @@ Lucene supports escaping special characters that are part of the query syntax.
 To escape these character use the \ before the character.
 str.translate does not work on Unicode objects
 """
-from dbUtils import getFamilyFromChild
+from dbUtils import getFamilyFromChild, getFamilyFromId
 class matchtext:
     """
     calculates the text representation used for initial selection of match-kandidates
@@ -76,11 +76,11 @@ class matchtext:
         return mtxt.strip()
 
     ###########################
-    def matchtextPerson(self, p, personDB, relationDB):
+    def matchtextPerson(self, p, personDB, familyDB, relationDB):
             matchtext = self.personText(p)
             #Add father and mother
             try:
-                fam = getFamilyFromChild(p['_id'], personDB, relationDB)
+                fam = getFamilyFromChild(p['_id'], familyDB, relationDB)
                 if fam:
                     mtxt = set()
                     if fam['husb']:
@@ -94,8 +94,8 @@ class matchtext:
             return self.luceneFix(matchtext)
 
     ###########################
-    #Not used
-    """
+    #Not used?
+
     def familyText(self, fam):
         if 'marriage' in fam:
             mtxt = self.eventText(fam['marriage'], 'M')
@@ -103,20 +103,21 @@ class matchtext:
             mtxt = ''
         return mtxt
     ###########################
-    def matchtextFamily(self, fam, pers_list):
-            matchtext = self.familyText(fam)
-            mtxt = set()
-            #Add HUSB o WIFE
-            if fam['husb']:
-                for item in self.personText(pers_list.find_one({'_id': fam['husb']})).split():
-                    mtxt.add('HUSB'+item)
-            if fam['wife']:
-                for item in self.personText(pers_list.find_one({'_id': fam['wife']})).split():
-                    mtxt.add('WIFE'+item)
-            #Add children
-            for ch in fam['children']:
-                for item in self.personText(pers_list.find_one({'_id': ch})).split():
-                    mtxt.add('CHILD' + item)
-            matchtext += ' ' + ' '.join(mtxt)
-            return self.luceneFix(matchtext)
-    """
+    def matchtextFamily(self, family, familyDB, pers_list, relations):
+        fam = getFamilyFromId(family['_id'], familyDB, relations)
+        matchtext = self.familyText(fam)
+        mtxt = set()
+        #Add HUSB o WIFE
+        if fam['husb']:
+            for item in self.personText(pers_list.find_one({'_id': fam['husb']})).split():
+                mtxt.add('HUSB'+item)
+        if fam['wife']:
+            for item in self.personText(pers_list.find_one({'_id': fam['wife']})).split():
+                mtxt.add('WIFE'+item)
+        #Add children
+        for ch in fam['children']:
+            for item in self.personText(pers_list.find_one({'_id': ch})).split():
+                mtxt.add('CHILD' + item)
+        matchtext += ' ' + ' '.join(mtxt)
+        return self.luceneFix(matchtext)
+

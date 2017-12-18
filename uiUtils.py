@@ -87,7 +87,8 @@ def persMatchDisp(role, pm, workfamId = None, matchfamId = None):
 
 def famDisp( tmpfid, rgdfid, match = None ):
     if not match:
-        match = common.config['fam_matches'].find_one({'workid': ObjectId(tmpfid), 'matchid': ObjectId(rgdfid)})
+        #match = common.config['fam_matches'].find_one({'workid': ObjectId(tmpfid), 'matchid': ObjectId(rgdfid)})
+        match = common.config['fam_matches'].find_one({'workid': tmpfid, 'matchid': rgdfid})
     tab = []
     tab.append(['', '<b>'+common.config['workDB'].split('_', 1)[1]+'</b>','','',
                 '', '<b>'+common.config['matchDB'].split('_', 1)[1]+'</b>','','',''])
@@ -319,7 +320,7 @@ def listPersons(filters, multi, page=1, limit=10):
     aggrPipe.append({'$skip': start})
     aggrPipe.append({'$limit': limit})
     for match in matches.aggregate(aggrPipe):
-        print match
+        #print match
 #FIX id, refId, namn, sum, född. död, visa
         if match['count'] == '1':
             args['wid'] = str(match['wid'])
@@ -358,9 +359,14 @@ def personView(wid, mid):
     if wid and mid:
         matches = common.config['matches'].find({'workid': wid, 'matchid': mid})
     elif wid:
+        """
+        AA0 debug
         # multilista => only statOK and statManuell
         matches = common.config['matches'].find({'$and': [{'workid': wid},
                 {'status': {'$in': list(common.statOK.union(common.statManuell))}}]})
+        """
+        matches = common.config['matches'].find({'workid': wid})
+
     elif mid:
         # multilista => only statOK and statManuell
         matches = common.config['matches'].find({'$and': [{'matchid': mid},

@@ -331,6 +331,8 @@ och
 onmouseover="this.width='794'; this.style='position: absolute;right: 0px;'"
 onmouseout="this.width='397'; this.style='position: reslative;right: 0px;'" /></td></tr>
 </table>
+<h4><em>Detaljerad dokumentation (visas i nytt fönster):
+  <a href="/static/VisaLikheter.pdf" target="_blank">VisaLikheter.pdf</a></em></h4>
 
 <table style="width: 100%"><tr><td style="vertical-align: top;">
 <h2>7. Sammanslagning - <a href="#Merge">Läs mera</a></h2>

@@ -41,7 +41,7 @@ def setupDir(dbName):
     except Exception, e:
         pass
 
-def index(personDB, relationDB):
+def index(personDB, familyDB, relationDB):
     #config = IndexWriterConfig(Version.LUCENE_CURRENT, analyzer)
     config = IndexWriterConfig(analyzer)
     config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
@@ -51,7 +51,7 @@ def index(personDB, relationDB):
     mt = matchtext()
 
     for p in personDB.find({}, no_cursor_timeout=True):
-        matchtxt = mt.matchtextPerson(p, personDB, relationDB)
+        matchtxt = mt.matchtextPerson(p, personDB, familyDB, relationDB)
         doc = Document()
         doc.add(Field('uid',str(p['_id']), StringField.TYPE_STORED))
         doc.add(Field('sex',str(p['sex']), StringField.TYPE_STORED))
@@ -59,13 +59,13 @@ def index(personDB, relationDB):
         writer.addDocument(doc)
 
     #Family matchtext
-    #for f in fam_list.find():
-    #    matchtxt = mt.matchtextFamily(f, person_list)
-    #    doc = Document()
-    #    doc.add(Field('uid',str(f['_id']), StringField.TYPE_STORED))
-    #    doc.add(Field('sex','FAM', StringField.TYPE_STORED))
-    #    doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
-    #    writer.addDocument(doc)
+    for f in familyDB.find():
+        matchtxt = mt.matchtextFamily(f, familyDB, personDB, relationDB)
+        doc = Document()
+        doc.add(Field('uid',str(f['_id']), StringField.TYPE_STORED))
+        doc.add(Field('sex','FAM', StringField.TYPE_STORED))
+        doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
+        writer.addDocument(doc)
 
     writer.commit()
     writer.close()

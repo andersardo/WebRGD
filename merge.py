@@ -280,7 +280,7 @@ for s in d.values():
           #Enl Rolf: Marr  datum kan vara olika eller blanka
           fam2beMerged = config['match_families'].find_one({'_id': fd})
           if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
-          print 'Merging family %s into %s', fam2beMerged['_id'], FId
+          print 'Merging family %s into %s' % (fam2beMerged['_id'], FId)
 
           config['match_families'].delete_one({'_id': fam2beMerged['_id']})
           Fmap[fam2beMerged['_id']] = [F['_id']]
@@ -353,7 +353,7 @@ print 'Indexing'
 #EVT only reindex affected persons, families
 from luceneUtils import setupDir, index
 setupDir(mDBname)
-index(config['match_persons'],config['match_families'])
+index(config['match_persons'],config['match_families'],config['match_relations'])
 print 'Indexed', mDBname, 'in Lucene'
 print 'Time:',time.time() - t0
 

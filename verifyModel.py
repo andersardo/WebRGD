@@ -5,12 +5,15 @@
 """
 import os
 import sys
+from collections import defaultdict
+import pickle
 import common
 from pymongo import MongoClient
 from matchtext import matchtext
-from featureSet import personDefault, famExtended
+from featureSet import personDefault, famExtended, famBaseline   #, baseline
 from matchUtils import nodeSim, familySim, cos
-from dbUtils import getFamilyFromId
+from dbUtils import getFamilyFromId, getFamilyFromChild
+from luceneUtils import search, setupDir, index
 
 class Facit:
     """
@@ -59,6 +62,8 @@ class Facit:
         self.OK = {'person': {}, 'family': {}}
         self.config = config
         self.mt_tmp = matchtext()
+        self.workMap = {}
+        self.matchMap = {}
 
     def runCommand(self, cmd):
         print 'OScmd:', cmd
@@ -79,6 +84,36 @@ class Facit:
     def loadDB(self, path, name):
         self.runCommand('mongorestore --drop --db '+name+' '+path)
 
+    def tDebug(self, qId):
+        setupDir(self.dbII)  #lucene
+        if qId.startswith('F'):
+            fam = self.config['families'].find_one({'refId': qId})
+            matchtxt = self.mt_tmp.matchtextFamily(fam, self.config['families'],
+                                                   self.config['persons'],
+                                                   self.config['relations'])
+            print 'Fam', len(matchtxt.split()), fam
+            candidates = search(matchtxt, 'FAM', 2) #Lucene search
+            for c in candidates:
+                f = self.config['match_families'].find_one({'_id': c[0]})
+                score = c[1]
+                print score
+                print f
+                print
+        else:
+            pers = self.config['persons'].find_one({'refId': qId})
+            matchtxt = self.mt_tmp.matchtextPerson(pers,
+                                                   self.config['persons'],
+                                                   self.config['families'],
+                                                   self.config['relations'])
+            print 'Pers', len(matchtxt.split()), pers
+            candidates = search(matchtxt, pers['sex'], 2) #Lucene search
+            for c in candidates:
+                pp = self.config['match_persons'].find_one({'_id': c[0]})
+                score = c[1]
+                print score
+                print pp
+                print
+
     def updateFacit(self):
         """
         Removes all entries in Facit for matches with matchDB
@@ -87,49 +122,82 @@ class Facit:
         Saves current status to ./files/Facit/
         """
         self.Facit[self.facitDB].remove({'matchDb': self.dbII})
-        self.OK = {'person': {}, 'family': {}}
         for match in self.matches.find({'status': {'$in': self.statOK}},
                             {'pwork.refId': 1, 'pmatch.refId': 1}):
             self.Facit[self.facitDB].insert_one({'type': 'person', 'matchDb': self.dbII,
                                   'dbIgedcomID': match['pwork']['refId'],
                                   'dbIIgedcomID': match['pmatch']['refId']})
-            self.OK['person'][match['pwork']['refId']+';'+match['pmatch']['refId']] = 1
         for match in self.fam_matches.find({'status': {'$in': self.statOK}},
                                       {'workRefId': 1, 'matchRefId': 1}):
             self.Facit[self.facitDB].insert_one({'type': 'family', 'matchDb': self.dbII,
                                   'dbIgedcomID': match['workRefId'],
                                   'dbIIgedcomID': match['matchRefId']})
-            self.OK['family'][match['workRefId']+';'+match['matchRefId']] = 1
-        print 'Facit: persons=', len(self.OK['person']), 'families=', len(self.OK['family'])
-        self.runCommand('mkdir -p files/Facit/anders/')
-        self.runCommand('cp -rf files/'+self.dbI.replace('_', '/')+' files/Facit/anders/')
-        self.runCommand('mongodump --db='+self.dbI+' --out=files/Facit/'+self.dbI.replace('_', '/'))
-        self.runCommand('cp -rf files/'+self.dbII.replace('_', '/')+' files/Facit/anders/')
-        self.runCommand('mongodump --db='+self.dbII+' --out=files/Facit/'+self.dbII.replace('_', '/'))
+        self.getFacit()
         return
 
     def getFacit(self):
         """
         get golden truth from Facit to self.OK
         """
+        self.OK = {'person': {}, 'family': {}}
         for f in self.Facit[self.facitDB].find({'matchDb': self.dbII}):
             #self.OK[f['type']][f['dbIgedcomID']+';'+f['dbIIgedcomID']] = 1
-            #Vallon
             self.OK[f['type']][f['dbIgedcomID'].replace('gedcom_', '')+';'+f['dbIIgedcomID'].replace('gedcom_', '')] = 1
         print 'Facit: persons=', len(self.OK['person']), 'families=', len(self.OK['family'])
+        #Fix merged families!
+        wMap = {}
+        mMap = {}
+        map = self.config['originalData'].find_one({'type': 'Fmap'})
+        if map:
+            for (k,v) in pickle.loads(map['data']).iteritems():
+                if k != v[0]:
+                    #get refId
+                    f = self.config['originalData'].find_one({'type': 'family', 'recordId': k})
+                    fMap = self.config['originalData'].find_one({'type': 'family', 'recordId': v[0]})
+                    wMap[f['data'][0]['record']['refId']] = fMap['data'][0]['record']['refId']
+                    #if len(f['data'])>1: print 'wf',len(f['data'])
+                    #if len(fMap['data'])>1: print 'wfMap',len(fMap['data'])
+                    #if (f['data'][0]['record']['refId'] == 'F15' or
+                    #   f['data'][0]['record']['refId'] == 'F16' or
+                    #   fMap['data'][0]['record']['refId'] == 'F15' or
+                    #   fMap['data'][0]['record']['refId'] == 'F16'):
+                    #    print f['data'][0]['record']['refId'], wMap[f['data'][0]['record']['refId']]
+        map = self.config['match_originalData'].find_one({'type': 'Fmap'})
+        if map:
+            for (k,v) in pickle.loads(map['data']).iteritems():
+                if k != v[0]:
+                    #get refId
+                    f = self.config['match_originalData'].find_one({'type': 'family', 'recordId': k})
+                    fMap = self.config['match_originalData'].find_one({'type': 'family', 'recordId': v[0]})
+                    mMap[f['data'][0]['record']['refId']] = fMap['data'][0]['record']['refId']
+                    #if len(f['data'])>1: print 'mf',len(f['data'])
+                    #if len(fMap['data'])>1: print 'mfMap',len(fMap['data'])
+                    #if (f['data'][0]['record']['refId'] == '1-1383' or
+                    #   f['data'][0]['record']['refId'] == '1-6078' or
+                    #   fMap['data'][0]['record']['refId'] == '1-1383' or
+                    #   fMap['data'][0]['record']['refId'] == '1-6078'):
+                    #    print f['data'][0]['record']['refId'], mMap[f['data'][0]['record']['refId']]
+        self.workMap = {v: k for k, v in wMap.iteritems()}
+        self.matchMap = {v: k for k, v in mMap.iteritems()}
+        #print self.matchMap['1-1383']
         return
 
-    def verify(self, doMatch=True, famFeature=''):
+    def verify(self, doMatch=True, persFeature= '', famFeature='', command='match'):
         #NEEDS reload of gedcom???
         print '  Doing', self.dbI, self.dbII
-        #self.runCommand('python match.py --featureset ' + model + ' '+db1+' '+db2)
-        #self.runCommand('python match.py --famfeatureset ' + model + ' '+db1+' '+db2)
         if doMatch:
+            featureOpt = ' '
+            if persFeature:
+                featureOpt += ' --featureset ' + persFeature
             if famFeature:
-                self.runCommand('python match.py --famfeatureset '+ famFeature + ' '+self.dbI+' '+self.dbII)
-            else:
-                self.runCommand('python match.py '+self.dbI+' '+self.dbII)
-
+                featureOpt += ' --famfeatureset ' + famFeature
+            if command == 'match':
+                self.runCommand('python match.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+            elif  command == 'famMatch':
+                self.runCommand('python -m cProfile -o prof.cprof famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+                #self.runCommand('python famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+            elif  command == 'famTreeMatch':
+                self.runCommand('python famTreeMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
         doneOK = []
         antOK=0
         antMan=0
@@ -149,14 +217,20 @@ class Facit:
         print '  Facit OK=', len(self.OK['person']), 'Done=', len(doneOK)
         print '  OK=', antOK, 'in Facit=', antOKinFacit
         print '  Man=', antMan, 'in Facit=', antManinFacit
+        print '  felOK=', antOK-antOKinFacit, ' missedOK=', len(self.OK['person'])-antOKinFacit
+        res = {'Facit': len(self.OK['person']), 'matchOK': antOK, 'matchOKinFacit': antOKinFacit,
+               'matchMan': antMan, 'matchManinFacit': antManinFacit}
         try:
             recall = float(antOKinFacit)/len(self.OK['person'])
             precision =  float(antOKinFacit)/antOK
             fscore = 2.0 * precision * recall / (precision + recall)
             print '  Precision=', precision, 'Recall=', recall, 'F-score=', fscore
+            res['Precision'] = precision
+            res['Recall'] = recall
+            res['F-score'] = fscore
         except:
             pass
-        return
+        return res
 
     def SVMvect(self, features, label):
         selected = label
@@ -166,20 +240,74 @@ class Facit:
             n += 1
         return selected
 
+    def genRawDataFacit(self):
+        """
+        Generate default feature vectors and matchtext strings for pairs from dbI and dbII
+        Facit determines which are OK, positive examples
+        """
+        setupDir(self.dbII)  #lucene
+        rawData = {}
+        for okPair in self.OK['person']:
+            rawData[okPair] = {}
+            (pI, pII) = okPair.split(';')
+            p1 = self.config['persons'].find_one({'refId': pI})
+            rgdP = self.config['match_persons'].find_one({'refId': pII})
+            nodeScore = nodeSim(p1, rgdP)
+            rawData[okPair]['nodeScore'] = nodeScore
+            pFam = getFamilyFromChild(p1['_id'], self.config['families'], self.config['relations'])
+            rgdFam = getFamilyFromChild(rgdP['_id'], self.config['match_families'], self.config['match_relations'])
+            famScore = familySim(pFam, self.config['persons'],
+                                 rgdFam, self.config['match_persons']) 
+            rawData[okPair]['famScore'] = famScore
+            cand_matchtxt = self.mt_tmp.matchtextPerson(rgdP, self.config['match_persons'],
+                                                              self.config['match_families'],
+                                                        self.config['match_relations'])
+            rawData[okPair]['pIImatchtext'] = cand_matchtxt
+            matchtxt = self.mt_tmp.matchtextPerson(p1, self.config['persons'],
+                                                       self.config['families'],
+                                                   self.config['relations'])
+            rawData[okPair]['pImatchtext'] = matchtxt
+            cosScore = cos(matchtxt, cand_matchtxt)
+            rawData[okPair]['cosScore'] = cosScore
+            feat = personDefault(p1, rgdP, self.config, None, nodeScore,
+                           famScore, cosScore, matchtxtLen=len(matchtxt.split()))
+            #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
+            rawData[okPair]['feat'] = feat
+        return rawData
+
+    def getLuceneScore(self, tmp, rgd, conf):
+        matchtxt = self.mt_tmp.matchtextPerson(tmp, conf['persons'],
+                                               conf['families'], conf['relations'])
+        #cand_matchtxt = self.mt_tmp.matchtextPerson(rgd, conf['match_persons'],
+        #                                    conf['match_families'], conf['match_relations'])
+        candidates = search(matchtxt, tmp['sex'], ant=30) #Lucene search
+        score = 0.0
+        n = 0
+        for (kid,sc) in candidates:
+            n+=1
+            if str(kid) == str(rgd['_id']):
+                score = sc
+                break
+        #print tmp['refId'], rgd['refId'], n, score
+        if score == 0.0: return None
+        return score
+
     def genTrainDataFacit(self):
         """
         Generate default feature vectors for pairs from dbI and dbII
         Facit determines which are OK, positive examples
         """
+        setupDir(self.dbII)  #lucene
         for okPair in self.OK['person']:
             (pI, pII) = okPair.split(';')
             p1 = self.config['persons'].find_one({'refId': pI})
             rgdP = self.config['match_persons'].find_one({'refId': pII})
+
             nodeScore = nodeSim(p1, rgdP)
-            pFam = self.config['families'].find_one({ 'children': p1['_id']})
-            rgdFam = self.config['match_families'].find_one({ 'children': rgdP['_id']})
-            famScore = familySim(pFam, self.config['persons'], rgdFam,
-                                       self.config['match_persons']) 
+            pFam = getFamilyFromChild(p1['_id'], self.config['families'], self.config['relations'])
+            rgdFam = getFamilyFromChild(rgdP['_id'], self.config['match_families'], self.config['match_relations'])
+            famScore = familySim(pFam, self.config['persons'],
+                                 rgdFam, self.config['match_persons']) 
             cand_matchtxt = self.mt_tmp.matchtextPerson(rgdP, self.config['match_persons'],
                                                               self.config['match_families'],
                                                         self.config['match_relations'])
@@ -189,9 +317,8 @@ class Facit:
             cosScore = cos(matchtxt, cand_matchtxt)
             feat = personDefault(p1, rgdP, self.config, None, nodeScore,
                            famScore, cosScore, matchtxtLen=len(matchtxt.split()))
-            #print self.SVMvect(feat, '+1')
-            #trainData += self.SVMvect(feat, '+1') + "\n"
-            #self.Facit['traindata'].insert_one( USE UPDATE M UPSERT
+
+            #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
             self.Facit['traindata'].update(
                 {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
                 {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
@@ -204,6 +331,7 @@ class Facit:
         Generate default feature vectors for pairs from dbI and dbII
         Matches not found in Facit and Manual matches define these negative examples
         """
+        setupDir(self.dbII)  #lucene
         ant = 0
         for match in self.matches.find({'status': {'$in': list(common.statOK.union(common.statManuell))}}):
             if match['pwork']['refId']+';'+match['pmatch']['refId'] not in self.OK['person']:
@@ -211,9 +339,10 @@ class Facit:
                 pII = match['pmatch']['refId']
                 p1 = match['pwork']
                 rgdP = match['pmatch']
+
                 nodeScore = nodeSim(p1, rgdP)
-                pFam = self.config['families'].find_one({ 'children': p1['_id']})
-                rgdFam = self.config['match_families'].find_one({ 'children': rgdP['_id']})
+                pFam = getFamilyFromChild(p1['_id'], self.config['families'], self.config['relations'])
+                rgdFam = getFamilyFromChild(rgdP['_id'], self.config['match_families'], self.config['match_relations'])
                 famScore = familySim(pFam, self.config['persons'], rgdFam,
                                            self.config['match_persons']) 
                 cand_matchtxt = self.mt_tmp.matchtextPerson(rgdP, self.config['match_persons'],
@@ -225,6 +354,8 @@ class Facit:
                 cosScore = cos(matchtxt, cand_matchtxt)
                 feat = personDefault(p1, rgdP, self.config, None, nodeScore,
                                famScore, cosScore, matchtxtLen=len(matchtxt.split()))
+
+                #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
                 ant += 1
                 self.Facit['traindata'].update(
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
@@ -263,9 +394,10 @@ class Facit:
                 pII = match['pmatch']['refId']
                 p1 = match['pwork']
                 rgdP = match['pmatch']
+
                 nodeScore = nodeSim(p1, rgdP)
-                pFam = self.config['families'].find_one({ 'children': p1['_id']})
-                rgdFam = self.config['match_families'].find_one({ 'children': rgdP['_id']})
+                pFam = getFamilyFromChild(p1['_id'], self.config['families'], self.config['relations'])
+                rgdFam = getFamilyFromChild(rgdP['_id'], self.config['match_families'], self.config['match_relations'])
                 famScore = familySim(pFam, self.config['persons'], rgdFam,
                                            self.config['match_persons']) 
                 cand_matchtxt = self.mt_tmp.matchtextPerson(rgdP, self.config['match_persons'],
@@ -277,21 +409,70 @@ class Facit:
                 cosScore = cos(matchtxt, cand_matchtxt)
                 feat = personDefault(p1, rgdP, self.config, None, nodeScore,
                                famScore, cosScore, matchtxtLen=len(matchtxt.split()))
+
+                #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
                 tot+=1
                 self.Facit['traindata'].update(
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
-                     'type': 'person', 'status': 'Random', 'SVMvector': self.SVMvect(feat, '-1')
+                     'type': 'person', 'status': 'RandomEjOK', 'SVMvector': self.SVMvect(feat, '-1')
                     }, upsert=True)
+        return tot
+
+    def genTrainDataNotTested(self, ant=5000):
+        """
+        Generate default feature vectors for pairs from dbI and dbII
+        Select randomly from EjOK matches
+
+        find out how many to generate
+        The following aggregation operation randomly selects 3 documents from the collection:
+        db.users.aggregate(   [ { $sample: { size: 3 } } ])
+        """
+        databaseSize = self.dbIpers.find().count()
+        traindataSize = self.Facit['traindata'].find({'dbI': self.dbI, 'dbII': self.dbII}).count()
+        antToDo = len(self.OK['person']) * 2 - (traindataSize - len(self.OK['person']))
+        if antToDo > ant: antToDo = ant
+        elif antToDo <= 0: antToDo = 10
+        tot=0
+        for p1 in self.dbIpers.aggregate([{ '$sample': { 'size': antToDo*2} }]):
+            for rgdP in self.dbIIpers.aggregate([{ '$sample': { 'size': 2} }]):
+                pI = p1['refId']
+                pII = rgdP['refId']
+
+                if self.Facit['traindata'].find_one({'dbI': self.dbI, 'dbII': self.dbII,
+                                                     'dbIrefId': pI, 'dbIIrefId': pII}):
+                    continue
+                nodeScore = nodeSim(p1, rgdP)
+                pFam = getFamilyFromChild(p1['_id'], self.config['families'], self.config['relations'])
+                rgdFam = getFamilyFromChild(rgdP['_id'], self.config['match_families'], self.config['match_relations'])
+                famScore = familySim(pFam, self.config['persons'], rgdFam,
+                                     self.config['match_persons']) 
+                cand_matchtxt = self.mt_tmp.matchtextPerson(rgdP, self.config['match_persons'],
+                                                            self.config['match_families'],
+                                                            self.config['match_relations'])
+                matchtxt = self.mt_tmp.matchtextPerson(p1, self.config['persons'],
+                                                       self.config['families'],
+                                                       self.config['relations'])
+                cosScore = cos(matchtxt, cand_matchtxt)
+                feat = personDefault(p1, rgdP, self.config, None, nodeScore,
+                                     famScore, cosScore, matchtxtLen=len(matchtxt.split()))
+
+                #feat = baseline(p1, rgdP, self.config, self.getLuceneScore(p1, rgdP, self.config))
+                tot+=1
+                self.Facit['traindata'].update(
+                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
+                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
+                     'type': 'person', 'status': 'NotTested', 'SVMvector': self.SVMvect(feat, '-1')
+                  }, upsert=True)
+                if tot >= antToDo: return tot
+                continue
         return tot
 
     def genFamTrainDataFacit(self):
         """
-        Generate default (famExtended) feature vectors for pairs from dbI and dbII
+        Generate default (famExtended, famBaseline) feature vectors for pairs from dbI and dbII
         Facit determines which are OK, positive examples
         """
-        from collections import defaultdict
-        import pickle
         workMap = defaultdict(list)
         matchMap = defaultdict(list)
         map = self.config['originalData'].find_one({'type': 'Fmap'})
@@ -303,30 +484,38 @@ class Facit:
             matchMap['_id'] = map['_id']
             for (k,v) in pickle.loads(map['data']).iteritems(): matchMap[k] = v
         ant=0
+        print 'workMap', len(workMap)
+        print 'matchMap', len(matchMap)
         for okPair in self.OK['family']:
             (pI, pII) = okPair.split(';')
             fix = False
             p1 = self.config['families'].find_one({'refId': pI})
             if not p1:
                 fix = True
-                orig = self.config['originalData'].find_one({'type': 'family', 'record.refId': pI}, {"recordId" : 1})
-                p1 = self.config['families'].find_one({'_id': workMap[orig['recordId']][0]})
+                orig = self.config['originalData'].find_one({'type': 'family', 'data.record.refId': pI}, {"recordId" : 1})
+                try:
+                    p1 = self.config['families'].find_one({'_id': workMap[orig['recordId']][0]})
+                except: p1 = None
                 if not p1:
-                    print 'Not found', pI
+                    print 'Not found pI', pI
                     continue
             fI = getFamilyFromId(p1['_id'], self.config['families'],
                                      self.config['relations'])
             rgdP = self.config['match_families'].find_one({'refId': pII})
             if not rgdP:
                 fix = True
-                orig = self.config['match_originalData'].find_one({'type': 'family', 'record.refId': pII}, {"recordId" : 1})
-                rgdP = self.config['match_families'].find_one({'_id': matchMap[orig['recordId']][0]})
+                orig = self.config['match_originalData'].find_one({'type': 'family', 'data.record.refId': pII}, {"recordId" : 1})
+                try:
+                    rgdP = self.config['match_families'].find_one({'_id': matchMap[orig['recordId']][0]})
+                except:
+                    rgdP = None
                 if not rgdP:
-                    print 'Not Found', pII
+                    print 'Not Found pII', pII
                     continue
             fII = getFamilyFromId(rgdP['_id'], self.config['match_families'],
                                      self.config['match_relations'])
             feat = famExtended(fI, fII, self.config)
+            #feat = famBaseline(fI, fII, self.config)
             if not feat: continue
             if fix:
                 print 'Org', okPair, 'Inserting new', fI['refId'], fII['refId']
@@ -345,7 +534,7 @@ class Facit:
 
     def genFamTrainDataMiss(self):
         """
-        Generate default (famExtended) feature vectors for pairs from dbI and dbII
+        Generate default (famExtended, famBaseline) feature vectors for pairs from dbI and dbII
         Matches not found in Facit and Manual matches define these negative examples
         """
         ant = 0
@@ -358,12 +547,13 @@ class Facit:
                 fII = getFamilyFromId(match['matchid'], self.config['match_families'],
                                      self.config['match_relations'])
                 feat = famExtended(fI, fII, self.config)
+                #feat = famBaseline(fI, fII, self.config)
                 if not feat: continue
                 ant += 1
                 self.Facit['famtraindata'].update(
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
-                     'type': 'family', 'status': 'Miss', 'SVMvector': self.SVMvect(feat, '-1')
+                     'type': 'familyExtended', 'status': 'Miss', 'SVMvector': self.SVMvect(feat, '-1')
                     }, upsert=True)
         return ant
 
@@ -397,14 +587,56 @@ class Facit:
                                      self.config['match_relations'])
                 #print 'Fam', fI['refId'], fII['refId']
                 feat = famExtended(fI, fII, self.config)
+                #feat = famBaseline(fI, fII, self.config)
                 if not feat: continue
                 #print 'Feat OK'
                 tot+=1
                 self.Facit['famtraindata'].update(
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
                     {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
-                     'type': 'family', 'status': 'Random', 'SVMvector': self.SVMvect(feat, '-1')
+                     'type': 'familyExtended', 'status': 'Random', 'SVMvector': self.SVMvect(feat, '-1')
                     }, upsert=True)
+        return tot
+
+    def genFamTrainDataNotTested(self, ant=2000):
+        """
+        Generate default feature vectors for pairs from dbI and dbII
+        Select randomly from EjOK matches
+
+        find out how many to generate
+        The following aggregation operation randomly selects 3 documents from the collection:
+        db.users.aggregate(   [ { $sample: { size: 3 } } ])
+        """
+        tot=0
+        databaseSize = self.config['families'].find().count()
+        traindataSize = self.Facit['famtraindata'].find({'dbI': self.dbI, 'dbII': self.dbII}).count()
+        antToDo = len(self.OK['family']) * 2 - (traindataSize - len(self.OK['family']))
+        if antToDo > ant: antToDo = ant
+        elif antToDo <= 0: antToDo = 5
+        print 'antToDo', antToDo
+        tot=0
+        for f1 in self.config['families'].aggregate([{ '$sample': { 'size': antToDo*2} }]):
+            for f2 in self.config['match_families'].aggregate([{ '$sample': { 'size': 2} }]):
+                pI = f1['refId']
+                pII = f2['refId']
+                if self.Facit['famtraindata'].find_one({'dbI': self.dbI, 'dbII': self.dbII,
+                                                     'dbIrefId': pI, 'dbIIrefId': pII}):
+                    continue
+                fI = getFamilyFromId(f1['_id'], self.config['families'],
+                                     self.config['relations'])
+                fII = getFamilyFromId(f2['_id'], self.config['match_families'],
+                                     self.config['match_relations'])
+                feat = famExtended(fI, fII, self.config)
+                #feat = famBaseline(fI, fII, self.config)
+                if not feat: continue
+                tot+=1
+                self.Facit['famtraindata'].update(
+                    {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII},
+                    {'dbI': self.dbI, 'dbII': self.dbII, 'dbIrefId': pI, 'dbIIrefId': pII,
+                     'type': 'familyExtended', 'status': 'NotTested', 'SVMvector': self.SVMvect(feat, '-1')
+                    }, upsert=True)
+                if tot >= antToDo: return tot
+                continue
         return tot
 
     def getFamTraindata(self, query = {}):
@@ -415,7 +647,7 @@ class Facit:
 
     def getTraindata(self, query = {}):
         traindata = ''
-        for ex in self.Facit['traindata'].find(query, {'SVMvector': True}):
+        for ex in self.Facit['traindata'].find(query, {'SVMvector': True}, no_cursor_timeout=True):
             traindata += ex['SVMvector']+"\n"
         return traindata
 
@@ -445,6 +677,12 @@ class Facit:
         try: print match['pmatch']['death']['place'],
         except: pass
         print
+        #try to find fam-match
+        for m in self.config['fam_matches'].find({'$or': [{'husb.workid':  match['pwork']['_id']},
+                                                     {'wife.workid':  match['pwork']['_id']},
+                                                     {'children.workid':  match['pwork']['_id']}
+                                         ]}):
+            print 'fam-match', m['status'], m['workid'], m['matchid']
         for f in ('status', 'familysim', 'nodesim', 'cosScore', 'svmscore'):
             print f, match.get(f), ',',
         print
@@ -537,6 +775,46 @@ class Facit:
                             break
                     if pos >= 20 or pos == 0: print 'No lucene hit in first 20 hits'
                     print
+
+    def setMatchStatusfromFacit(self):
+        from collections import defaultdict
+        import pickle
+        antMatch=0
+        antFamMatch=0
+        antMatchOK=0
+        antFamMatchOK=0
+        workMap = defaultdict(list)
+        matchMap = defaultdict(list)
+        for okPair in self.OK['person']:
+            (pI, pII) = okPair.split(';')
+            match = self.matches.find_one({'pwork.refId': pI, 'pmatch.refId': pII})
+            if match: antMatch+=1
+            else:
+                p = self.persons.find_one({'refId': pI})
+                candidate = self.match_persons.find_one({'refId': pII})
+                match = matchPers(p, candidate, self.config)
+            match['status'] = 'Match'
+            self.matches.update_one({'_id': match['_id']}, match, upsert=True)
+        #Fam
+        map = self.config['originalData'].find_one({'type': 'Fmap'})
+        if map:
+            workMap['_id'] = map['_id']
+            for (k,v) in pickle.loads(map['data']).iteritems(): workMap[k] = v
+        map = self.config['match_originalData'].find_one({'type': 'Fmap'})
+        if map:
+            matchMap['_id'] = map['_id']
+            for (k,v) in pickle.loads(map['data']).iteritems(): matchMap[k] = v
+        ant=0
+        for okPair in self.OK['family']:
+            (pI, pII) = okPair.split(';')
+            #iterate all comb p* Map(p*) break when found
+            match = self.fam_matches.find_one({'workRefId': pI, 'matchRefId': pII})
+            if match: antFamMatch+=1
+            else:
+                pass
+            #if match['status'] in self.statOK: antFamMatchOK+=1
+        print 'PersMatch=', antMatch, 'FamMatch=', antFamMatch
+        print 'OK PersMatch=', antMatchOK, 'FamMatch=', antFamMatchOK
 
 if __name__=="__main__":
     dbName = sys.argv[1]

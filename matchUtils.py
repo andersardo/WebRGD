@@ -268,8 +268,8 @@ def matchPers(p1, rgdP, conf, score = None):
     #rgdFam = conf['match_families'].find_one({ 'children': rgdP['_id']})
     rgdFam = getFamilyFromChild(rgdP['_id'], conf['match_families'], conf['match_relations'])
     famScore = familySim(pFam, conf['persons'], rgdFam, conf['match_persons']) 
-    cand_matchtxt = mt_tmp.matchtextPerson(rgdP, conf['match_persons'], conf['match_relations'])
-    matchtxt = mt_tmp.matchtextPerson(p1, conf['persons'], conf['relations'])
+    cand_matchtxt = mt_tmp.matchtextPerson(rgdP, conf['match_persons'], conf['match_families'], conf['match_relations'])
+    matchtxt = mt_tmp.matchtextPerson(p1, conf['persons'], conf['families'], conf['relations'])
     cosScore = cos(matchtxt, cand_matchtxt)
     if score is None and 'featureSet' in conf:  #score not used by deault
         try:  #Lucene
@@ -295,6 +295,7 @@ def matchPers(p1, rgdP, conf, score = None):
     status = 'Manuell'
     if svmstat<0.1: status = 'EjMatch'
     if svmstat>0.9: status = 'Match'
+    if status == 'Manuell' and nodeScore<-0.25: status = 'EjMatch'
     matchdata = {}
     matchdata['workid'] = p1['_id']
     matchdata['pwork'] = p1

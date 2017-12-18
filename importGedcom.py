@@ -97,11 +97,13 @@ for person in people.individual_list():
     pp = pers_dict(person)
     orgData = { 'type': 'person', 'data': [] }
     fixGedcom(person)
-    #orgData['data'].append({'contributionId': contributionId, 'record': pp,
-    #                         'gedcom': person.gedcom()})
-    orgData['contributionId'] = contributionId
-    orgData['record'] = pp
-    orgData['gedcom'] = person.gedcom()
+    #DISserver
+    orgData['data'].append({'contributionId': contributionId, 'record': pp,
+                             'gedcom': person.gedcom()})
+    #New - how about merge?
+    #orgData['contributionId'] = contributionId
+    #orgData['record'] = pp
+    #orgData['gedcom'] = person.gedcom()
     pp['_id'] = common.get_id('P')
     person.pid = persons.insert( pp )
     orgData['recordId'] = person.pid
@@ -120,11 +122,13 @@ for fam in people.family_list():
         (ff, relations) = fam_dict(fam)
         orgData = { 'type': 'family', 'data': [] }
         fixGedcom(fam)
-        #orgData['data'].append({'contributionId': contributionId, 'record': ff,
-        #                        'gedcom': fam.gedcom()})
-        orgData['contributionId'] = contributionId
-        orgData['record'] = ff
-        orgData['gedcom'] = fam.gedcom()
+        #DISserver
+        orgData['data'].append({'contributionId': contributionId, 'record': ff,
+                                'gedcom': fam.gedcom()})
+        #New - how about merge?
+        #orgData['contributionId'] = contributionId
+        #orgData['record'] = ff
+        #orgData['gedcom'] = fam.gedcom()
         ff['_id'] = common.get_id('F')
         fam.pid = families.insert( ff )
         for rel in relations:
@@ -254,5 +258,5 @@ logging.info('Time %s',time.time() - t0)
 logging.info('Indexing %s in Lucene', dbName)
 from luceneUtils import setupDir, index
 setupDir(dbName)
-index(config['persons'],config['families'])
+index(config['persons'],config['families'],config['relations'])
 logging.info('Time %s',time.time() - t0)
