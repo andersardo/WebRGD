@@ -1,10 +1,8 @@
 <?PHP
 //	Initiering databas
 $db_server = "localhost";
-//$db_user = "root";
 $db_user = "rgd";
-//$db_password = "";
-$db_password = "mzs388insJ";
+$db_password = "openRGD";
 $db="RGDindatavalid";
 $link = mysqli_connect($db_server, $db_user, $db_password);
 if (!$link) {

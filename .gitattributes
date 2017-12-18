@@ -1,0 +1,3 @@
+Docker/SQLsetup.sql merge=ours
+PHP/initdb.php merge=ours
+PHP/initname.php merge=ours
