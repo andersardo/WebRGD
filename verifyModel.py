@@ -84,46 +84,35 @@ class Facit:
     def loadDB(self, path, name):
         self.runCommand('mongorestore --drop --db '+name+' '+path)
 
-    def tSnabb(self):
+    def tDebug(self, qId):
         setupDir(self.dbII)  #lucene
-        antOK=0
-        tot=0
-        foundOK = {}
-        for fam in self.config['families'].find({}, no_cursor_timeout=True):
-            tot+=1
-            #print 'Fam', fam['refId'], fam['_id']
+        if qId.startswith('F'):
+            fam = self.config['families'].find_one({'refId': qId})
             matchtxt = self.mt_tmp.matchtextFamily(fam, self.config['families'],
                                                    self.config['persons'],
                                                    self.config['relations'])
-            if not matchtxt:
-                logging.error('No matchtextdata for %s, %s',fam['_id'],fam['refId'])
-                continue       ##########FIX!!!!!!!!!!
-            antS=2
-            candidates = search(matchtxt, 'FAM', antS) #Lucene search
+            print 'Fam', len(matchtxt.split()), fam
+            candidates = search(matchtxt, 'FAM', 2) #Lucene search
             for c in candidates:
                 f = self.config['match_families'].find_one({'_id': c[0]})
                 score = c[1]
-                if fam['refId'] == 'F9577': print fam['refId'], score, f['refId']
-                keys = [fam['refId']+';'+f['refId']]
-                try: keys.append(self.workMap[fam['refId']]+';'+f['refId'])
-                except: pass
-                try: keys.append(fam['refId']+';'+self.matchMap[f['refId']])
-                except: pass
-                try: keys.append(self.workMap[fam['refId']]+';'+self.matchMap[f['refId']])
-                except: pass
-                found = False
-                if fam['refId'] == 'F279': print c[0], keys
-                for key in keys:
-                    if key in self.OK['family']:
-                        print score, key, 'OK'
-                        foundOK[key] = score
-                        antOK+=1
-                        found = True
-                        #??break
-                if not found: print score, keys, 'NO'
-        print 'Sum', antS, len(self.OK['family']), antOK, 'tot=', tot
-        for k in self.OK['family'].keys():
-            if k not in foundOK: print k
+                print score
+                print f
+                print
+        else:
+            pers = self.config['persons'].find_one({'refId': qId})
+            matchtxt = self.mt_tmp.matchtextPerson(pers,
+                                                   self.config['persons'],
+                                                   self.config['families'],
+                                                   self.config['relations'])
+            print 'Pers', len(matchtxt.split()), pers
+            candidates = search(matchtxt, pers['sex'], 2) #Lucene search
+            for c in candidates:
+                pp = self.config['match_persons'].find_one({'_id': c[0]})
+                score = c[1]
+                print score
+                print pp
+                print
 
     def updateFacit(self):
         """
@@ -205,8 +194,10 @@ class Facit:
             if command == 'match':
                 self.runCommand('python match.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
             elif  command == 'famMatch':
-                #self.runCommand('python -m cProfile -o prof.cprof matchSnabb.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
-                self.runCommand('python famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+                self.runCommand('python -m cProfile -o prof.cprof famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+                #self.runCommand('python famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+            elif  command == 'famTreeMatch':
+                self.runCommand('python famTreeMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
         doneOK = []
         antOK=0
         antMan=0
@@ -686,6 +677,12 @@ class Facit:
         try: print match['pmatch']['death']['place'],
         except: pass
         print
+        #try to find fam-match
+        for m in self.config['fam_matches'].find({'$or': [{'husb.workid':  match['pwork']['_id']},
+                                                     {'wife.workid':  match['pwork']['_id']},
+                                                     {'children.workid':  match['pwork']['_id']}
+                                         ]}):
+            print 'fam-match', m['status'], m['workid'], m['matchid']
         for f in ('status', 'familysim', 'nodesim', 'cosScore', 'svmscore'):
             print f, match.get(f), ',',
         print

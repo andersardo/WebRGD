@@ -359,9 +359,14 @@ def personView(wid, mid):
     if wid and mid:
         matches = common.config['matches'].find({'workid': wid, 'matchid': mid})
     elif wid:
+        """
+        AA0 debug
         # multilista => only statOK and statManuell
         matches = common.config['matches'].find({'$and': [{'workid': wid},
                 {'status': {'$in': list(common.statOK.union(common.statManuell))}}]})
+        """
+        matches = common.config['matches'].find({'workid': wid})
+
     elif mid:
         # multilista => only statOK and statManuell
         matches = common.config['matches'].find({'$and': [{'matchid': mid},

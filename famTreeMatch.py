@@ -59,102 +59,60 @@ fam_matches.drop()
 match_person = config['match_persons']
 match_family = config['match_families']
 
-dubltmp = defaultdict(list)
-dbltmpNs = defaultdict(float)
+#dubltmp = defaultdict(list)
+#dbltmpNs = defaultdict(float)
 
+#lägg till inre loop som följer föräldrarna uppåt
+done = set()
+toDo = set()
 ant=0
-for p in person_list.find({}, no_cursor_timeout=True):
-    matchtxt = mt_tmp.matchtextPerson(p, person_list, fam_list, config['relations'])
-    if not matchtxt:
-        logging.error('No matchtextdata for %s, %s',p['_id'],p['refId'])
-        continue       ##########FIX!!!!!!!!!!
-    candidates = search(matchtxt, p['sex'], 2) #Lucene search
-    #Om inga kandidat-matcher? Inget problem dom är inte Match
-    sc = 0
-    for (kid,score) in candidates:
-        #do not break if little data - WORSE
-        #if score < 35.0 and (len(matchtxt.split())>10): break  #breakoff score point for considering  match
-        if score < 34.0: break  #breakoff score point for considering  match
-        if (score> sc): sc = score
-        candidate = match_person.find_one({'_id': kid})
-        matchdata = matchPers(p, candidate, config, score)
-        #FIX EVT: lägg in mönster (autoOK, autoCheck -> EjOK) (multimatch Resolve) här
-        logging.debug('Insert main matching for %s, %s',p['refId'], candidate['refId'])
-        matches.insert(matchdata)
-#        if p['_id']=='P_980100': print matchdata
-        ant += 1
-#se mail 'Stickprov' Juni 5 2015
-#        if matchdata['status'] in common.statEjOK: break
-        if  matchdata['status'] in common.statOK.union(common.statManuell):
-            dubltmp[p['_id']].append(candidate['_id'])
-            dbltmpNs[p['_id'], candidate['_id']] = matchdata['nodesim']
-        #break if Match
-        if matchdata['status'] == 'Match': break
-        #break if score is less than 1/3 of max score
-        if (sc/score > 3.0): break
+for pers in person_list.find({}, no_cursor_timeout=True).sort([('birth.date', -1)]):
+    if pers['_id'] in done: continue
+    toDo.add(pers['_id'])
+#    if pers['_id']=='P_1073174': print 'yttre', pers
+    breakOffScore = 34.0
+    while len(toDo)>0:
+        pId = toDo.pop()
+        if pId in done: continue
+        done.add(pId)
+        p = person_list.find_one({'_id': pId})
+#        if p['_id']=='P_1073174': print 'Inner', p
+        matchtxt = mt_tmp.matchtextPerson(p, person_list, fam_list, config['relations'])
+        if not matchtxt:
+            logging.error('No matchtextdata for %s, %s',p['_id'],p['refId'])
+            continue       ##########FIX!!!!!!!!!!
+        candidates = search(matchtxt, p['sex'], 2) #Lucene search
+        #Om inga kandidat-matcher? Inget problem dom är inte Match
+        sc = 0
+        for (kid,score) in candidates:
+            if score < breakOffScore: break  #breakoff score point for considering  match
+            if (score> sc): sc = score
+            candidate = match_person.find_one({'_id': kid})
+            matchdata = matchPers(p, candidate, config, score)
+            #FIX EVT: lägg in mönster (autoOK, autoCheck -> EjOK) (multimatch Resolve) här
+            logging.debug('Insert main matching for %s, %s',p['refId'], candidate['refId'])
+            matches.insert(matchdata)
+    #        if p['_id']=='P_980100': print matchdata
+            ant += 1
+    #se mail 'Stickprov' Juni 5 2015
+    #        if matchdata['status'] in common.statEjOK: break
+#            if  matchdata['status'] in common.statOK.union(common.statManuell):
+#                dubltmp[p['_id']].append(candidate['_id'])
+#                dbltmpNs[p['_id'], candidate['_id']] = matchdata['nodesim']
+            #break if Match
+            if matchdata['status'] == 'Match':
+                #add parents to toDo
+                rel = config['relations'].find_one({'persId': pId, 'relTyp': 'child'})
+                if rel:
+                    for ids in config['relations'].find({'famId': rel['famId']}):
+                        toDo.add(ids['persId'])
+                break
+            #break if score is less than 1/3 of max score
+            #if (sc/score > 2.0): break
+        breakOffScore = 25.0
 logging.info('%d person matchings inserted', ant)
 logging.info('Time %s',time.time() - t0)
-#print matches.find_one({'workid': 'P_1110398'})
-"""
-#Mönster för att upplösa multimatch för individer
-#Flera OK matchindivid i tmp; alla i samma familj
-#Välj den individmatch med högst nodeSim och samma födelsedatum
-#  om 2 lika behåll manuell koll
-ant = 0
-for (ind,listrgdid) in dubltmp.iteritems():
-    if len(listrgdid)>1:
-        rdubl = None
-        rdublNs = -1.0
-        patternOK = False
-        pp =person_list.find_one({'_id': ind})
-#Om tvillingar kanske ta flera från person_list? för att få hela bilden?
-        for rgdid in listrgdid:
-            rgdpp = match_person.find_one({'_id': rgdid})
-            #same birthdate
-            try:
-                if pp['birth']['date'] == rgdpp['birth']['date']:
-                #same family
-                    if not rdubl:
-                        rdubl = rgdid
-                    elif match_person.find_one({ 'children': rgdid})==match_person.find_one({ 'children': rdubl}):
-                        #highest nodeSim
-                        if dbltmpNs[ind,rgdid] > dbltmpNs[ind,rdubl]:
-                            rdubl = rgdid
-                        patternOK = True
-                    else:
-                        patternOK = False
-                        break
-                else:
-                    patternOK = False
-                    break
-            except:
-                patternOK = False
-                break
-        if patternOK:
-            logging.debug('Multimatch resolved %s -> %s from %s',ind,rdubl,listrgdid)
-            ant += 1
-            logging.debug('set status for matches %s,* and *,%s to rEjOK',ind,rdubl)
-            matches.update({'$or': [{'workid': ind},{'matchid': rdubl}]},
-                           {'$set': {'status': 'rEjOK'}}, multi=True)
-            logging.debug('set status for match %s -> %s to rOK',ind,rdubl)
-            matches.update({'workid': ind, 'matchid': rdubl}, {'$set': {'status': 'rOK'}})
-logging.info('%d Multimatch individer (tvillingar/syskon) fixade', ant)
-logging.info('Time %s',time.time() - t0)
 
-#Ta bort individ med status Manuell om finns OK och  nodeSim < 0 och SVM < 0.5
-###BEHÖVS INTE endast 2 I HELA FACIT
-ant=0
-for mt in matches.find({'status': {'$in': list(common.statOK)}}, {'_id': 1, 'workid': 1}):
-    for check in matches.find({'status': {'$in': list(common.statManuell)}, 'workid': mt['workid'],
-                               'nodesim': {'$lte': 0.0}, 'svmscore': {'$lt': 0.5}
-                               }):
-        logging.debug('Set persons %s %s status=rEjOK',
-                      check['pwork']['refId'],check['pmatch']['refId'])
-        matches.update({'_id': check['_id']}, {'$set': {'status': 'rEjOK'}})
-        ant += 1
-logging.info('%d Individer med status Manuell => rEjOK fixade', ant)
-logging.info('Time %s',time.time() - t0)
-"""
 #Families match-status calculated from person match-status => No SVM
 ant = 0
 fams = set()
@@ -197,11 +155,11 @@ for (tFamId,rFamId) in fams:    #  for all involved families
     ant += 1
 logging.info('%d family matchings inserted', ant)
 logging.info('Time %s',time.time() - t0)
-#print matches.find_one({'workid': 'P_1110398'})
+
 ############################
 #EVT SVM for fam-matches?
 ############################
-"""
+
 logging.info('Do multimatch reduction rules')
 def analyzeMatchPattern(match):
     # parameter match is a fam_match
@@ -305,38 +263,29 @@ for multiiter in (1,2):
                 #for (typ, workid, matchid, wrefid, mrefid) in fLb:
                 for (typ, workid, matchid) in fLb:
                     if typ == 'F':
-#                        if workid=='F_397987': print 'fLb', typ, workid, matchid
                         setEjOKfamily(str(workid), str(matchid), code = 'rEjOK')
                         break
                 setFamOK(None, None, config, famlist = fLa, button = False)
-                if matches.find_one({'workid': 'P_1110398'})['status'] != 'Match':
-#                    print 'fLa=', fLa
-#                    sys.exit()
             elif checkPattern1(mts[1], mts[0]):
                 #for (typ, workid, matchid, wrefid, mrefid) in fLa:
                 for (typ, workid, matchid) in fLa:
                     if typ == 'F':
-#                        if workid=='F_397987': print 'fLa', typ, workid, matchid
                         setEjOKfamily(str(workid), str(matchid), code = 'rEjOK')
                         break
                 setFamOK(None, None, config, famlist = fLb, button = False)
-#                if matches.find_one({'workid': 'P_1110398'})['status'] != 'Match': print 'Fla1', typ, workid, matchid
             elif checkPattern2(mts):
                 if checkPattern3(mts[0]):
                     setFamOK(None, None, config, famlist = fLa, button = False)
-#                    if matches.find_one({'workid': 'P_1110398'})['status'] != 'Match': print 'p2', typ, workid, matchid
                 elif checkPattern3(mts[1]):
                     setFamOK(None, None, config, famlist = fLb, button = False)
-#                    if matches.find_one({'workid': 'P_1110398'})['status'] != 'Match': print 'p3', typ, workid, matchid
-#print matches.find_one({'workid': 'P_1110398'})
 #AA LOGGING STATS HOW MANY RESOLVED
 logging.info('Time %s',time.time() - t0)
-"""
+
 if noFamSVM: #default
     logging.info('Matching All done')
     sys.exit()
-logging.info('Doing SVM family match, incl split-ifying')
 
+logging.info('Doing SVM family match, incl split-ifying')
 from uiUtils import nameDiff, eventDiff
 from utils import updateFamMatch
 #USE famfeatureSet!!
@@ -387,7 +336,7 @@ for fmatch in config['fam_matches'].find().batch_size(50):
         antSVM += 1
 logging.info('%d families updated after split; %d set to OK by SVM', antChanged, antSVM)
 logging.info('Time %s',time.time() - t0)
-#print matches.find_one({'workid': 'P_1110398'})
+
 #Rule:
 #  if all children Green
 #     and 1 partner Green and 1 partner Yellow
@@ -410,4 +359,3 @@ logging.info('Time %s',time.time() - t0)
 #for f in fam_matches.find({'workid': 'F_354430'}):
 #    print f
 logging.info('Matching All done')
-#print matches.find_one({'workid': 'P_1110398'})

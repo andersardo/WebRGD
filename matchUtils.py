@@ -295,6 +295,7 @@ def matchPers(p1, rgdP, conf, score = None):
     status = 'Manuell'
     if svmstat<0.1: status = 'EjMatch'
     if svmstat>0.9: status = 'Match'
+    if status == 'Manuell' and nodeScore<-0.25: status = 'EjMatch'
     matchdata = {}
     matchdata['workid'] = p1['_id']
     matchdata['pwork'] = p1
