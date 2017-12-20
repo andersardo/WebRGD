@@ -1,11 +1,17 @@
 WebRGD
 ======
+English summary
+<p>
 Matching two Gedcom files - finding identical persons and families.
 Possibility to manually correct the matching.
 Merge two Gedcom files into one while merging identical persons and families.
 Export merged Gedcom-files as new Gedcom-file.
 <p>
 Test the system at <a href="http://rgd.dis.se/">DIS server rgd.dis.se</a>.
+<p>
+Files in the Documentation directory are not updated.
+Use the instructions in the Docker directory instead.
+
 <h4>Funktionalitet</h4>
 <ul>
 <li>Indatavalidering / egenkontroll av GEDCOM-filer
