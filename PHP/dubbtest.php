@@ -280,8 +280,13 @@ else
 					$nradx = $str;
 				}
 				elseif(($tagl == 'DATE') && ($birt == 'J')) {
+					$tstx = $str; // fimpa ()
+					$lend = strlen($str);
+					$tstp = substr($str,0,1);
+					if($tstp == '(') {
+						$tstx = substr($str,1,$lend-2); }
 					$dpref = 'f. ';
-					$dradx = $dpref.$str;
+					$dradx = $dpref.$tstx;
 				}
 				elseif(($tagl == 'PLAC') && ($birt == 'J')) {
 					if($dpref == '') {
@@ -293,8 +298,13 @@ else
 					}
 				}
 				elseif(($tagl == 'DATE') && ($deat == 'J') && ($dpref == '')) {
+					$tstx = $str; // fimpa ()
+					$lend = strlen($str);
+					$tstp = substr($str,0,1);
+					if($tstp == '(') {
+						$tstx = substr($str,1,$lend-2); }
 					$dpref = 'd. ';
-					$dradx = $dpref.$str;
+					$dradx = $dpref.$tstx;
 				}
 				elseif(($tagl == 'PLAC') && ($deat == 'J')) {
 					if($dpref == '') {
@@ -1040,8 +1050,13 @@ else
 					$nradx = $str;
 				}
 				elseif(($tagl == 'DATE') && ($birt == 'J')) {
+					$tstx = $str; // fimpa ()
+					$lend = strlen($str);
+					$tstp = substr($str,0,1);
+					if($tstp == '(') {
+						$tstx = substr($str,1,$lend-2); }
 					$dpref = 'f. ';
-					$dradx = $dpref.$str;
+					$dradx = $dpref.$tstx;
 				}
 				elseif(($tagl == 'PLAC') && ($birt == 'J')) {
 					if($dpref == '') {
@@ -1053,8 +1068,13 @@ else
 					}
 				}
 				elseif(($tagl == 'DATE') && ($deat == 'J') && ($dpref == '')) {
+					$tstx = $str; // fimpa ()
+					$lend = strlen($str);
+					$tstp = substr($str,0,1);
+					if($tstp == '(') {
+						$tstx = substr($str,1,$lend-2); }
 					$dpref = 'd. ';
-					$dradx = $dpref.$str;
+					$dradx = $dpref.$tstx;
 				}
 				elseif(($tagl == 'PLAC') && ($deat == 'J')) {
 					if($dpref == '') {
@@ -1799,8 +1819,13 @@ else
 					$nradx = $str;
 				}
 				elseif(($tagl == 'DATE') && ($birt == 'J')) {
+					$tstx = $str; // fimpa ()
+					$lend = strlen($str);
+					$tstp = substr($str,0,1);
+					if($tstp == '(') {
+						$tstx = substr($str,1,$lend-2); }
 					$dpref = 'f. ';
-					$dradx = $dpref.$str;
+					$dradx = $dpref.$tstx;
 				}
 				elseif(($tagl == 'PLAC') && ($birt == 'J')) {
 					if($dpref == '') {
@@ -1812,8 +1837,13 @@ else
 					}
 				}
 				elseif(($tagl == 'DATE') && ($deat == 'J') && ($dpref == '')) {
+					$tstx = $str; // fimpa ()
+					$lend = strlen($str);
+					$tstp = substr($str,0,1);
+					if($tstp == '(') {
+						$tstx = substr($str,1,$lend-2); }
 					$dpref = 'd. ';
-					$dradx = $dpref.$str;
+					$dradx = $dpref.$tstx;
 				}
 				elseif(($tagl == 'PLAC') && ($deat == 'J')) {
 					if($dpref == '') {
@@ -2558,8 +2588,13 @@ else
 					$nradx = $str;
 				}
 				elseif(($tagl == 'DATE') && ($birt == 'J')) {
+					$tstx = $str; // fimpa ()
+					$lend = strlen($str);
+					$tstp = substr($str,0,1);
+					if($tstp == '(') {
+						$tstx = substr($str,1,$lend-2); }
 					$dpref = 'f. ';
-					$dradx = $dpref.$str;
+					$dradx = $dpref.$tstx;
 				}
 				elseif(($tagl == 'PLAC') && ($birt == 'J')) {
 					if($dpref == '') {
@@ -2571,8 +2606,13 @@ else
 					}
 				}
 				elseif(($tagl == 'DATE') && ($deat == 'J') && ($dpref == '')) {
+					$tstx = $str; // fimpa ()
+					$lend = strlen($str);
+					$tstp = substr($str,0,1);
+					if($tstp == '(') {
+						$tstx = substr($str,1,$lend-2); }
 					$dpref = 'd. ';
-					$dradx = $dpref.$str;
+					$dradx = $dpref.$tstx;
 				}
 				elseif(($tagl == 'PLAC') && ($deat == 'J')) {
 					if($dpref == '') {

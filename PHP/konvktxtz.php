@@ -93,9 +93,73 @@ else
 				{
 					$exp="";
 					$exp1="";
+//	Fix	V2
+					$utlen = strlen($str);
+					if($utlen > 16) {
+						if(substr($str,7,9) == 'CD-skivan'){
+							$exp = substr($str,0,7);
+							$exp = $exp.substr($str,17,$utlen);
+							$str = $exp;
+//echo '/'.$str.'/'.strlen($str).'<br/>';
+						}
+					}
 //	Kopiera EJ detta block!	
+// 	längd 32	V2				
+					if(substr($str,7,32) == 'Vallonsläkter av Kjell Lindblom') {
+/*						if($strlen > 38) {
+							$exp=(Substr($str,39,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}*/
+						$text = $tagg."*8 Kjell Lindblom, Vallonsläkter under 1600-talet".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+// 	längd 31	V2				
+					elseif(substr($str,7,31) == 'Vallonsläkter under 1600-talet') {
+/*						if($strlen > 37) {
+							$exp=(Substr($str,38,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}*/
+						$text = $tagg."*8 Kjell Lindblom, Vallonsläkter under 1600-talet".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+// 	längd 28	V2				
+					elseif(substr($str,7,28) == 'Lindblom, rättelser hemsida') {
+						if($strlen > 34) {
+							$exp=(Substr($str,35,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*8 Kjell Lindblom, Rättelser hemsida".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 // 	längd 28				
-					if((substr($str,7,28) == 'Sveriges Biografiska Lexikon') || (substr($str,7,28) == 'sveriges biografiska lexikon') || (substr($str,7,28) == 'Sveriges biografiska lexikon')) {
+					elseif((substr($str,7,28) == 'Sveriges Biografiska Lexikon') || (substr($str,7,28) == 'sveriges biografiska lexikon') || (substr($str,7,28) == 'Sveriges biografiska lexikon')) {
 						if($strlen > 34) {
 							$exp=(Substr($str,35,(Strlen($str))));
 							$exp1=(substr($exp,0,1));
@@ -148,6 +212,96 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+// 	längd 26	V2				
+					elseif(substr($str,7,26) == 'Sporrong av Kjell Lindblom') {
+						if($strlen > 32) {
+							$exp=(Substr($str,33,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Kjell Lindblom, Sporrong".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+// 	längd 25	V2				
+					elseif(substr($str,7,25) == '"Söder i våra Hjärtan"') {
+						if($strlen > 31) {
+							$exp=(Substr($str,32,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Söder i våra Hjärtan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+// 	längd 23	V2				
+					elseif(substr($str,7,23) == 'Söder i våra Hjärtan') {
+						if($strlen > 29) {
+							$exp=(Substr($str,30,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Söder i våra Hjärtan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+// 	längd 23	V2				
+					elseif((substr($str,7,23) == 'Lindblom, Kjell, Nordis') || (substr($str,7,23) == 'Lindblom, Kjell; Nordis')){
+/*						if($strlen > 29) {
+							$exp=(Substr($str,30,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}*/
+						$text = $tagg."*8 Kjell Lindblom, Nordisk vallongenealogi 1580 - 1750".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+// 	längd 23	V2				
+					elseif(substr($str,7,23) == 'Nordisk Vallongenealogi') {
+/*						if($strlen > 29) {
+							$exp=(Substr($str,30,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}*/
+						$text = $tagg."*8 Kjell Lindblom, Nordisk vallongenealogi 1580 - 1750".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 // 	längd 22				
 					elseif((substr($str,7,22) == 'Sv Biografiskt Lexikon') || (substr($str,7,22) == 'sv biografiskt lexikon') || (substr($str,7,22) == 'Sv biografiskt lexikon') || (substr($str,7,22) == 'Sv Biografiskt lexikon')) {
 						if($strlen > 28) {
@@ -167,7 +321,7 @@ else
 						fwrite($handut,$text."\r\n");
 					}
 //	längd 22	V	
-					elseif((substr($str,7,22) == 'Sveriges Adelskalendern') || (substr($str,7,22) == 'sveriges adelskalender') || (substr($str,7,22) == 'Sveriges adelskalender')) {
+					elseif((substr($str,7,22) == 'Sveriges Adelskalender') || (substr($str,7,22) == 'sveriges adelskalender') || (substr($str,7,22) == 'Sveriges adelskalender')) {
 						if($strlen > 28) {
 							$exp=(Substr($str,29,(Strlen($str))));
 							$exp1=(substr($exp,0,1));
@@ -179,6 +333,60 @@ else
 							}
 						}
 						$text = $tagg."*9 Sveriges Adelskalender".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+//	längd 21	V2	
+					elseif(substr($str,7,21) == 'Bertil I W Kjelldorff') {
+						if($strlen > 27) {
+							$exp=(Substr($str,28,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Bertil Kjelldorff".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+//	längd 21	V	
+					elseif(substr($str,7,21) == 'Sv Adelns Ättetavlor') {
+						if($strlen > 27) {
+							$exp=(Substr($str,28,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Svenska Adelns Ättetavlor".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+//	längd 20	V2	
+					elseif(substr($str,7,20) == 'Bertil I W Kjelldorf') {
+						if($strlen > 26) {
+							$exp=(Substr($str,27,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Bertil Kjelldorff".$exp;
 						$utlen = strlen($text);
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
@@ -220,6 +428,24 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+// 	längd 19	V2				
+					elseif(substr($str,7,19) == 'KL Sporrong-häftet') {
+						if($strlen > 25) {
+							$exp=(Substr($str,26,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Kjell Lindblom, Sporrong".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 //	längd 18		
 					elseif((substr($str,7,18) == 'Begravda i Sverige') || (substr($str,7,18) == 'begravda i sverige') || (substr($str,7,18) == 'begravda i Sverige')){
 						if($strlen > 24) {
@@ -238,6 +464,42 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+//	längd 17	V2	
+					elseif(substr($str,7,17) == 'Bertil Kjelldorff') {
+						if($strlen > 23) {
+							$exp=(Substr($str,24,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Bertil Kjelldorff".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+//	Längd 17 V2
+					elseif(substr($str,7,17) == 'Kungsholmsskivan'){
+						if($strlen > 23) {
+							$exp=(Substr($str,24,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Kungsholmsskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
 //	längd 16		
 					elseif((substr($str,7,16) == 'Sveriges Dödbok') || (substr($str,7,16) == 'sveriges dödbok') || (substr($str,7,16) == 'Sveriges dödbok')) {
 						if($strlen > 22) {
@@ -256,6 +518,24 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+// 	längd 16	V2				
+					elseif(substr($str,7,16) == 'Begravda i Sthlm') {
+						if($strlen > 22) {
+							$exp=(Substr($str,23,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Begravda i Stockholm".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 //	Längd 15 V
 					elseif(substr($str,7,15) == 'Kjell Lindbloms'){
 						if($strlen > 21) {
@@ -268,7 +548,7 @@ else
 								$exp = " ".$exp;
 							}
 						}
-						$text = $tagg."*9 Kjell Lindbloms".$exp;
+						$text = $tagg."*9 Kjell Lindblom".$exp;
 						$utlen = strlen($text);
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
@@ -323,6 +603,60 @@ else
 							}
 						}
 						$text = $tagg."*9 Svenskt Biografiskt Lexikon".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+//	Längd 15 V2
+					elseif(substr($str,7,15) == 'Kungsholmen, CD'){
+						if($strlen > 21) {
+							$exp=(Substr($str,22,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Kungsholmsskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
+//	Längd 14 V2
+					elseif(substr($str,7,14) == 'Kungsholmen CD'){
+						if($strlen > 20) {
+							$exp=(Substr($str,21,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Kungsholmsskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
+//	längd 14	V2	
+					elseif(substr($str,7,14) == 'BIW Kjelldorff') {
+						if($strlen > 20) {
+							$exp=(Substr($str,21,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Bertil Kjelldorff".$exp;
 						$utlen = strlen($text);
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
@@ -399,6 +733,24 @@ else
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
+					} 
+//	längd 13 V2		
+					elseif(substr($str,7,13) == 'Smeddatabasen') {
+						if($strlen > 19) {
+							$exp=(Substr($str,20,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Smeddatabasen".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
 					}
 // 	längd 13				
 					elseif((substr($str,7,13) == 'Bouppteckning') || (substr($str,7,13) == 'bouppteckning')) {
@@ -436,7 +788,7 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
-/*	längd 13		
+//	längd 13		
 					elseif((substr($str,7,13) == 'Söderskivan') || (substr($str,7,13) == 'söderskivan')){
 						if($strlen > 19) {
 							$exp=(Substr($str,20,(Strlen($str))));
@@ -453,7 +805,25 @@ else
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
-					}*/
+					}
+//	längd 12	V2		
+					elseif((substr($str,7,13) == 'Klaraskivan') || (substr($str,7,13) == 'klaraskivan')){
+						if($strlen > 19) {
+							$exp=(Substr($str,20,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Klaraskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 //	längd 12 V		
 					elseif((substr($str,7,12) == 'Folkräkning') || (substr($str,7,12) == 'folkräkning')){
 						if($strlen > 18) {
@@ -508,6 +878,24 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+//	längd 12	V2	
+					elseif((substr($str,7,12) == 'B Kjelldorff') || (substr($str,7,12) == 'B.Kjelldorff')){
+						if($strlen > 18) {
+							$exp=(Substr($str,19,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Bertil Kjelldorff".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 // 	längd 12				
 					elseif((substr($str,7,12) == 'Sv Biogr Lex') || (substr($str,7,12) == 'sv biogr lex') || (substr($str,7,12) == 'Sv biogr lex') || (substr($str,7,12) == 'Sv Biogr lex')) {
 						if($strlen > 18) {
@@ -526,8 +914,44 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+// 	längd 12	V2				
+					elseif(substr($str,7,12) == 'Begr i Sthlm') {
+						if($strlen > 18) {
+							$exp=(Substr($str,19,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Begravda i Stockholm".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 //	Längd 11 V
-					elseif(substr($str,7,11) == 'K, Lindblom'){
+/*					elseif(substr($str,7,11) == 'Kungsholmen'){
+						if($strlen > 17) {
+							$exp=(Substr($str,18,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Kungsholmsskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}*/
+//	Längd 11 V
+					elseif((substr($str,7,11) == 'K, Lindblom') || (substr($str,7,11) == 'K. Lindblom')) {
 						if($strlen > 17) {
 							$exp=(Substr($str,18,(Strlen($str))));
 							$exp1=(substr($exp,0,1));
@@ -544,6 +968,24 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 						}
+//	längd 10	V2	
+					elseif(substr($str,7,10) == 'Kjelldorff') {
+						if($strlen > 16) {
+							$exp=(Substr($str,17,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Bertil Kjelldorff".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 //	längd 10 V		
 					elseif((substr($str,7,10) == 'Sv Dödbok') || (substr($str,7,10) == 'sv dödbok') || (substr($str,7,10) == 'Sv dödbok')) {
 						if($strlen > 16) {
@@ -634,8 +1076,26 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+// 	längd 10	V2				
+					elseif((substr($str,7,10) == 'Adelns BOU') || (substr($str,7,10) == 'Adelns bou') || (substr($str,7,10) == 'Adelns Bou') || (substr($str,7,10) == 'Adelns BoU')) {
+						if($strlen > 16) {
+							$exp=(Substr($str,17,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*6 Adelns Bouppteckning".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
 //	Längd 10 V
-					elseif((substr($str,7,10) == 'K Lindblom') || (substr($str,7,10) == 'K.Lindblom')){
+					elseif((substr($str,7,10) == 'K Lindblom') || (substr($str,7,10) == 'K.Lindblom') || (substr($str,7,10) == 'K-Lindblom')){
 						if($strlen > 16) {
 							$exp=(Substr($str,17,(Strlen($str))));
 							$exp1=(substr($exp,0,1));
@@ -652,8 +1112,26 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 						}
-/*	längd 9 V		
-					elseif((substr($str,7,9) == 'Söder CD') || (substr($str,7,9) == 'söder cd')){
+//	Längd 10 V2
+					elseif(substr($str,7,10) == 'Söder, CD'){
+						if($strlen > 16) {
+							$exp=(Substr($str,17,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Söderskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
+//	Längd 9 V2
+					elseif(substr($str,7,9) == 'Söder CD'){
 						if($strlen > 15) {
 							$exp=(Substr($str,16,(Strlen($str))));
 							$exp1=(substr($exp,0,1));
@@ -665,6 +1143,24 @@ else
 							}
 						}
 						$text = $tagg."*9 Söderskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
+//	längd 9 V2		
+					elseif(substr($str,7,9) == 'KL Goffin'){
+						if($strlen > 15) {
+							$exp=(Substr($str,16,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*8 Kjell Lindblom, Nordisk vallongenealogi 1580 - 1750 Goffin".$exp;
 						$utlen = strlen($text);
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
@@ -687,7 +1183,7 @@ else
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
-					}*/
+					}
 //	längd 9	V	
 					elseif((substr($str,7,9) == 'Sv SmedSl') || (substr($str,7,9) == 'Sv Smedsl') || (substr($str,7,9) == 'sv smedsl') || (substr($str,7,9) == 'Sv smedsl')){
 						if($strlen > 15) {
@@ -742,6 +1238,42 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+//	Längd 9 V2
+					elseif(substr($str,7,9) == 'Klara, CD'){
+						if($strlen > 15) {
+							$exp=(Substr($str,16,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Klaraskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
+//	Längd 8 V2
+					elseif(substr($str,7,8) == 'Klara CD'){
+						if($strlen > 14) {
+							$exp=(Substr($str,15,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Klaraskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
 //	längd 8		
 					elseif((substr($str,7,8) == 'Vallonä') || (substr($str,7,8) == 'vallonä')) {
 //	Skippas
@@ -814,6 +1346,42 @@ else
 							}
 						}
 						$text = $tagg."*9 Kråken".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+//	längd 8	V2
+					elseif(substr($str,7,8) == 'SvBef-70') {
+						if($strlen > 14) {
+							$exp=(Substr($str,15,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*8 Sveriges Befolkning 1970".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}
+//	längd 7	V2
+					elseif(substr($str,7,7) == 'SvBef70') {
+						if($strlen > 13) {
+							$exp=(Substr($str,14,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*8 Sveriges Befolkning 1970".$exp;
 						$utlen = strlen($text);
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
@@ -954,6 +1522,24 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+//	längd 6 V2		
+/*					elseif(substr($str,7,6) == 'Söder') {
+						if($strlen > 12) {
+							$exp=(Substr($str,13,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Söderskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}*/
 //	längd 6		
 					elseif((substr($str,7,6) == 'SV BEF') || (substr($str,7,6) == 'sv bef') || (substr($str,7,6) == 'Sv bef') || (substr($str,7,6) == 'Sv Bef')) {
 						if($strlen > 12) {
@@ -1008,6 +1594,24 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+//	längd 5	V	
+/*					elseif(substr($str,7,5) == 'Klara') {
+						if($strlen > 11) {
+							$exp=(Substr($str,12,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Klaraskivan".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+					}*/
 //	längd 5		
 					elseif((substr($str,7,5) == 'SVBEF') || (substr($str,7,5) == 'svbef') || (substr($str,7,5) == 'Svbef') || (substr($str,7,5) == 'SvBef')) {
 						if($strlen > 11) {
@@ -1116,6 +1720,24 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+//	Längd 4	V2
+					elseif(substr($str,7,4) == 'KL 2') {
+						if($strlen > 10) {
+							$exp=(Substr($str,11,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*8 Kjell Lindblom, Nordisk vallongenealogi 1580 - 1750".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
 // 	längd 3				
 					elseif((substr($str,7,3) == 'SBL') || (substr($str,7,3) == 'sbl') || (substr($str,7,3) == 'Sbl')) {
 						if($strlen > 9) {
@@ -1350,6 +1972,24 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
+//	Längd 3 V2
+					elseif(substr($str,7,3) == 'KL2') {
+						if($strlen > 9) {
+							$exp=(Substr($str,10,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*8 Kjell Lindblom, Nordisk vallongenealogi 1580 - 1750".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
 //	Längd 2 V
 					elseif(substr($str,7,2) == 'KL') {
 						if($strlen > 8) {
@@ -1363,6 +2003,24 @@ else
 							}
 						}
 						$text = $tagg."*9 Kjell Lindblom".$exp;
+						$utlen = strlen($text);
+						$utlista[] = substr($text,7,$utlen).
+						' -----> ersätter ----->> '.substr($str,7,$strlen);
+						fwrite($handut,$text."\r\n");
+						}
+//	Längd 2 V2
+					elseif(substr($str,7,2) == 'AP') {
+						if($strlen > 8) {
+							$exp=(Substr($str,9,(Strlen($str))));
+							$exp1=(substr($exp,0,1));
+							if(($exp1 == ',') || ($exp1 == '.') || ($exp1 == '-') || ($exp1 == ':') || ($exp1 == ';')) {
+//	Skiljetecken OK
+							}
+							elseif(($exp1) != " ") {
+								$exp = " ".$exp;
+							}
+						}
+						$text = $tagg."*9 Anders Pemer".$exp;
 						$utlen = strlen($text);
 						$utlista[] = substr($text,7,$utlen).
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
@@ -1422,7 +2080,7 @@ else
 						' -----> ersätter ----->> '.substr($str,7,$strlen);
 						fwrite($handut,$text."\r\n");
 					}
-//					
+//				
 // 	längd 2	temp Passar ibland oftast inte			
 /*					elseif((substr($str,7,2) == 'SV') || (substr($str,7,2) == 'sv') || (substr($str,7,2) == 'Sv')) {
 						if($strlen > 8) {
@@ -1488,8 +2146,8 @@ else
 				echo "<br/>";
 				$radbr = 0;
 			}	
-		}*/
-//
+		}
+*/
 		echo "<br/>";
 		echo "Filen ".$fileut." har skapats <br/>";
 //

@@ -12,8 +12,8 @@ För enkelhetens skull har även andra funktioner lagts till.
 require 'initbas.php';
 require 'initdb.php';
 //
-include 'class_exchange_disbyt.php';
-include 'class_db_disbyt.php';
+//include 'class_exchange_disbyt.php';
+//include 'class_db_disbyt.php';
 //
 $brytr = 0;
 $larma = 0;
@@ -480,7 +480,7 @@ if($typtest == 'JA') {
 		$handin=fopen($filein,"r");
 		$handut=fopen($fileut,"w");
 //	Disbyt konvertering hel fil
-		$byt = new exchange();
+		//$byt = new exchange();
 		$dir = $directory;
         $file_in = "RGDX.GED";
         $file_out = "RGDR.GED";
@@ -492,8 +492,9 @@ if($typtest == 'JA') {
         * required classes class_db_disbyt.php and class_exchange_disbyt.php
         * $logg = FALSE as std or handle to file
         *********************************************/
-        $acp = $byt->change_ged_CP($file_in,$file_out,$dir,$logg);        
-      
+        //$acp = $byt->change_ged_CP($file_in,$file_out,$dir,$logg);
+        include 'gedcom2utf8.php';
+        $acp = convertGedcom2UTF8($file_in,$file_out,$dir,$logg);
         /************************************/
 		if(!empty($acp[3])) { 
 			$acp3 = array($acp[3]);
@@ -710,13 +711,23 @@ if(file_exists($filename))
 				$mant++;
 			}
 			if($taggk == 'DATE') {
+//	fimpa ()
+				$tstx = $str;
+				$lend = strlen($str);
+				$tstp = substr($str,0,8);
+				if($tstp == '2 DATE (') {
+					$tstx = substr($str,8,$lend-9);
+					$tstx = '2 DATE '.$tstx;
+//echo $str.'/'.$tstx.'/ <br/>';				
+				}
+//
 				$lend = strlen($str);
 				if(($aktf == 'JA') && ($txtf == '')) {
-						$txtf = substr($str,7,$lend); }
+						$txtf = substr($tstx,7,$lend); }
 				if(($aktd == 'JA') && ($txtd == '')) {
-						$txtd = substr($str,7,$lend); }
+						$txtd = substr($tstx,7,$lend); }
 				if(($aktm == 'JA') && ($txtm == '')) {
-						$txtm = substr($str,7,$lend); }
+						$txtm = substr($tstx,7,$lend); }
 				$aktf = '';
 				$aktd = '';
 				$aktm = '';

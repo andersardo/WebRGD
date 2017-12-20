@@ -973,11 +973,21 @@ else
 							$wrant++;
 						}
 						elseif($tagg == 'DATE') {
+//	fimpa ()
+							$tstx = $str;
+							$lend = strlen($str);
+							$tstp = substr($str,0,8);
+							if($tstp == '2 DATE (') {
+								$tstx = substr($str,8,$lend-9);
+								$tstx = '2 DATE '.$tstx;
+//echo $str.'/'.$tstx.'/ <br/>';				
+							}
+//
 							$lend = strlen($str);
 							if(($aktf == 'JA') && ($txtf == '')) {
-									$txtf = substr($str,7,$lend); }
+									$txtf = substr($tstx,7,$lend); }
 							if(($aktd == 'JA') && ($txtd == '')) {
-									$txtd = substr($str,7,$lend); }
+									$txtd = substr($tstx,7,$lend); }
 							$aktf = '';
 							$aktd = '';
 //	Spara rader	
@@ -1163,13 +1173,22 @@ $fileut=$directory . "RGDJ.GED";
 					$lnamn = 'Plats familj';
 				}
 				if($tagg == '2 DATE') {
+//	fimpa ()
+					$tstx = $str;
+					$lend = strlen($str);
+					$tstp = substr($str,0,8);
+					if($tstp == '2 DATE (') {
+						$tstx = substr($str,8,$lend-9);
+						$tstx = '2 DATE '.$tstx;
+//echo $str.'/'.$tstx.'/ <br/>';				
+					}
 					$lend = strlen($str);
 					if(($aktf == 'JA') && ($txtf == '')) {
-							$txtf = substr($str,7,$lend); }
+							$txtf = substr($tstx,7,$lend); }
 					if(($aktd == 'JA') && ($txtd == '')) {
-							$txtd = substr($str,7,$lend); }
+							$txtd = substr($tstx,7,$lend); }
 					if(($aktm == 'JA') && ($txtm == '')) {
-							$txtm = substr($str,7,$lend); }
+							$txtm = substr($tstx,7,$lend); }
 					$aktf = '';
 					$aktd = '';
 					$aktm = '';
@@ -2815,9 +2834,21 @@ Ladda array med kända värden.
 					}
 				}	
 				if($tagg == '2 DATE') {
+					$fant=0;
+//	fimpa ()
+					$tstx = $str;
+					$lend = strlen($str);
+					$tstp = substr($str,0,8);
+					if($tstp == '2 DATE (') {
+						$tstx = substr($str,8,$lend-9);
+						$tstx = '2 DATE '.$tstx;
+						$fant++;
+//echo $str.'/'.$tstx.'/ <br/>';				
+					}
+//
 					$lend = strlen($str);
 					if(($aktm == 'JA') && ($txtm == '')) {
-							$txtm = substr($str,7,$lend); }
+					$txtm = substr($tstx,7,$lend); }
 					$aktm = '';
 				}				
 				if(($tagg == '2 DATE') && ($akt == 'JA'))
@@ -2843,7 +2874,7 @@ Ladda array med kända värden.
 					$temp='';
 					$tkn='';
 					$imax=7;
-					$fant=0;
+//					$fant=0;
 					$len=strlen($str);
 					$test = substr($str,7,3);
 					for($i=0;$i<count($tst);$i++)
@@ -2866,7 +2897,8 @@ Ladda array med kända värden.
 //	Fix för att ge årtal ut
 									if($temp == '?') {
 										$temp = '0';
-										$fxx = 'JA';
+										$fant++;
+////										$fxx = 'JA';
 									}
 									if(($temp < '0') || ($temp > '9')) {
 										$temp = '';
@@ -2879,7 +2911,8 @@ Ladda array med kända värden.
 										($temp == '? ') || ($temp == '?0') ||
 										($temp == '??')) {
 										$temp = '00';
-										$fxx = 'JA';
+										$fant++;
+////										$fxx = 'JA';
 									}
 									$p1 = substr($temp,0,1);
 									if(($p1 < '0') || ($p1 > '9')) {
@@ -2991,12 +3024,32 @@ Ladda array med kända värden.
 							}
 							$imax++;
 						}
+						if($fant > 0) {
+//	fimpa ) men sök år
+							$naar = 0;
+							$taar = '';
+							$tmpl = strlen($str);
+							$tstp = substr($str,$tmpl-1,1);
+//echo $str.'/'.$tstp.'/ <br/>';				
+							if($tstp == ')') {
+								$taar = substr($str,$tmpl-5,4);
+								$naar=$taar;
+								$fant++;
+								$tdag = 'XX';
+								$tman = 'XXX';
+////								$fxx = 'JA';
+//echo $str.'/'.$naar.'/ <br/>';				
+							}
+						}
 						if((strlen($tman)) == 1)
 						{
 							$tman = '0'.$tman;
 						}
 						if($naar >= 1000)
 						{
+//	Årtal OK även vid felsignal
+							$fxx = 'JA';
+//
 							if($tdag == 'XX')
 							{
 //							Även om månad godkänts skrivs bara år när datum saknas	
@@ -3020,9 +3073,9 @@ Ladda array med kända värden.
 								$tman = '';
 							}
 //	Felsignal fixen
-							if(($fant == 0) && ($fxx == 'JA')) {
-								$fant++;
-							}
+////							if(($fant == 0) && ($fxx == 'JA')) {
+////								$fant++;
+////							}
 //	Sätt samman befintliga bitar av datumet	om datum eller årtal är OK
 							if($fant == 0) {
 								$datut=$date.$taar.$tman.$tdag;
@@ -3082,7 +3135,8 @@ Ladda array med kända värden.
 					if($fant > 0)
 					{
 						$kant++;
-						echo " *  *  *  *  *  Ej korrekt kalenderdatum ".$str.
+//						echo " *  *  *  *  *  Ej korrekt kalenderdatum ".$str.
+						echo " *  *  *  *  *  Ej korrekt kalenderdatum ".$tstx.
 						" . . . . . . . . . . Id => ".$znum." - ".$lnamn." <br/>";
 //	Larm
 						if($xfam == '') {
@@ -3109,13 +3163,15 @@ Ladda array med kända värden.
 								$brytr = 1;
 							}	
 // och beskrivande feltext
-							$larm = "Ej korrekt kalenderdatum ".$str.
+////							$larm = "Ej korrekt kalenderdatum ".$str.
+							$larm = "Ej korrekt kalenderdatum ".$tstx.
 							" - Id => ".$larmid." - ".$larmnamn;
 							fwrite($handlarm,$larm."\r\n");
 							fclose($handlarm);
 						}
 						else {
-							$xlrm = "Ej korrekt vigseldatum ".$str." - Id => ".$znum;
+//							$xlrm = "Ej korrekt vigseldatum ".$str." - Id => ".$znum;
+							$xlrm = "Ej korrekt vigseldatum ".$tstx." - Id => ".$znum;
 						}
 //
 					}			
@@ -4243,13 +4299,22 @@ if(file_exists($filename))
 				$aktm = 'JA';
 			}
 			if($taggk == 'DATE') {
+//	fimpa ()
+				$tstx = $str;
+				$lend = strlen($str);
+				$tstp = substr($str,0,8);
+				if($tstp == '2 DATE (') {
+					$tstx = substr($str,8,$lend-9);
+					$tstx = '2 DATE '.$tstx;
+//echo $str.'/'.$tstx.'/ <br/>';				
+				}
 				$lend = strlen($str);
 				if(($aktf == 'JA') && ($txtf == '')) {
-						$txtf = substr($str,7,$lend); }
+						$txtf = substr($tstx,7,$lend); }
 				if(($aktd == 'JA') && ($txtd == '')) {
-						$txtd = substr($str,7,$lend); }
+						$txtd = substr($tstx,7,$lend); }
 				if(($aktm == 'JA') && ($txtm == '')) {
-						$txtm = substr($str,7,$lend); }
+						$txtm = substr($tstx,7,$lend); }
 				$aktf = '';
 				$aktd = '';
 				$aktm = '';

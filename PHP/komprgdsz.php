@@ -1,6 +1,6 @@
 ﻿<?PHP
 /*
-Programmet behandlar specialtaggen RGDS (I fixen används PLAC i stället för RGDX)
+Programmet behandlar specialtaggen RGDS
 
 Programmet lägger samman PLAC och SOUR för att få med församling i källan
 Årtal för händelsen tas också in för att kunna verifiera 1:sta hands källor korrekt.
@@ -17,6 +17,7 @@ require 'initdb.php';
 $filein=$directory . "RGD9Y.GED";
 $fileut=$directory . "RGD9Z.GED";
 //
+$rgds = '';
 $akt='NEJ';
 $typ='';
 $bild='';
@@ -74,6 +75,7 @@ else
 			{
 				$xyz = '';
 //
+				$rgds = '';
 				$akt = 'NEJ';
 				$typ = '';
 				$aar = '';
@@ -100,12 +102,16 @@ else
 				$typ = 'V';
 				$tant++;
 			}
-			if(($tagg == '2 RGDD') && ($akt == 'JA'))
+//	DATE sista 4
+//			if(($tagg == '2 RGDD') && ($akt == 'JA'))
+			if(($tagg == '2 DATE') && ($akt == 'JA'))
 			{
-				$aar = substr($str,7,4);
+				$dlen = strlen($str);
+				$aar = substr($str,$dlen-4,4);
+//echo $aar.'<br/>';
 			}
-//	Org.	if(($tagg == '2 RGDX') && ($akt == 'JA'))
-			if(($tagg == '2 PLAC') && ($akt == 'JA'))
+//	Bidrag	if(($tagg == '2 RGDX') && ($akt == 'JA'))
+  			if(($tagg == '2 PLAC') && ($akt == 'JA'))
 			{
 				$pant++;
  				fwrite($handut,$str."\r\n");
@@ -273,9 +279,10 @@ else
 				}	
 			}
  			elseif(($tagl=='2 RGDS *') && ($akt == 'JA'))
-			{
+ 			{
 //	Återskriv redan behandlad rad
 				fwrite($handut,$str."\r\n");
+				$rgds = 'J';
 //	och bearbeta ej vidare
 				$akt = 'NEJ';
 				if(substr($str,8,1) == '6') {
@@ -289,11 +296,6 @@ else
  			elseif(($tagg=='2 RGDS') && ($akt == 'JA'))
 			{
 				$slen = strlen($str);
-//
-//if((substr($str,7,6) == 'Kalmar') || (substr($str,7,6) == 'Visby ')) {
-//	$xyz = 'JA';
-//}
-//
 				$otkn = '';
 				$strtmp = '';
 				$smax = 0;
@@ -341,31 +343,32 @@ else
 						if(($skol == '') && ($stkn == ' ')) {
 							$oldx = $sord;
 							if($old2 == '') {
-							$old2 = $sord;
+								$old2 = $sord;
 							}
 							else {
-							$old2 = $old2.' '.$sord;
+								
+								$old2 = $old2.' '.$sord;
 							}
 							$sord = '';
 						}
 						else {
+							$skip = 'N';
+//	Skip S: normalt Sankt
 							if($stkn == ':') {
-								if(($sord == 'AID') || ($sord == 'GID') || ($sord == 'Bildid'))  {
-//	Undantag
-									$sord = '';
+								if($sord == 'S') {
+									$skip = 'J';
 								}
-								else {
-									if($stkn2 != ' ') {
-										$skol = 'JA';
-										if($oldx == 'län') {
-											$sold = 'XXX';
-										}
-										else {
-											$sold = $oldx;
-										}	
-									}	
+//	Skip Reg: normalt ej kyrkbok
+								if(($sord == 'Reg') || ($sord == 'reg')) {
+									$skip = 'J';
+								}
+							}
+							if(($stkn == ':') && ($skip == 'N')){
+								if($stkn2 != ' ') {
+									$skol = 'JA';
+									$sold = $old2;
 								}	
-							}         
+							}
 							if(($skol == 'JA') && (($stkn == ' ') || ($stkn == ',') || 
 							($stkn == "/") || ($stkn == ";"))) {
 								if($bbok == '') {
@@ -383,7 +386,6 @@ else
 						$smix=$smix.$stkn;
 						$sord=$sord.$stkn;
 					}
-//	Kyrkböcker slutar inte med kolon
 					$olen=strlen($bbok);
 					if($olen > 0) {
 						$opos=substr($bbok,($olen-1),1);
@@ -509,28 +511,16 @@ else
 					}	
 					$bmix = '';
 //	Alternativ test
-//echo $book;
 					$altx = strlen($book);
 					$alt1 = substr($book,0,1);
 					$alt2 = substr($book,1,1);
-					$alt3 = substr($book,1,2);
 					$altr = substr($book,1,$altx);
-					$alta = substr($book,3,$altx);
-					if($alt3 == '1:') {
-						$book = $alt1.'I:'.$alta;
-					}
 					if($alt2 == ':') {
 						$balt = $alt1.'I'.$altr;
 					}
 					else {
-						if(($alt3 == 'I:') || ($alt3 == '1:')) {
-							$balt = $alt1.':'.$alta;
-						}
-						else {
-							$balt = $book;
-						}
+						$balt = $book;
 					}
-//echo '/'.$book.'/'.$balt.'<br/>';
 //			
 					$sbok = '';
 					if($fors == '') {
@@ -637,45 +627,41 @@ else
 						$old2 = $fors;
 					}
 					$stxt = $old2.' '.$book;
-/*					if(($fors == '') && ($sold == '')) {
-						$sold = $oldx;
+					if(($fors == '') && ($sold == '')) {
+						$sold = $old2;
 					}
 					if(($sold == '') || (($sok2 >= 1) && ($sok2 <= 3))){
 						$stxt = $fors.' '.$book;
 					}
 					else {
 						$stxt = $sold.' '.$book;
-					}*/
+					}
 					$ssid = '';
 					if(($snum != '') && ($bild == 'JA')) {
 						$ssid = ', Bild '.$snum;
 					}	
 					if(($snum != '') && ($sida == 'JA')) {
 						$ssid = ', Sidan '.$snum;
-					}	
+					}
 					fwrite($handut,"2 RGDS ".$sok.$stxt.$ssid." \r\n");
-/*
-if($sok == '*4 ') {
-	echo '* '.$sok.$stxt.$ssid.'-->'.$spar.'<br/>';
-}
-if($sok == '*5 ') {
-	echo '** '.$sok.$stxt.$ssid.'-->'.$spar.'<br/>';
-}
-if($sok == '*6 ') {
-	echo '*** '.$sok.$stxt.$ssid.'-->'.$spar.'<br/>';
-}
-//
-echo $spar.'*'.$id.'-'.$typ.$aar.'/'.$fbok.'/'.$sbok.'/'.$salt.'-?-'.$old2.'/ <br/>';	
-*/					
 				}	
 				else {
-					fwrite($handut,"2 RGDS ".$utx."\r\n");
-//					$fellista[] = $utx;
+//	ej *
+					if($rgds == '') {
+						fwrite($handut,$str."\r\n");
+						$utx = substr($str,7,strlen($str));
+						$fellista[] = $utx;
+					}
+					else {
+echo '***** Borde vara utskriven i tidigare skede <br/>';
+//						fwrite($handut,$str."\r\n");
+					}
 				}
 //
 			}
 			else
 			{
+//	akt ej JA
 				fwrite($handut,$str."\r\n");
 			}
 		}
@@ -693,6 +679,7 @@ echo $spar.'*'.$id.'-'.$typ.$aar.'/'.$fbok.'/'.$sbok.'/'.$salt.'-?-'.$old2.'/ <b
 		echo "<br/>";
 		echo "Filen ".$fileut." har skapats <br/>";
 		echo "<br/>";
+//	zz
 /*
 		if($zant > 0) {
 			echo "<br/>";
@@ -710,10 +697,13 @@ echo $spar.'*'.$id.'-'.$typ.$aar.'/'.$fbok.'/'.$sbok.'/'.$salt.'-?-'.$old2.'/ <b
 				}	
 			}
 			echo "<br/>";
-		}*/
+		}
+*/	
+//	zz	
 		echo "<br/>";
 		echo "Program komprgdsz avslutad <br/>";
-/*			
+//
+/*	
 		$filelogg=$directory . "RGDlogg.txt";
 		$handlog=fopen($filelogg,"a");
 		$text = "Program komprgdsz avslutad ";
