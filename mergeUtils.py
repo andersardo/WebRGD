@@ -6,7 +6,7 @@ import common
 from dbUtils import getFamilyFromId
 from utils import matchFam
 import pickle
-
+from operator import itemgetter
 #Imap = {}
 #Fmap = {}
 Imap = defaultdict(list)
@@ -41,8 +41,7 @@ def mergeSimple(items):
         else: it[item]=1
     return maxdict(it)
 
-def mergeEvent(events):
-    #FIX Change to use quality
+def mergeEventLongest(events):
     evDict = {}
     for field in ("date", "source", "place", "normPlaceUid"):
         ll = []
@@ -52,6 +51,17 @@ def mergeEvent(events):
         if ll:
            evDict[field] = mergeSimple(ll)
     return evDict
+
+def mergeEvent(events):
+    #Use quality to select which events to merge
+    events.sort(key = itemgetter('quality'))
+    mergeEvents = [events[0]]
+    for ev in events[1:]:
+        if ev['quality'] == mergeEvents[0]['quality']: mergeEvents.append(ev)
+        else: break
+    ev = mergeEventLongest(mergeEvents)
+    ev['quality'] = mergeEvents[0]['quality']
+    return ev
 
 def mergeOrgDataPers(personUid, personDB, originalDataDB):
     #reverseImap matchId -> set(person uids)
@@ -68,7 +78,8 @@ def mergeOrgDataPers(personUid, personDB, originalDataDB):
             persDict[field] = mergeSimple(rawData[field])
     #events
     for ev in ('birth', 'death'):
-        persDict[ev] = mergeEvent(rawData[ev])
+        #persDict[ev] = mergeEvent(rawData[ev])
+        persDict[ev] = mergeEventQuality(rawData[ev])
     return persDict
 
 def mergeOrgDataFam(recordid, families, originalData):
