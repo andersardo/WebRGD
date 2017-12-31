@@ -7,6 +7,9 @@ require 'initbas.php';
 //
 $fileut=$directory . "RGDK.CSV";
 //
+$jfr='';
+$test='';
+$xnum='';
 $namn='';
 $fnamn='';
 $enamn='';
@@ -56,12 +59,34 @@ else
 			$tagk=substr($str,0,5);
 			$tagg=substr($str,0,6);
 			$tagl=substr($str,0,8);
-			if(($pos1 == '0') || ($pos1 == '1'))
+//
+			if($pos1 == '0')
+			{
+//	Utskrift					
+				if($kalla == 'Saknas') {
+					$jfr = '';
+					if($typ == 'gift') {
+						$jfr = '(jfr. '.$xnum.')';
+					}
+					$xnum = '';
+					$radl++;
+					$txtrad=$znum.';'.$enamn.';'.$fnamn.';'.$typ.';'.$ort.';'.$dat.';'.$kalla.';'.$jfr;
+					fwrite($handut,$txtrad."\r\n");
+				}
+				$akt = 'NEJ';
+				$kalla = '';
+				$ort = '';
+				$dat = '';
+				$typ = '#';
+				$xnum = '';
+			}
+//
+			if(($pos1 == '1') && ($test == ' IND'))
 			{
 //	Utskrift					
 				if($kalla == 'Saknas') {
 					$radl++;
-					$txtrad=$znum.';'.$enamn.';'.$fnamn.';'.$typ.';'.$ort.';'.$dat.';'.$kalla;
+					$txtrad=$znum.';'.$enamn.';'.$fnamn.';'.$typ.';'.$ort.';'.$dat.';'.$kalla.';'.$jfr;
 					fwrite($handut,$txtrad."\r\n");
 				}
 				$kalla = '';
@@ -118,12 +143,37 @@ else
 			{
 				$akt = 'JA';
 				$typ = 'gift';
+				$enamn = 'Familj';
+				$fnamn = 'Familj';
 			}
 			if(($tagg == '2 DATE') && ($akt == 'JA'))
 			{
-				$dat = substr($str,7,(strlen($str)));
+//	fimpa ()
+				$tstx = $str;
+				$lend = strlen($str);
+				$tstp = substr($str,0,8);
+				if($tstp == '2 DATE (') {
+					$tstx = substr($str,8,$lend-9);
+					$tstx = '2 DATE '.$tstx;
+//echo $str.'/'.$tstx.'/ <br/>';				
+				}
+//
+				$dat = substr($tstx,7,(strlen($str)));
 				$kalla = 'Saknas';
 			}
+			if(($tagg == '1 HUSB') || ($tagg == '1 WIFE') || ($tagg == '1 CHIL')) {
+				if($xnum == '') {
+					$xlen = strlen($str);
+					$xmax = 7;
+					while($xmax <= $xlen) {
+						$xtal = substr($str,$xmax,1);
+						if($xtal != '@') {
+							$xnum = $xnum.$xtal;
+						}
+						$xmax++;
+					}					
+				}
+			}	
 			if(($tagg == '2 PLAC') && ($akt == 'JA'))
 			{
 				$ort = substr($str,7,(strlen($str)));
@@ -166,8 +216,12 @@ else
 //	
 //	Utskrift
 					if($kalla == 'Saknas') {
+						$jfr = '';
+						if($typ == 'gift') {
+							$jfr = '(jfr. '.$xnum.')';
+						}
 						$radl++;
-						$txtrad=$znum.';'.$enamn.';'.$fnamn.';'.$typ.';'.$ort.';'.$dat.';'.$kalla;
+						$txtrad=$znum.';'.$enamn.';'.$fnamn.';'.$typ.';'.$ort.';'.$dat.';'.$kalla.';'.$jfr;
 						fwrite($handut,$txtrad."\r\n");
 					}
 				}
@@ -196,9 +250,7 @@ else
 							}
 							if($test == ' FAM')
 							{
-								$namn = 'Familj';
-								$fnamn = 'Familj';
-								$enamn = 'Familj';
+//								$namn = 'Familj';
 								$radf++;
 							}
 						}

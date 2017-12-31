@@ -229,11 +229,21 @@ else
 					$aktd = 'JA';
 				}
 				if($tagg == '2 DATE') {
+//	fimpa ()
+					$tstx = $str;
+					$lend = strlen($str);
+					$tstp = substr($str,0,8);
+					if($tstp == '2 DATE (') {
+						$tstx = substr($str,8,$lend-9);
+						$tstx = '2 DATE '.$tstx;
+//echo $str.'/'.$tstx.'/ <br/>';				
+					}
+//
 					$lend = strlen($str);
 					if(($aktf == 'JA') && ($txtf == '')) {
-							$txtf = substr($str,7,$lend); }
+							$txtf = substr($tstx,7,$lend); }
 					if(($aktd == 'JA') && ($txtd == '')) {
-							$txtd = substr($str,7,$lend); }
+							$txtd = substr($tstx,7,$lend); }
 //echo '?'.$aktf.$txtf.$aktd.$txtd.'<br/>';
 					$aktf = '';
 					$aktd = '';

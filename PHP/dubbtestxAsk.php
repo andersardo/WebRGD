@@ -27,7 +27,9 @@ $filename=$directory . "RGD9.GED";
 //
 $fileut=$directory . "RGDXL.txt";
 $filedub=$directory . "dbxl.dat";
-//
+//	Disgen Ask
+$fileu2=$directory . "DUBB.txt";
+//	Ask end//
 if(file_exists($fileut))
 {
 	echo $fileut	." finns redan, programmet avbruts<br/>";
@@ -6448,29 +6450,68 @@ else
 //
 		if($kant > 0) {
 //
-			rsort($fellista);
+//	Disgen Ask
+			$handu2=fopen($fileu2,"w");
+//	Ask end			rsort($fellista);
 //			echo "<br/>";
 			fwrite($handut," \r\n");
 			foreach($fellista as $felrad) {
 				$xlen = 0;
 				$xant = 0;
 				$xblock = '';
-				$xlen = strlen($felrad);
+//	Disgen Ask
+				$yblk1 = '';
+				$yblk2 = '';
+				$yblk3 = '';
+				$yblock = '';
+//	Ask end				$xlen = strlen($felrad);
 				while($xant <= $xlen) {
 					$xtkn = substr($felrad,$xant,1);
 					if($xtkn == ':') {
+						$yblk1 = $xblock;
 						$xblock = $xblock.$xtkn;
 //						echo $xblock."<br/>";
 						fwrite($handut,$xblock." \r\n");
 						$xblock = '';
 					}
 					else {
+//	Disgen Ask
+						if($xtkn == ',') {
+							if($yblk2 == '') {
+								$ylen = strlen($xblock);
+								$yblk2 = substr($xblock,1,$ylen);
+							}
+						}
+//	Ask end
 						$xblock = $xblock.$xtkn;
 					}
 					$xant++;
 				}
-//				echo $xblock."<br/>";
-//				echo "<br/>";
+//	Disgen Ask
+echo $xblock."<br/>";
+				$xlen = 0;
+				$xant = 1;
+				$xlen = strlen($xblock);
+				while($xant <= $xlen) {
+					$xtkn = substr($xblock,$xant,1);
+					if($xtkn == ',') {
+							$xant = $xlen;
+					}
+					else {
+						$yblk3 = $yblk3.$xtkn;
+					}
+					$xant++;
+				}
+				$yblock = $yblk1.'?'.$yblk2.'?'.$yblk3;
+echo "<br/>";
+echo "1 /".$yblk1."/ <br/>";
+echo "2 /".$yblk2."/ <br/>";
+echo "3 /".$yblk3."/ <br/>";
+echo $yblock."<br/>";
+echo "<br/>";
+				fwrite($handu2,$yblock." \r\n");
+				$yblock = '';
+//	Ask end
 				fwrite($handut,$xblock." \r\n");
 				fwrite($handut," \r\n");
 				$xblock = '';
@@ -6495,7 +6536,9 @@ else
 			fwrite($handut,"Inga kandidater hittade, sökningen avslutad. \r\n");
 		}
 	fclose($handut);
-//
+//	Disgen Ask
+	fclose($handu2);
+//	Ask end
 	}
 //**** extra fixen
 	}
