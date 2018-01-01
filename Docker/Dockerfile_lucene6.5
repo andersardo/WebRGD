@@ -56,18 +56,20 @@ RUN make
 RUN make install
 
 WORKDIR /
-# Skapa MySQL databas som används av PHP-programmet för 
-# indatavalidering.
-COPY RGDindatavalid.sql ./RGDindatavalid.sql
-COPY SQLsetup.sql ./SQLsetup.sql
-RUN service mysql start && mysql --user=root --password=rgd < SQLsetup.sql
-
 #version of svmutils 3.12-1 without annoying print
 COPY svmutil.py /usr/share/pyshared/svmutil.py
 
-#starts everything
+#startup everything
 COPY supervisorRGD.conf /etc/supervisor/conf.d/openRGD.conf
+
+# Skapa MySQL databas som används av PHP-programmet för
+# indatavalidering.
+COPY RGDindatavalid.sql ./RGDindatavalid.sql
+COPY SQLsetup.sql ./SQLsetup.sql
+#RUN chown -R mysql.mysql /var/lib/mysql*
+RUN find /var/lib/mysql -type f -exec touch {} \; \
+    && service mysql start \
+    && mysql --user=root --password=rgd < SQLsetup.sql
 
 EXPOSE 8085
 ENTRYPOINT /bin/bash
-
