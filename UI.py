@@ -108,7 +108,7 @@ def combined():
     yield '<meta charset="UTF-8" />'
     yield '<pre>'+mess.encode('UTF-8')+"\n"
     fn = fdir + '/' + fn
-    cmd = ['/usr/bin/python', 'indataValidering.py', bottle.request.session['directory'], fn]
+    cmd = ['python', 'indataValidering.py', bottle.request.session['directory'], fn]
     if bottle.request.forms.get('resmail'):
         cmd.append('--email')
         cmd.append(aaa.current_user.email_addr)
@@ -277,7 +277,7 @@ def runprog(prog):
         #check parameters FIX
         cmd = ['python', 'sanityCheck.py', bottle.request.query.workDB, bottle.request.query.matchDB]
     elif prog == 'indatavalidation':
-        cmd = ['/usr/bin/python', 'indataValidering.py', bottle.request.session['directory'],
+        cmd = ['python', 'indataValidering.py', bottle.request.session['directory'],
                bottle.request.session['directory']+'/'+bottle.request.query.file]
         if 'resmail' in bottle.request.query:
                cmd.append('--email')
@@ -287,7 +287,7 @@ def runprog(prog):
         if 'dubl' in bottle.request.query: cmd.append('--dubl')
     elif prog == 'merge':
         #check parameters FIX
-        cmd = ['python', 'merge.py', bottle.request.query.workDB, bottle.request.query.matchDB]        
+        cmd = ['python', 'merge.py', bottle.request.query.workDB, bottle.request.query.matchDB]
     else:
         mess = prog + ' Not implemented'
     if cmd:
@@ -320,7 +320,7 @@ def runprog(prog):
         yield '<h2>Log</h2>'
         yield '<pre>' + outdata + '</pre>'
         logfile = codecs.open( fdir + prog + '.log', 'wb', 'utf-8')
-        logfile.write(outdata)
+        logfile.write(outdata.decode("utf-8"))
         logfile.close()
     else:
         (files, dbs, tmp, tmpu) = workFlowUI(aaa.current_user.username, bottle.request.session['directory'])
