@@ -7,6 +7,7 @@ export a database as Gedcom
 
 import argparse, sys, os, datetime
 from collections import defaultdict
+import pickle
 parser = argparse.ArgumentParser()
 parser.add_argument("workDB", help="Working database name" )
 args = parser.parse_args()
