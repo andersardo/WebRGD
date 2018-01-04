@@ -249,13 +249,13 @@ reverseImap = defaultdict(set)
 reverseFmap = defaultdict(set)
 map = config['originalData'].find_one({'type': 'Fmap'})
 if map:
-    Fmap['_id'] = map['_id']
+    #Fmap['_id'] = map['_id']  #KOLLA ??
     for (k,v) in pickle.loads(map['data']).iteritems(): Fmap[k] = v
 else:  #initialize with identity map
     for F in config['families'].find({}, {'_id': 1}): Fmap[F['_id']].add(F['_id'])
 map = config['originalData'].find_one({'type': 'Imap'})
 if map:
-    Imap['_id'] = map['_id'] #KOLLA Imap is dict of set
+    #Imap['_id'] = map['_id'] #KOLLA Imap is dict of set
     for (k,v) in pickle.loads(map['data']).iteritems(): Imap[k] = v
 else:  #initialize with identity map
     for P in config['persons'].find({}, {'_id': 1}): Imap[P['_id']].add(P['_id'])
@@ -265,7 +265,7 @@ for pers in Imap.keys():
         reverseImap[P].add(pers)
 for fam  in Fmap.keys():
     for F in Fmap[fam]:
-        reverseImap[F].add(fam)
+        reverseFmap[F].add(fam)
 
 for ind in config['persons'].find({}):
     mapPersId[ind['_id']] = ind['_id']
@@ -290,7 +290,7 @@ for ind in config['persons'].find({}):
     chanTag = None
     parsedGed = []
     #loop over all mapped ID's - see mergeUtils mergeOrgDataPers !!!!!!!!!!!!!!!
-    for uid in reverseImap[personUid]:
+    for uid in reverseImap[ind['_id']]:
         orgRec = config['originalData'].find_one({'recordId': uid}) # evt 'type': 'person'?
         for rec in orgRec['data']:
             printTag('1 NOTE', 'Original id ' + cIdMap.get(rec['contributionId']) + ' ' + rec['record']['refId'])
@@ -377,8 +377,22 @@ for famRec in config['families'].find({}):
     if 'husb' in fam and fam['husb']: printTagI("1 HUSB",mapPersId[fam['husb']])
     #other tags
     chanTag = None
-    orgData =  config['originalData'].find_one({'recordId': fam['_id']})
     parsedGed = []
+    #loop over all mapped ID's - see mergeUtils mergeOrgDataPers !!!!!!!!!!!!!!!
+    for uid in reverseFmap[famRec['_id']]:
+        orgRec = config['originalData'].find_one({'recordId': uid}) # evt 'type': 'family'?
+        for rec in orgRec['data']:
+            printTag('1 NOTE', 'Original id ' + cIdMap.get(rec['contributionId']) + ' ' + rec['record']['refId'])
+            try:
+                ged = Gedcom('/dev/null')
+            except Exception, e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_exception(exc_type, exc_value, exc_traceback)
+            parseGedcom(ged, rec['gedcom'])
+            parsedGed.append(ged.family_list()[0])
+    # ORG
+    """
+    orgData =  config['originalData'].find_one({'recordId': fam['_id']})
     for rec in orgData['data']:
         printTag('1 NOTE', 'Original id ' + cIdMap.get(rec['contributionId']) + ' ' + rec['record']['refId'].replace('gedcom_',''))
 	if 'gedcom' in rec:
@@ -389,6 +403,7 @@ for famRec in config['families'].find({}):
                traceback.print_exception(exc_type, exc_value, exc_traceback)
             parseGedcom(ged, rec['gedcom'])
             parsedGed.append(ged.family_list()[0])
+    """
     gedMergeEvent = {}
     for gedTag in parsedGed:
         for tag in gedTag.children_lines():
