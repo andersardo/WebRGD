@@ -79,7 +79,6 @@ def gedcomNoRGD(self):
     for e in self.children_lines():
         if e.tag() in ('PLAC'): plac = e.value()
     for e in self.children_lines():
-        if e.tag() in ('RGDF', 'RGDE', 'RGDP', 'RGDD'): continue
         result += '\n' + e.gedcom()
         if e.tag() in ('SOUR'):
                 #use mapped or not?
@@ -114,13 +113,11 @@ def printTag(tag, val):
 def printTagI(tag, val):
     if val:
         print tag,
-#        print '@I-'+str(val)+'@'
         print '@'+str(val)+'@'
 
 def printTagF(tag, val):
     if val:
         print tag,
-#        print '@F-'+str(val)+'@'
         print '@'+str(val)+'@'
 
 def compTagEQ(tag):
@@ -129,7 +126,7 @@ def compTagEQ(tag):
         else: return True
     if tag.tag() in ('BIRT', 'DEAT', 'MARR'):
         for cline in tag.children_lines():
-            if cline.tag() in ('DATE', 'PLAC', 'SOUR', 'RGDP', 'RGDD', 'RGDS'): continue
+            if cline.tag() in ('DATE', 'PLAC', 'SOUR'): continue
             else: return False
         return True
     return False
@@ -252,27 +249,33 @@ for ind in config['persons'].find({}):
     printTag("1 NAME",ind['name'])
     try: birth[ind['_id']] = ind['birth']['date']
     except:  birth[ind['_id']] = 0
-##    for ev in ('birth', 'death'):
-##        if ev in ind:
-##            if 'date' in ind[ev] or 'place' in ind[ev] or 'source' in ind[ev]:
-##                print "1", mapGedcom[ev]
-##                for item in ('date', 'place', 'source'):
-##                    if item in ind[ev]: printTag("2 "+mapGedcom[item],ind[ev][item])
+    for ev in ('birth', 'death'):
+        if ev in ind:
+            if 'date' in ind[ev] or 'place' in ind[ev] or 'source' in ind[ev]:
+                print "1", mapGedcom[ev]
+                for item in ('date', 'place', 'source'):
+                    if item in ind[ev]: printTag("2 "+mapGedcom[item],ind[ev][item])
     if ind['_id'] in  mapFamc: printTagF("1 FAMC", mapFamc[ind['_id']])
-    """
-    for fam in config['families'].find(
-        {'$or': [ {'husb': ind['_id']},
-                  {'wife': ind['_id']}
-                  ]},
-        {'_id': True, 'marriage': True}
-        ).sort([('marriage.date', 1)]):
-        printTagF("1 FAMS",fam['_id'])
-    """
     for rel in config['relations'].find({'persId': ind['_id']}):
         if rel['relTyp'] == 'child': continue
         printTagF("1 FAMS",rel['famId'])
     #Other tags
     chanTag = None
+    parsedGed = []
+    #loop over all mapped ID's - see mergeUtils mergeOrgDataPers !!!!!!!!!!!!!!!
+    for uid in reverseImap[personUid]:
+        orgRec = config['originalData'].find_one({'recordId': uid}) # evt 'type': 'person'?
+        for rec in orgRec['data']:
+            printTag('1 NOTE', 'Original id ' + cIdMap.get(rec['contributionId']) + ' ' + rec['record']['refId'])
+            try:
+                ged = Gedcom('/dev/null')
+            except Exception, e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_exception(exc_type, exc_value, exc_traceback)
+            parseGedcom(ged, rec['gedcom'])
+            parsedGed.append(ged.individual_list()[0])
+    #ORG
+    """
     orgData =  config['originalData'].find_one({'recordId': ind['_id']})
     parsedGed = []
     for rec in orgData['data']:
@@ -284,24 +287,23 @@ for ind in config['persons'].find({}):
             traceback.print_exception(exc_type, exc_value, exc_traceback)
         parseGedcom(ged, rec['gedcom'])
         parsedGed.append(ged.individual_list()[0])
+    """
     gedMergeEvent = {}
     gedUniqueEvent = {}
     gedUniqueTag = {}
     for gedTag in parsedGed:
         for tag in gedTag.children_lines():
             if tag.level() == 1:
-                if tag.tag() in ('SEX', 'RGDF', 'RGDE', 'RGDP', 'RGDD', 'RGDS', 'FAMC', 'FAMS'):
+                if tag.tag() in ('SEX', 'FAMC', 'FAMS'):
                     continue
                 elif tag.tag() in ('CHAN'):
                     chanTag = tag
                     continue
-##                elif tag.tag() in ('NAME', 'BIRT', 'DEAT'):
-                elif tag.tag() in ('NAME'):
+                elif tag.tag() in ('NAME', 'BIRT', 'DEAT'):
 #                    if not compTagEQ(tag): print gedcomNoRGD(tag)
 #                    else: print 'Skipped', tag.tag(), tag.value(), tag.gedcom(), '!!'
                     continue
-##                elif tag.tag() in ('CHR', 'BURI'):
-                elif tag.tag() in ('BIRT', 'CHR', 'DEAT', 'BURI'):
+                elif tag.tag() in ('CHR', 'BURI'):
                     print '1 NOTE openRGD Merge ', tag.tag()
                     if tag.tag() in gedMergeEvent:
                         gedMergeEvent[tag.tag()].append(tag)
@@ -336,12 +338,12 @@ for famRec in config['families'].find({}):
     fam = getFamilyFromId(famRec['_id'], config['families'], config['relations'])
     #basedata
     print "0 @"+str(fam['_id'])+"@ FAM"
-    #for ev in ('marriage',):
-    #    if ev not in fam: continue
-    #    print "1", mapGedcom[ev]
-    #    for item in ('date', 'place', 'source'):
-    #        if item in fam[ev]: printTag("2 "+mapGedcom[item],fam[ev][item])
-    #sort according to birth-date
+    for ev in ('marriage',):
+        if ev not in fam: continue
+        print "1", mapGedcom[ev]
+        for item in ('date', 'place', 'source'):
+            if item in fam[ev]: printTag("2 "+mapGedcom[item],fam[ev][item])
+    #sort children according to birth-date
     for ch in sorted(fam['children'], key=lambda c: birth[c]):
         printTagI("1 CHIL", mapPersId[ch])
     if 'wife' in fam and fam['wife']: printTagI("1 WIFE",mapPersId[fam['wife']])
@@ -364,12 +366,13 @@ for famRec in config['families'].find({}):
     for gedTag in parsedGed:
         for tag in gedTag.children_lines():
             if tag.level() == 1:
-                if tag.tag() in ('RGDP', 'RGDD', 'RGDS', 'CHIL', 'HUSB', 'WIFE'):
+                if tag.tag() in ('CHIL', 'HUSB', 'WIFE'):
                     continue
                 elif tag.tag() in ('CHAN'):
                     chanTag = tag
                     continue
                 elif tag.tag() in ('MARR'):
+                    continue
                     if tag.tag() in gedMergeEvent:
                         gedMergeEvent[tag.tag()].append(tag)
                     else:
