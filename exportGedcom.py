@@ -19,6 +19,7 @@ config = common.init(dbName, indexes=True)
 import codecs, locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8') #sorting??
 sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+
 #####################
 #map cId to file
 #Read mappings per file
@@ -240,6 +241,31 @@ for fam in config['families'].find({}):
     for ch in famAll['children']: mapFamc[ch] = fam['_id']
 
 birth = {}
+#mappings orgId -> mergedId
+Imap = defaultdict(set)
+Fmap = defaultdict(set)
+reverseImap = defaultdict(set)
+reverseFmap = defaultdict(set)
+map = config['originalData'].find_one({'type': 'Fmap'})
+if map:
+    Fmap['_id'] = map['_id']
+    for (k,v) in pickle.loads(map['data']).iteritems(): Fmap[k] = v
+else:  #initialize with identity map
+    for F in config['families'].find({}, {'_id': 1}): Fmap[F['_id']].add(F['_id'])
+map = config['originalData'].find_one({'type': 'Imap'})
+if map:
+    Imap['_id'] = map['_id'] #KOLLA Imap is dict of set
+    for (k,v) in pickle.loads(map['data']).iteritems(): Imap[k] = v
+else:  #initialize with identity map
+    for P in config['persons'].find({}, {'_id': 1}): Imap[P['_id']].add(P['_id'])
+#reverse maps
+for pers in Imap.keys():
+    for P in Imap[pers]:
+        reverseImap[P].add(pers)
+for fam  in Fmap.keys():
+    for F in Fmap[fam]:
+        reverseImap[F].add(fam)
+
 for ind in config['persons'].find({}):
     mapPersId[ind['_id']] = ind['_id']
     #basedata
