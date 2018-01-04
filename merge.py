@@ -137,7 +137,8 @@ for person in config['persons'].find():
                                                  config['match_originalData']) )
         else: print 'NOT Updating Imap list longer than one:', matchid
     else:
-        config['match_persons'].insert_one(person)  #Kolla att _id behålls
+        config['match_persons'].insert_one(person)
+        Imap[person['_id']] = person['_id']  #Identity map
         inscnt+=1
 print 'Persons new=',inscnt,'updated=',updcnt
 print 'Time:',time.time() - t0
@@ -168,6 +169,7 @@ for family in config['families'].find():
             print 'NOT Updating Fmap list longer than one:', matchid
     else:
         config['match_families'].insert_one(family)
+        Fmap[family['_id']] = family['_id']  #Identity map
         inscnt += 1
 print 'Families new=',inscnt,'updated=',updcnt
 print 'Time:',time.time() - t0
