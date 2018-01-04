@@ -52,21 +52,28 @@ def mergeEventLongest(events):
 
 def mergeEvent(events):
     #Use quality to select which events to merge
+    print 'mergeEvent', events
     events.sort(key = itemgetter('quality'))
+    print 'mergeEventsorted', events
     mergeEvents = [events[0]]
+    print 'Q', mergeEvents[0]['quality']
     for ev in events[1:]:
         if ev['quality'] == mergeEvents[0]['quality']: mergeEvents.append(ev)
         else: break
+    print mergeEvents
     ev = mergeEventLongest(mergeEvents)
+    print 'Choosen', ev
     ev['quality'] = mergeEvents[0]['quality']
     return ev
 
 def mergeOrgDataPers(personUid, personDB, originalDataDB):
     #reverseImap matchId -> set(person uids)
+    print 'pUid', personUid, reverseImap[personUid]
     persDict = {}
     rawData = defaultdict(list)
     for uid in reverseImap[personUid]:
-        orgRec = originalDataDB.find_one({'recordId': personUid}) # evt 'type': 'person'?
+        #orgRec = originalDataDB.find_one({'recordId': personUid}) # evt 'type': 'person'?
+        orgRec = originalDataDB.find_one({'recordId': uid}) # evt 'type': 'person'?
         for field in ('name', 'sex', 'grpNameLast', 'grpNameGiven', 'birth', 'death'):
             if field in orgRec['data'][0]['record']:
                 rawData[field].append(orgRec['data'][0]['record'][field])
@@ -89,7 +96,7 @@ def mergeOrgDataFam(recordid, families, originalData):
     rawdataMar = []
     famDict = {}
     for uid in reverseFmap[recordid]:
-        orgRec = originalDataDB.find_one({'recordId': recordid}) # evt 'type': 'person'?
+        orgRec = originalDataDB.find_one({'recordId': uid}) # evt 'type': 'person'?
         if 'marriage' in orgRec['data'][0]['record']:    #KOLLA - finns fler records i listan
             rawdataMar.append(orgRec['data'][0]['record'][field])
     try:

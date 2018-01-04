@@ -127,10 +127,12 @@ config['match_originalData'].insert_many(recs)
 inscnt=0
 updcnt=0
 for person in config['persons'].find():
+    if person['refId'] == 'I1076': print person
     if person['_id'] in Imap:
         updcnt += 1
         matchid = Imap[person['_id']]
         #generate merged record
+        if person['refId'] == 'I1076': print matchid
         if len(matchid)  == 1:
             config['match_persons'].update({'_id': next(iter(matchid))}, 
                                 mergeOrgDataPers(next(iter(matchid)), config['match_persons'],
