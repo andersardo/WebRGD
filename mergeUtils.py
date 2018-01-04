@@ -52,23 +52,17 @@ def mergeEventLongest(events):
 
 def mergeEvent(events):
     #Use quality to select which events to merge
-    print 'mergeEvent', events
     events.sort(key = itemgetter('quality'))
-    print 'mergeEventsorted', events
     mergeEvents = [events[0]]
-    print 'Q', mergeEvents[0]['quality']
     for ev in events[1:]:
         if ev['quality'] == mergeEvents[0]['quality']: mergeEvents.append(ev)
         else: break
-    print mergeEvents
     ev = mergeEventLongest(mergeEvents)
-    print 'Choosen', ev
     ev['quality'] = mergeEvents[0]['quality']
     return ev
 
 def mergeOrgDataPers(personUid, personDB, originalDataDB):
     #reverseImap matchId -> set(person uids)
-    print 'pUid', personUid, reverseImap[personUid]
     persDict = {}
     rawData = defaultdict(list)
     for uid in reverseImap[personUid]:
@@ -130,7 +124,7 @@ def checkFam(wid,mid):
             fams.add((l[0], l[2]))
 #?#
     for (tFamId,rFamId) in fams:    #  for all involved families do new matchning
-        print 'checking',tFamId,rFamId
+        #print 'checking',tFamId,rFamId
         famMatchData = matchFam(tFamId, rFamId, config)
         if common.config['fam_matches'].find({'workid': tFamId, 'matchid': rFamId}).count() == 0:
             if famMatchData['status'] in common.statOK.union(common.statManuell):
@@ -154,7 +148,7 @@ def createMap(config):
         cnt += 1
         if famMatch['workid'] in Fmap and Fmap[famMatch['workid']] != famMatch['matchid']:
             print 'Family', famMatch['workid'], 'in dbI matches', Fmap[famMatch['workid']], famMatch['matchid'], 'in dbII'
-            print 'NO IGNORE'
+            print 'NO - IGNORE THIS'
             #del Fmap[famMatch['workid']]
             #Fignore.append(famMatch['workid'])
             #continue
