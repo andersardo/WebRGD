@@ -66,7 +66,6 @@ def mergeOrgDataPers(personUid, personDB, originalDataDB):
     persDict = {}
     rawData = defaultdict(list)
     for uid in reverseImap[personUid]:
-        #orgRec = originalDataDB.find_one({'recordId': personUid}) # evt 'type': 'person'?
         orgRec = originalDataDB.find_one({'recordId': uid}) # evt 'type': 'person'?
         for field in ('name', 'sex', 'grpNameLast', 'grpNameGiven', 'birth', 'death'):
             if field in orgRec['data'][0]['record']:
@@ -83,7 +82,7 @@ def mergeOrgDataPers(personUid, personDB, originalDataDB):
             pass  #KOLLA tomma events ska finnas i DB
     return persDict
 
-def mergeOrgDataFam(recordid, families, originalData):
+def mergeOrgDataFam(recordid, families, originalDataDB):
     """ Merge orginalData for 'recordid' into a
         combined record used in RGD.
         marriage uses maxdict to determine which value to keep"""
@@ -92,7 +91,7 @@ def mergeOrgDataFam(recordid, families, originalData):
     for uid in reverseFmap[recordid]:
         orgRec = originalDataDB.find_one({'recordId': uid}) # evt 'type': 'person'?
         if 'marriage' in orgRec['data'][0]['record']:    #KOLLA - finns fler records i listan
-            rawdataMar.append(orgRec['data'][0]['record'][field])
+            rawdataMar.append(orgRec['data'][0]['record']['marriage'])
     try:
         famDict['marriage'] = mergeEvent(rawdataMar)
     except:
@@ -211,7 +210,7 @@ def createMap(config):
                 reverseImap[P].add(pers)
         for fam  in Fmap.keys():
             for F in Fmap[fam]:
-                reverseImap[F].add(fam)
+                reverseFmap[F].add(fam)
 
 
     print 'Matched persons', cnt, 'out of', config['persons'].count(), '; Mappings:', len(Imap)

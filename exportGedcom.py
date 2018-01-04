@@ -93,7 +93,6 @@ def gedcomNoRGD(self):
 
 mapGedcom = {'birth': 'BIRT', 'death': 'DEAT', 'marriage': 'MARR',
              'date': 'DATE', 'place': 'PLAC', 'source': 'SOUR'}
-#mapTag = {v: k for k, v in mapGedcom.iteritems()}
 
 month = {'01': 'JAN', '02': 'FEB', '03': 'MAR', '04': 'APR', '05': 'MAY', '06': 'JUN',
          '07': 'JUL', '08': 'AUG', '09': 'SEP', '10': 'OCT', '11': 'NOV', '12': 'DEC'}
@@ -183,7 +182,6 @@ def gedPrintMergeEvent(events):
             for cline in useEvent.children_lines():
                 if cline.tag() == 'DATE': cline._value = Qdate  #HACK
             print gedcomNoRGD(useEvent)
-    #print 'Exit'
 
 def gedPrintUniqueEvent(events):
     #print 'gedPrintUniqueEvent'
@@ -301,20 +299,6 @@ for ind in config['persons'].find({}):
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
             parseGedcom(ged, rec['gedcom'])
             parsedGed.append(ged.individual_list()[0])
-    #ORG
-    """
-    orgData =  config['originalData'].find_one({'recordId': ind['_id']})
-    parsedGed = []
-    for rec in orgData['data']:
-        printTag('1 NOTE', 'Original id ' + cIdMap.get(rec['contributionId']) + ' ' + rec['record']['refId'].replace('gedcom_',''))
-        try:
-            ged = Gedcom('/dev/null')
-        except Exception, e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(exc_type, exc_value, exc_traceback)
-        parseGedcom(ged, rec['gedcom'])
-        parsedGed.append(ged.individual_list()[0])
-    """
     gedMergeEvent = {}
     gedUniqueEvent = {}
     gedUniqueTag = {}
@@ -390,21 +374,6 @@ for famRec in config['families'].find({}):
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
             parseGedcom(ged, rec['gedcom'])
             parsedGed.append(ged.family_list()[0])
-    # ORG
-    """
-    orgData =  config['originalData'].find_one({'recordId': fam['_id']})
-    for rec in orgData['data']:
-        printTag('1 NOTE', 'Original id ' + cIdMap.get(rec['contributionId']) + ' ' + rec['record']['refId'].replace('gedcom_',''))
-	if 'gedcom' in rec:
-            try:
-               ged = Gedcom('/dev/null')
-            except Exception, e:
-               exc_type, exc_value, exc_traceback = sys.exc_info()
-               traceback.print_exception(exc_type, exc_value, exc_traceback)
-            parseGedcom(ged, rec['gedcom'])
-            parsedGed.append(ged.family_list()[0])
-    """
-    gedMergeEvent = {}
     for gedTag in parsedGed:
         for tag in gedTag.children_lines():
             if tag.level() == 1:
@@ -415,14 +384,7 @@ for famRec in config['families'].find({}):
                     continue
                 elif tag.tag() in ('MARR'):
                     continue
-                    if tag.tag() in gedMergeEvent:
-                        gedMergeEvent[tag.tag()].append(tag)
-                    else:
-                        gedMergeEvent[tag.tag()] = [tag]
-#                    if not compTagEQ(tag): print gedcomNoRGD(tag)
-#                    else: print 'Skipped', tag.tag(), tag.value(), tag.gedcom(), '!!'
                 else: print gedcomNoRGD(tag)
-    if gedMergeEvent: gedPrintMergeEvent(gedMergeEvent)
     #CHAN-tag
     if len(parsedGed) == 1 and chanTag:
         print gedcomNoRGD(chanTag)
