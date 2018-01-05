@@ -14,6 +14,7 @@ Avvikelser adderas i $neg, endast 1 avvikelse tillåten
 Utdata, en sorterad kandidatlista avsedd för egenkontroll.
 
 Antalsspärr, f.n. 100 000 inlagd
+Optimering av loop 1 tillkommer 
 
 */
 require 'initbas.php';
@@ -21,6 +22,10 @@ require 'initbas.php';
 $filename=$directory . "RGD9.GED";
 //
 $fileut=$directory . "RGDD.txt";
+//	Disgen Ask
+$filein=$directory . "RGD1.GED";
+$fileu2=$directory . "DgDub.txt";
+//	Ask end
 //
 if(file_exists($fileut))
 {
@@ -37,16 +42,36 @@ else
 		echo "Program startar ".date('Y-m-d')." / ".date('H:i:s')."<br/>";
 //****
 //	Extra snurra för att kunna begränsa volymen
+// ändrad till RGD1 inför Ask-versionen i stället för en extra genomläsning.
 	$zlen = 0;
 	$zind = 0;
 	$zfam = 0;
 	$ztst = '';
-	$handle=fopen($filename,"r");
+	$stig = '?';
+	$dg = '';
+	$handin=fopen($filein,"r");
 //	Läs in indatafilen				
-	$lines = file($filename,FILE_IGNORE_NEW_LINES);
+	$lines = file($filein,FILE_IGNORE_NEW_LINES);
 	foreach($lines as $radnummer => $str)
 	{
 		$zlen = strlen($str);
+		$tagg = substr($str,2,4);
+		$tag6 = substr($str,0,6);
+		$tags = substr($str,7,6);
+		$tagv = substr($str,7,1);
+		if($tag6 == '1 SOUR') {
+			if($tags == 'Disgen') {
+				$dg = 'JA';
+			}
+		}
+		if(($tag6 == '2 VERS') && ($dg == 'JA')) {
+			if(($tagv == '8') || ($tagv == '7')) {
+				$dg = '';
+			}
+		}
+		if($tagg == 'FILE') {
+			$stig = substr($str,2,$zlen);
+		}
 		$ztst = substr($str,$zlen-6,6);
 		if($ztst == '@ INDI') {
 			$zind++;
@@ -56,7 +81,7 @@ else
 			$zfam++;
 		}
 	}
-	fclose($handle);
+	fclose($handin);
 //
 	if($zind >= 100000) 
 	{
@@ -82,9 +107,9 @@ else
 //****
 		$handut=fopen($fileut,"w");
 		echo "<br/>";
-//
 		echo 'Antal individer = '.$zind.'<br/>';
 		echo 'Antal familjer  = '.$zfam.'<br/>';
+		echo "<br/>";
 //
 		fwrite($handut,"Dubblett Sökning \r\n");
 		fwrite($handut," \r\n");
@@ -445,6 +470,41 @@ else
 		$min = $max;
 		$nsist = $max - 1;
 		while($n1 <= $nsist) {
+//	Ladda z
+			$numz = $num[$n1];
+			$nradz = $nrad[$n1];
+			$dradz = $drad[$n1];
+			$pradz = $prad[$n1];
+//
+			$isexz = $isex[$n1];
+			$fmcz = $fmc[$n1];
+			$ifpz = $ifp[$n1];
+			$ifdz = $ifd[$n1];
+			$ifd1z = $ifd1[$n1];
+			$ifd2z = $ifd2[$n1];
+			$ifd3z = $ifd3[$n1];
+			$ifnz = $ifn[$n1];
+			$ifn1z = $ifn1[$n1];
+			$ifn2z = $ifn2[$n1];
+			$ifn3z = $ifn3[$n1];
+			$ifn4z = $ifn4[$n1];
+			$ifn5z = $ifn5[$n1];
+			$idpz = $idp[$n1];
+			$iddz = $idd[$n1];
+			$idd1z = $idd1[$n1];
+			$idd2z = $idd2[$n1];
+			$idd3z = $idd3[$n1];
+			$ienz = $ien[$n1];
+			$ien1z = $ien1[$n1];
+			$ien2z = $ien2[$n1];
+			$ien3z = $ien3[$n1];
+			$kp1z = $kp1[$n1];
+			$kp2z = $kp2[$n1];
+			$kp3z = $kp3[$n1];
+			$kp4z = $kp4[$n1];
+			$kp5z = $kp5[$n1];
+			$kp6z = $kp6[$n1];
+//		
 //	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
@@ -456,17 +516,17 @@ else
 				$halv = 0;
 				$plus = ' ';
 //	Individerna har olika kön					
-				if($isex[$n1] != '') {
+				if($isexz != '') {
 					if($isex[$n2] != '') {
-						if($isex[$n1] != $isex[$n2]) {
+						if($isexz != $isex[$n2]) {
 							$neg++;
 						}		
 					}
 				}
 //	Båda har barnfamilj och dessutom samma familj (syskon)					
-				if($fmc[$n1] != '') {
+				if($fmcz != '') {
 					if($fmc[$n2] != '') {
-						if($fmc[$n1] == $fmc[$n2]) {
+						if($fmcz == $fmc[$n2]) {
 							$plus = '-';
 							$neg++;
 // ?						$halv++;
@@ -474,28 +534,28 @@ else
 					}
 				}
 //	Boost					
-				if(($ifd[$n1] != '') && (strlen($ifd[$n1]) == 8)) {
+				if(($ifdz != '') && (strlen($ifdz) == 8)) {
 					if($ifd[$n2] != '') {
-						if($ifd[$n1] == $ifd[$n2]) {
+						if($ifdz == $ifd[$n2]) {
 							$bon++;
 						}
 					}
 				}
-				if($ifd1[$n1] != '') {
+				if($ifd1z != '') {
 					if($ifd1[$n2] != '') {
 						$ant++;
-						if($ifd1[$n1] == $ifd1[$n2]) {
+						if($ifd1z == $ifd1[$n2]) {
 							$pos++;
 						}
 						else {
 							$neg++;
-							if($ifd1[$n1] < $ifd1[$n2]) {
-								if(($ifd1[$n1] + 10) < $ifd1[$n2]) {
+							if($ifd1z < $ifd1[$n2]) {
+								if(($ifd1z + 10) < $ifd1[$n2]) {
 									$neg++;
 								}
 							}	
 							else {
-								if(($ifd1[$n2] + 10) < $ifd1[$n1]) {
+								if(($ifd1[$n2] + 10) < $ifd1z) {
 									$neg++;
 								}
 							}
@@ -503,17 +563,17 @@ else
 					}
 				}
 //	Bryt om ett dödår är mindre än det andra födelseåret
-				if($ifd1[$n1] != '') {
+				if($ifd1z != '') {
 					if($idd1[$n2] != '') {
-						if($idd1[$n2] < $ifd1[$n1]) {
+						if($idd1[$n2] < $ifd1z) {
 							$neg++;
 							$neg++;
 						}
 					}
 				}
 				if($ifd1[$n2] != '') {
-					if($idd1[$n1] != '') {
-						if($idd1[$n1] < $ifd1[$n2]) {
+					if($idd1z != '') {
+						if($idd1z < $ifd1[$n2]) {
 							$neg++;
 							$neg++;
 						}
@@ -523,29 +583,29 @@ else
 				if($neg < 2){
 //						
 //	Boost					
-					if(($idd[$n1] != '') && (strlen($idd[$n1]) == 8)) {
+					if(($iddz != '') && (strlen($iddz) == 8)) {
 						if($idd[$n2] != '') {
-							if($idd[$n1] == $idd[$n2]) {
+							if($iddz == $idd[$n2]) {
 								$bon++;
 							}
 						}
 					}
 //						
-					if($idd1[$n1] != '') {
+					if($idd1z != '') {
 						if($idd1[$n2] != '') {
 							$ant++;
-							if($idd1[$n1] == $idd1[$n2]) {
+							if($idd1z == $idd1[$n2]) {
 								$pos++;
 							}
 							else {
 								$neg++;
-								if($idd1[$n1] < $idd1[$n2]) {
-									if(($idd1[$n1] + 10) < $idd1[$n2]) {
+								if($idd1z < $idd1[$n2]) {
+									if(($idd1z + 10) < $idd1[$n2]) {
 										$neg++;
 									}
 								}	
 								else {
-									if(($idd1[$n2] + 10) < $idd1[$n1]) {
+									if(($idd1[$n2] + 10) < $idd1z) {
 										$neg++;
 									}
 								}
@@ -557,11 +617,11 @@ else
 //						
 //	Boost		
 						$ntest = 0;
-						if($ifn[$n1] != '') {
+						if($ifnz != '') {
 							if($ifn[$n2] != '') {
-								if($ifn[$n1] == $ifn[$n2]) {
+								if($ifnz == $ifn[$n2]) {
 									$bon++;
-									if($ifn[$n1] != $ifn1[$n1]) {
+									if($ifnz != $ifn1z) {
 										$bon++;
 									}	
 									$ntest++;
@@ -569,55 +629,55 @@ else
 							}
 						}
 //						
-						if($ifn1[$n1] != '') {
+						if($ifn1z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn1[$n1] == $ifn1[$n2]) || ($ifn1[$n1] == $ifn2[$n2]) || ($ifn1[$n1] == $ifn3[$n2])
-								 || ($ifn1[$n1] == $ifn4[$n2]) || ($ifn1[$n1] == $ifn5[$n2]) ) {
+								if(($ifn1z == $ifn1[$n2]) || ($ifn1z == $ifn2[$n2]) || ($ifn1z == $ifn3[$n2])
+								 || ($ifn1z == $ifn4[$n2]) || ($ifn1z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}	
 						}
 //						
-						if($ifn2[$n1] != '') {
+						if($ifn2z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn2[$n1] == $ifn1[$n2]) || ($ifn2[$n1] == $ifn2[$n2]) || ($ifn2[$n1] == $ifn3[$n2])
-								 || ($ifn2[$n1] == $ifn4[$n2]) || ($ifn2[$n1] == $ifn5[$n2]) ) {
+								if(($ifn2z == $ifn1[$n2]) || ($ifn2z == $ifn2[$n2]) || ($ifn2z == $ifn3[$n2])
+								 || ($ifn2z == $ifn4[$n2]) || ($ifn2z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn3[$n1] != '') {
+						if($ifn3z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn3[$n1] == $ifn1[$n2]) || ($ifn3[$n1] == $ifn2[$n2]) || ($ifn3[$n1] == $ifn3[$n2])
-								 || ($ifn3[$n1] == $ifn4[$n2]) || ($ifn3[$n1] == $ifn5[$n2]) ) {
+								if(($ifn3z == $ifn1[$n2]) || ($ifn3z == $ifn2[$n2]) || ($ifn3z == $ifn3[$n2])
+								 || ($ifn3z == $ifn4[$n2]) || ($ifn3z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn4[$n1] != '') {
+						if($ifn4z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn4[$n1] == $ifn1[$n2]) || ($ifn4[$n1] == $ifn2[$n2]) || ($ifn4[$n1] == $ifn3[$n2])
-								 || ($ifn4[$n1] == $ifn4[$n2]) || ($ifn4[$n1] == $ifn5[$n2]) ) {
+								if(($ifn4z == $ifn1[$n2]) || ($ifn4z == $ifn2[$n2]) || ($ifn4z == $ifn3[$n2])
+								 || ($ifn4z == $ifn4[$n2]) || ($ifn4z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn5[$n1] != '') {
+						if($ifn5z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn5[$n1] == $ifn1[$n2]) || ($ifn5[$n1] == $ifn2[$n2]) || ($ifn5[$n1] == $ifn3[$n2])
-								 || ($ifn5[$n1] == $ifn4[$n2]) || ($ifn5[$n1] == $ifn5[$n2]) ) {
+								if(($ifn5z == $ifn1[$n2]) || ($ifn5z == $ifn2[$n2]) || ($ifn5z == $ifn3[$n2])
+								 || ($ifn5z == $ifn4[$n2]) || ($ifn5z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
@@ -629,10 +689,10 @@ else
 //			
 						if($neg < 2) {
 //						
-							if($ifd2[$n1] != '') {
+							if($ifd2z != '') {
 								if($ifd2[$n2] != '') {
 									$ant++;
-									if($ifd2[$n1] == $ifd2[$n2]) {
+									if($ifd2z == $ifd2[$n2]) {
 										$pos++;
 									}
 									else {
@@ -641,10 +701,10 @@ else
 								}
 							}
 //						
-							if($ifd3[$n1] != '') {
+							if($ifd3z != '') {
 								if($ifd3[$n2] != '') {
 									$ant++;
-									if($ifd3[$n1] == $ifd3[$n2]) {
+									if($ifd3z == $ifd3[$n2]) {
 										$pos++;
 									}
 									else {
@@ -653,10 +713,10 @@ else
 								}
 							}
 //						
-							if($ifp[$n1] != '') {
+							if($ifpz != '') {
 								if($ifp[$n2] != '') {
 									$ant++;
-									if($ifp[$n1] == $ifp[$n2]) {
+									if($ifpz == $ifp[$n2]) {
 										$pos++;
 									}
 									else {
@@ -668,10 +728,10 @@ else
 //			
 							if($neg < 2) {
 //						
-								if($idd2[$n1] != '') {
+								if($idd2z != '') {
 									if($idd2[$n2] != '') {
 										$ant++;
-										if($idd2[$n1] == $idd2[$n2]) {
+										if($idd2z == $idd2[$n2]) {
 											$pos++;
 										}
 										else {
@@ -680,10 +740,10 @@ else
 									}
 								}
 //						
-								if($idd3[$n1] != '') {
+								if($idd3z != '') {
 									if($idd3[$n2] != '') {
 										$ant++;
-										if($idd3[$n1] == $idd3[$n2]) {
+										if($idd3z == $idd3[$n2]) {
 											$pos++;
 										}
 										else {
@@ -692,10 +752,10 @@ else
 									}
 								}
 //						
-								if($idp[$n1] != '') {
+								if($idpz != '') {
 									if($idp[$n2] != '') {
 										$ant++;
-										if($idp[$n1] == $idp[$n2]) {
+										if($idpz == $idp[$n2]) {
 											$pos++;
 										}
 										else {
@@ -708,11 +768,11 @@ else
 								if($neg < 2) {
 //	Boost					
 									$ntest = 0;
-									if($ien[$n1] != '') {
+									if($ienz != '') {
 										if($ien[$n2] != '') {
-											if($ien[$n1] == $ien[$n2]) {
+											if($ienz == $ien[$n2]) {
 												$bon++;
-												if($ien[$n1] != $ien1[$n1]) {
+												if($ienz != $ien1z) {
 													$bon++;
 												}	
 												$ntest++;
@@ -720,30 +780,30 @@ else
 										}
 									}
 //						
-									if($ien1[$n1] != '') {
+									if($ien1z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien1[$n1] == $ien1[$n2]) || ($ien1[$n1] == $ien2[$n2]) || ($ien1[$n1] == $ien3[$n2])) {
+											if(($ien1z == $ien1[$n2]) || ($ien1z == $ien2[$n2]) || ($ien1z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
 										}
 									}
 //						
-									if($ien2[$n1] != '') {
+									if($ien2z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien2[$n1] == $ien1[$n2]) || ($ien2[$n1] == $ien2[$n2]) || ($ien2[$n1] == $ien3[$n2])) {
+											if(($ien2z == $ien1[$n2]) || ($ien2z == $ien2[$n2]) || ($ien2z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
 										}
 									}
 //						
-									if($ien3[$n1] != '') {
+									if($ien3z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien3[$n1] == $ien1[$n2]) || ($ien3[$n1] == $ien2[$n2]) || ($ien3[$n1] == $ien3[$n2])) {
+											if(($ien3z == $ien1[$n2]) || ($ien3z == $ien2[$n2]) || ($ien3z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
@@ -753,49 +813,49 @@ else
 										$halv++;
 									}
 //	Boost					
-									if($kp1[$n1] != '') {
+									if($kp1z != '') {
 										if($kp1[$n2] != '') {
-											if(($kp1[$n1] == $kp1[$n2]) && (strlen($ifd[$n1]) == 8)) {
+											if(($kp1z == $kp1[$n2]) && (strlen($ifdz) == 8)) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp2[$n1] != '') {
+									if($kp2z != '') {
 										if($kp2[$n2] != '') {
-											if(($kp2[$n1] == $kp2[$n2]) && (strlen($idd[$n1]) == 8)) {
+											if(($kp2z == $kp2[$n2]) && (strlen($iddz) == 8)) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp3[$n1] != '') {
+									if($kp3z != '') {
 										if($kp3[$n2] != '') {
-											if($kp3[$n1] == $kp3[$n2]) {
+											if($kp3z == $kp3[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp4[$n1] != '') {
+									if($kp4z != '') {
 										if($kp4[$n2] != '') {
-											if($kp4[$n1] == $kp4[$n2]) {
+											if($kp4z == $kp4[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp5[$n1] != '') {
+									if($kp5z != '') {
 										if($kp5[$n2] != '') {
-											if($kp5[$n1] == $kp5[$n2]) {
+											if($kp5z == $kp5[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp6[$n1] != '') {
+									if($kp6z != '') {
 										if($kp6[$n2] != '') {
-											if($kp6[$n1] == $kp6[$n2]) {
+											if($kp6z == $kp6[$n2]) {
 												$bon++;
 											}
 										}
@@ -803,23 +863,23 @@ else
 //	Tolka betydelsen av familj FAMC 
 //					
 //	Båda har barmfamilj men olika familjer
-									if($fmc[$n1] != '') {
+									if($fmcz != '') {
 										if($fmc[$n2] != '') {
-											if($fmc[$n1] != $fmc[$n2]) {
+											if($fmcz != $fmc[$n2]) {
 												$plus = '?';
 												$halv++;
 											}
 										}
 									}
 //	En saknar barnfamilj (mor/dotter - far/som)					
-									if($fmc[$n1] != '') {
+									if($fmcz != '') {
 										if($fmc[$n2] == '') {
 											$plus = '+';
 											$bon++;
 										}
 									}
 //	En saknar barnfamilj (mor/dotter - far/som)					
-									if($fmc[$n1] == '') {
+									if($fmcz == '') {
 										if($fmc[$n2] != '') {
 											$plus = '+';
 											$bon++;
@@ -854,7 +914,7 @@ else
 							}
 //
 							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför:"
-							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1]." med:"
+							.$numz.", ".$nradz.", ".$dradz.", ".$pradz." med:"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
 						}
@@ -1215,6 +1275,41 @@ else
 		$min = $max;
 		$nsist = $max - 1;
 		while($n1 <= $nsist) {
+//	Ladda z
+			$numz = $num[$n1];
+			$nradz = $nrad[$n1];
+			$dradz = $drad[$n1];
+			$pradz = $prad[$n1];
+//
+			$isexz = $isex[$n1];
+			$fmcz = $fmc[$n1];
+			$ifpz = $ifp[$n1];
+			$ifdz = $ifd[$n1];
+			$ifd1z = $ifd1[$n1];
+			$ifd2z = $ifd2[$n1];
+			$ifd3z = $ifd3[$n1];
+			$ifnz = $ifn[$n1];
+			$ifn1z = $ifn1[$n1];
+			$ifn2z = $ifn2[$n1];
+			$ifn3z = $ifn3[$n1];
+			$ifn4z = $ifn4[$n1];
+			$ifn5z = $ifn5[$n1];
+			$idpz = $idp[$n1];
+			$iddz = $idd[$n1];
+			$idd1z = $idd1[$n1];
+			$idd2z = $idd2[$n1];
+			$idd3z = $idd3[$n1];
+			$ienz = $ien[$n1];
+			$ien1z = $ien1[$n1];
+			$ien2z = $ien2[$n1];
+			$ien3z = $ien3[$n1];
+			$kp1z = $kp1[$n1];
+			$kp2z = $kp2[$n1];
+			$kp3z = $kp3[$n1];
+			$kp4z = $kp4[$n1];
+			$kp5z = $kp5[$n1];
+			$kp6z = $kp6[$n1];
+//		
 //	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
@@ -1226,45 +1321,45 @@ else
 				$halv = 0;
 				$plus = ' ';
 //	Individerna har olika kön					
-				if($isex[$n1] != '') {
+				if($isexz != '') {
 					if($isex[$n2] != '') {
-						if($isex[$n1] != $isex[$n2]) {
+						if($isexz != $isex[$n2]) {
 							$neg++;
 						}		
 					}
 				}
 //	Båda har barnfamilj och dessutom samma familj (syskon)					
-				if($fmc[$n1] != '') {
+				if($fmcz != '') {
 					if($fmc[$n2] != '') {
-						if($fmc[$n1] == $fmc[$n2]) {
+						if($fmcz == $fmc[$n2]) {
 							$plus = '-';
 							$neg++;
 						}		
 					}
 				}
 //	Boost					
-				if(($ifd[$n1] != '') && (strlen($ifd[$n1]) == 8)) {
+				if(($ifdz != '') && (strlen($ifdz) == 8)) {
 					if($ifd[$n2] != '') {
-						if($ifd[$n1] == $ifd[$n2]) {
+						if($ifdz == $ifd[$n2]) {
 							$bon++;
 						}
 					}
 				}
-				if($ifd1[$n1] != '') {
+				if($ifd1z != '') {
 					if($ifd1[$n2] != '') {
 						$ant++;
-						if($ifd1[$n1] == $ifd1[$n2]) {
+						if($ifd1z == $ifd1[$n2]) {
 							$pos++;
 						}
 						else {
 							$neg++;
-							if($ifd1[$n1] < $ifd1[$n2]) {
-								if(($ifd1[$n1] + 10) < $ifd1[$n2]) {
+							if($ifd1z < $ifd1[$n2]) {
+								if(($ifd1z + 10) < $ifd1[$n2]) {
 									$neg++;
 								}
 							}	
 							else {
-								if(($ifd1[$n2] + 10) < $ifd1[$n1]) {
+								if(($ifd1[$n2] + 10) < $ifd1z) {
 									$neg++;
 								}
 							}
@@ -1272,17 +1367,17 @@ else
 					}
 				}
 //	Bryt om ett dödår är mindre än det andra födelseåret
-				if($ifd1[$n1] != '') {
+				if($ifd1z != '') {
 					if($idd1[$n2] != '') {
-						if($idd1[$n2] < $ifd1[$n1]) {
+						if($idd1[$n2] < $ifd1z) {
 							$neg++;
 							$neg++;
 						}
 					}
 				}
 				if($ifd1[$n2] != '') {
-					if($idd1[$n1] != '') {
-						if($idd1[$n1] < $ifd1[$n2]) {
+					if($idd1z != '') {
+						if($idd1z < $ifd1[$n2]) {
 							$neg++;
 							$neg++;
 						}
@@ -1292,29 +1387,29 @@ else
 				if($neg < 2){
 //						
 //	Boost					
-					if(($idd[$n1] != '') && (strlen($idd[$n1]) == 8)) {
+					if(($iddz != '') && (strlen($iddz) == 8)) {
 						if($idd[$n2] != '') {
-							if($idd[$n1] == $idd[$n2]) {
+							if($iddz == $idd[$n2]) {
 								$bon++;
 							}
 						}
 					}
 //						
-					if($idd1[$n1] != '') {
+					if($idd1z != '') {
 						if($idd1[$n2] != '') {
 							$ant++;
-							if($idd1[$n1] == $idd1[$n2]) {
+							if($idd1z == $idd1[$n2]) {
 								$pos++;
 							}
 							else {
 								$neg++;
-								if($idd1[$n1] < $idd1[$n2]) {
-									if(($idd1[$n1] + 10) < $idd1[$n2]) {
+								if($idd1z < $idd1[$n2]) {
+									if(($idd1z + 10) < $idd1[$n2]) {
 										$neg++;
 									}
 								}	
 								else {
-									if(($idd1[$n2] + 10) < $idd1[$n1]) {
+									if(($idd1[$n2] + 10) < $idd1z) {
 										$neg++;
 									}
 								}
@@ -1326,11 +1421,11 @@ else
 //						
 //	Boost		
 						$ntest = 0;
-						if($ifn[$n1] != '') {
+						if($ifnz != '') {
 							if($ifn[$n2] != '') {
-								if($ifn[$n1] == $ifn[$n2]) {
+								if($ifnz == $ifn[$n2]) {
 									$bon++;
-									if($ifn[$n1] != $ifn1[$n1]) {
+									if($ifnz != $ifn1z) {
 										$bon++;
 									}	
 									$ntest++;
@@ -1338,55 +1433,55 @@ else
 							}
 						}
 //						
-						if($ifn1[$n1] != '') {
+						if($ifn1z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn1[$n1] == $ifn1[$n2]) || ($ifn1[$n1] == $ifn2[$n2]) || ($ifn1[$n1] == $ifn3[$n2])
-								 || ($ifn1[$n1] == $ifn4[$n2]) || ($ifn1[$n1] == $ifn5[$n2]) ) {
+								if(($ifn1z == $ifn1[$n2]) || ($ifn1z == $ifn2[$n2]) || ($ifn1z == $ifn3[$n2])
+								 || ($ifn1z == $ifn4[$n2]) || ($ifn1z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}	
 						}
 //						
-						if($ifn2[$n1] != '') {
+						if($ifn2z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn2[$n1] == $ifn1[$n2]) || ($ifn2[$n1] == $ifn2[$n2]) || ($ifn2[$n1] == $ifn3[$n2])
-								 || ($ifn2[$n1] == $ifn4[$n2]) || ($ifn2[$n1] == $ifn5[$n2]) ) {
+								if(($ifn2z == $ifn1[$n2]) || ($ifn2z == $ifn2[$n2]) || ($ifn2z == $ifn3[$n2])
+								 || ($ifn2z == $ifn4[$n2]) || ($ifn2z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn3[$n1] != '') {
+						if($ifn3z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn3[$n1] == $ifn1[$n2]) || ($ifn3[$n1] == $ifn2[$n2]) || ($ifn3[$n1] == $ifn3[$n2])
-								 || ($ifn3[$n1] == $ifn4[$n2]) || ($ifn3[$n1] == $ifn5[$n2]) ) {
+								if(($ifn3z == $ifn1[$n2]) || ($ifn3z == $ifn2[$n2]) || ($ifn3z == $ifn3[$n2])
+								 || ($ifn3z == $ifn4[$n2]) || ($ifn3z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn4[$n1] != '') {
+						if($ifn4z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn4[$n1] == $ifn1[$n2]) || ($ifn4[$n1] == $ifn2[$n2]) || ($ifn4[$n1] == $ifn3[$n2])
-								 || ($ifn4[$n1] == $ifn4[$n2]) || ($ifn4[$n1] == $ifn5[$n2]) ) {
+								if(($ifn4z == $ifn1[$n2]) || ($ifn4z == $ifn2[$n2]) || ($ifn4z == $ifn3[$n2])
+								 || ($ifn4z == $ifn4[$n2]) || ($ifn4z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn5[$n1] != '') {
+						if($ifn5z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn5[$n1] == $ifn1[$n2]) || ($ifn5[$n1] == $ifn2[$n2]) || ($ifn5[$n1] == $ifn3[$n2])
-								 || ($ifn5[$n1] == $ifn4[$n2]) || ($ifn5[$n1] == $ifn5[$n2]) ) {
+								if(($ifn5z == $ifn1[$n2]) || ($ifn5z == $ifn2[$n2]) || ($ifn5z == $ifn3[$n2])
+								 || ($ifn5z == $ifn4[$n2]) || ($ifn5z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
@@ -1398,10 +1493,10 @@ else
 //			
 						if($neg < 2) {
 //						
-							if($ifd2[$n1] != '') {
+							if($ifd2z != '') {
 								if($ifd2[$n2] != '') {
 									$ant++;
-									if($ifd2[$n1] == $ifd2[$n2]) {
+									if($ifd2z == $ifd2[$n2]) {
 										$pos++;
 									}
 									else {
@@ -1410,10 +1505,10 @@ else
 								}
 							}
 //						
-							if($ifd3[$n1] != '') {
+							if($ifd3z != '') {
 								if($ifd3[$n2] != '') {
 									$ant++;
-									if($ifd3[$n1] == $ifd3[$n2]) {
+									if($ifd3z == $ifd3[$n2]) {
 										$pos++;
 									}
 									else {
@@ -1422,10 +1517,10 @@ else
 								}
 							}
 //						
-							if($ifp[$n1] != '') {
+							if($ifpz != '') {
 								if($ifp[$n2] != '') {
 									$ant++;
-									if($ifp[$n1] == $ifp[$n2]) {
+									if($ifpz == $ifp[$n2]) {
 										$pos++;
 									}
 									else {
@@ -1437,10 +1532,10 @@ else
 //			
 							if($neg < 2) {
 //						
-								if($idd2[$n1] != '') {
+								if($idd2z != '') {
 									if($idd2[$n2] != '') {
 										$ant++;
-										if($idd2[$n1] == $idd2[$n2]) {
+										if($idd2z == $idd2[$n2]) {
 											$pos++;
 										}
 										else {
@@ -1449,10 +1544,10 @@ else
 									}
 								}
 //						
-								if($idd3[$n1] != '') {
+								if($idd3z != '') {
 									if($idd3[$n2] != '') {
 										$ant++;
-										if($idd3[$n1] == $idd3[$n2]) {
+										if($idd3z == $idd3[$n2]) {
 											$pos++;
 										}
 										else {
@@ -1461,10 +1556,10 @@ else
 									}
 								}
 //						
-								if($idp[$n1] != '') {
+								if($idpz != '') {
 									if($idp[$n2] != '') {
 										$ant++;
-										if($idp[$n1] == $idp[$n2]) {
+										if($idpz == $idp[$n2]) {
 											$pos++;
 										}
 										else {
@@ -1477,11 +1572,11 @@ else
 								if($neg < 2) {
 //	Boost					
 									$ntest = 0;
-									if($ien[$n1] != '') {
+									if($ienz != '') {
 										if($ien[$n2] != '') {
-											if($ien[$n1] == $ien[$n2]) {
+											if($ienz == $ien[$n2]) {
 												$bon++;
-												if($ien[$n1] != $ien1[$n1]) {
+												if($ienz != $ien1z) {
 													$bon++;
 												}	
 												$ntest++;
@@ -1489,30 +1584,30 @@ else
 										}
 									}
 //						
-									if($ien1[$n1] != '') {
+									if($ien1z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien1[$n1] == $ien1[$n2]) || ($ien1[$n1] == $ien2[$n2]) || ($ien1[$n1] == $ien3[$n2])) {
+											if(($ien1z == $ien1[$n2]) || ($ien1z == $ien2[$n2]) || ($ien1z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
 										}
 									}
 //						
-									if($ien2[$n1] != '') {
+									if($ien2z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien2[$n1] == $ien1[$n2]) || ($ien2[$n1] == $ien2[$n2]) || ($ien2[$n1] == $ien3[$n2])) {
+											if(($ien2z == $ien1[$n2]) || ($ien2z == $ien2[$n2]) || ($ien2z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
 										}
 									}
 //						
-									if($ien3[$n1] != '') {
+									if($ien3z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien3[$n1] == $ien1[$n2]) || ($ien3[$n1] == $ien2[$n2]) || ($ien3[$n1] == $ien3[$n2])) {
+											if(($ien3z == $ien1[$n2]) || ($ien3z == $ien2[$n2]) || ($ien3z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
@@ -1522,49 +1617,49 @@ else
 										$halv++;
 									}
 //	Boost					
-									if($kp1[$n1] != '') {
+									if($kp1z != '') {
 										if($kp1[$n2] != '') {
-											if(($kp1[$n1] == $kp1[$n2]) && (strlen($ifd[$n1]) == 8)) {
+											if(($kp1z == $kp1[$n2]) && (strlen($ifdz) == 8)) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp2[$n1] != '') {
+									if($kp2z != '') {
 										if($kp2[$n2] != '') {
-											if(($kp2[$n1] == $kp2[$n2]) && (strlen($idd[$n1]) == 8)) {
+											if(($kp2z == $kp2[$n2]) && (strlen($iddz) == 8)) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp3[$n1] != '') {
+									if($kp3z != '') {
 										if($kp3[$n2] != '') {
-											if($kp3[$n1] == $kp3[$n2]) {
+											if($kp3z == $kp3[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp4[$n1] != '') {
+									if($kp4z != '') {
 										if($kp4[$n2] != '') {
-											if($kp4[$n1] == $kp4[$n2]) {
+											if($kp4z == $kp4[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp5[$n1] != '') {
+									if($kp5z != '') {
 										if($kp5[$n2] != '') {
-											if($kp5[$n1] == $kp5[$n2]) {
+											if($kp5z == $kp5[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp6[$n1] != '') {
+									if($kp6z != '') {
 										if($kp6[$n2] != '') {
-											if($kp6[$n1] == $kp6[$n2]) {
+											if($kp6z == $kp6[$n2]) {
 												$bon++;
 											}
 										}
@@ -1572,23 +1667,23 @@ else
 //	Tolka betydelsen av familj FAMC 
 //					
 //	Båda har barmfamilj men olika familjer
-									if($fmc[$n1] != '') {
+									if($fmcz != '') {
 										if($fmc[$n2] != '') {
-											if($fmc[$n1] != $fmc[$n2]) {
+											if($fmcz != $fmc[$n2]) {
 												$plus = '?';
 												$halv++;
 											}
 										}
 									}
 //	En saknar barnfamilj (mor/dotter - far/som)					
-									if($fmc[$n1] != '') {
+									if($fmcz != '') {
 										if($fmc[$n2] == '') {
 											$plus = '+';
 											$bon++;
 										}
 									}
 //	En saknar barnfamilj (mor/dotter - far/som)					
-									if($fmc[$n1] == '') {
+									if($fmcz == '') {
 										if($fmc[$n2] != '') {
 											$plus = '+';
 											$bon++;
@@ -1984,6 +2079,41 @@ else
 		$min = $max;
 		$nsist = $max - 1;
 		while($n1 <= $nsist) {
+//	Ladda z
+			$numz = $num[$n1];
+			$nradz = $nrad[$n1];
+			$dradz = $drad[$n1];
+			$pradz = $prad[$n1];
+//
+			$isexz = $isex[$n1];
+			$fmcz = $fmc[$n1];
+			$ifpz = $ifp[$n1];
+			$ifdz = $ifd[$n1];
+			$ifd1z = $ifd1[$n1];
+			$ifd2z = $ifd2[$n1];
+			$ifd3z = $ifd3[$n1];
+			$ifnz = $ifn[$n1];
+			$ifn1z = $ifn1[$n1];
+			$ifn2z = $ifn2[$n1];
+			$ifn3z = $ifn3[$n1];
+			$ifn4z = $ifn4[$n1];
+			$ifn5z = $ifn5[$n1];
+			$idpz = $idp[$n1];
+			$iddz = $idd[$n1];
+			$idd1z = $idd1[$n1];
+			$idd2z = $idd2[$n1];
+			$idd3z = $idd3[$n1];
+			$ienz = $ien[$n1];
+			$ien1z = $ien1[$n1];
+			$ien2z = $ien2[$n1];
+			$ien3z = $ien3[$n1];
+			$kp1z = $kp1[$n1];
+			$kp2z = $kp2[$n1];
+			$kp3z = $kp3[$n1];
+			$kp4z = $kp4[$n1];
+			$kp5z = $kp5[$n1];
+			$kp6z = $kp6[$n1];
+//		
 //	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
@@ -1995,45 +2125,45 @@ else
 				$halv = 0;
 				$plus = ' ';
 //	Individerna har olika kön					
-				if($isex[$n1] != '') {
+				if($isexz != '') {
 					if($isex[$n2] != '') {
-						if($isex[$n1] != $isex[$n2]) {
+						if($isexz != $isex[$n2]) {
 							$neg++;
 						}		
 					}
 				}
 //	Båda har barnfamilj och dessutom samma familj (syskon)					
-				if($fmc[$n1] != '') {
+				if($fmcz != '') {
 					if($fmc[$n2] != '') {
-						if($fmc[$n1] == $fmc[$n2]) {
+						if($fmcz == $fmc[$n2]) {
 							$plus = '-';
 							$neg++;
 						}		
 					}
 				}
 //	Boost					
-				if(($ifd[$n1] != '') && (strlen($ifd[$n1]) == 8)) {
+				if(($ifdz != '') && (strlen($ifdz) == 8)) {
 					if($ifd[$n2] != '') {
-						if($ifd[$n1] == $ifd[$n2]) {
+						if($ifdz == $ifd[$n2]) {
 							$bon++;
 						}
 					}
 				}
-				if($ifd1[$n1] != '') {
+				if($ifd1z != '') {
 					if($ifd1[$n2] != '') {
 						$ant++;
-						if($ifd1[$n1] == $ifd1[$n2]) {
+						if($ifd1z == $ifd1[$n2]) {
 							$pos++;
 						}
 						else {
 							$neg++;
-							if($ifd1[$n1] < $ifd1[$n2]) {
-								if(($ifd1[$n1] + 10) < $ifd1[$n2]) {
+							if($ifd1z < $ifd1[$n2]) {
+								if(($ifd1z + 10) < $ifd1[$n2]) {
 									$neg++;
 								}
 							}	
 							else {
-								if(($ifd1[$n2] + 10) < $ifd1[$n1]) {
+								if(($ifd1[$n2] + 10) < $ifd1z) {
 									$neg++;
 								}
 							}
@@ -2041,17 +2171,17 @@ else
 					}
 				}
 //	Bryt om ett dödår är mindre än det andra födelseåret
-				if($ifd1[$n1] != '') {
+				if($ifd1z != '') {
 					if($idd1[$n2] != '') {
-						if($idd1[$n2] < $ifd1[$n1]) {
+						if($idd1[$n2] < $ifd1z) {
 							$neg++;
 							$neg++;
 						}
 					}
 				}
 				if($ifd1[$n2] != '') {
-					if($idd1[$n1] != '') {
-						if($idd1[$n1] < $ifd1[$n2]) {
+					if($idd1z != '') {
+						if($idd1z < $ifd1[$n2]) {
 							$neg++;
 							$neg++;
 						}
@@ -2061,29 +2191,29 @@ else
 				if($neg < 2){
 //						
 //	Boost					
-					if(($idd[$n1] != '') && (strlen($idd[$n1]) == 8)) {
+					if(($iddz != '') && (strlen($iddz) == 8)) {
 						if($idd[$n2] != '') {
-							if($idd[$n1] == $idd[$n2]) {
+							if($iddz == $idd[$n2]) {
 								$bon++;
 							}
 						}
 					}
 //						
-					if($idd1[$n1] != '') {
+					if($idd1z != '') {
 						if($idd1[$n2] != '') {
 							$ant++;
-							if($idd1[$n1] == $idd1[$n2]) {
+							if($idd1z == $idd1[$n2]) {
 								$pos++;
 							}
 							else {
 								$neg++;
-								if($idd1[$n1] < $idd1[$n2]) {
-									if(($idd1[$n1] + 10) < $idd1[$n2]) {
+								if($idd1z < $idd1[$n2]) {
+									if(($idd1z + 10) < $idd1[$n2]) {
 										$neg++;
 									}
 								}	
 								else {
-									if(($idd1[$n2] + 10) < $idd1[$n1]) {
+									if(($idd1[$n2] + 10) < $idd1z) {
 										$neg++;
 									}
 								}
@@ -2095,11 +2225,11 @@ else
 //						
 //	Boost		
 						$ntest = 0;
-						if($ifn[$n1] != '') {
+						if($ifnz != '') {
 							if($ifn[$n2] != '') {
-								if($ifn[$n1] == $ifn[$n2]) {
+								if($ifnz == $ifn[$n2]) {
 									$bon++;
-									if($ifn[$n1] != $ifn1[$n1]) {
+									if($ifnz != $ifn1z) {
 										$bon++;
 									}	
 									$ntest++;
@@ -2107,55 +2237,55 @@ else
 							}
 						}
 //						
-						if($ifn1[$n1] != '') {
+						if($ifn1z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn1[$n1] == $ifn1[$n2]) || ($ifn1[$n1] == $ifn2[$n2]) || ($ifn1[$n1] == $ifn3[$n2])
-								 || ($ifn1[$n1] == $ifn4[$n2]) || ($ifn1[$n1] == $ifn5[$n2]) ) {
+								if(($ifn1z == $ifn1[$n2]) || ($ifn1z == $ifn2[$n2]) || ($ifn1z == $ifn3[$n2])
+								 || ($ifn1z == $ifn4[$n2]) || ($ifn1z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}	
 						}
 //						
-						if($ifn2[$n1] != '') {
+						if($ifn2z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn2[$n1] == $ifn1[$n2]) || ($ifn2[$n1] == $ifn2[$n2]) || ($ifn2[$n1] == $ifn3[$n2])
-								 || ($ifn2[$n1] == $ifn4[$n2]) || ($ifn2[$n1] == $ifn5[$n2]) ) {
+								if(($ifn2z == $ifn1[$n2]) || ($ifn2z == $ifn2[$n2]) || ($ifn2z == $ifn3[$n2])
+								 || ($ifn2z == $ifn4[$n2]) || ($ifn2z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn3[$n1] != '') {
+						if($ifn3z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn3[$n1] == $ifn1[$n2]) || ($ifn3[$n1] == $ifn2[$n2]) || ($ifn3[$n1] == $ifn3[$n2])
-								 || ($ifn3[$n1] == $ifn4[$n2]) || ($ifn3[$n1] == $ifn5[$n2]) ) {
+								if(($ifn3z == $ifn1[$n2]) || ($ifn3z == $ifn2[$n2]) || ($ifn3z == $ifn3[$n2])
+								 || ($ifn3z == $ifn4[$n2]) || ($ifn3z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn4[$n1] != '') {
+						if($ifn4z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn4[$n1] == $ifn1[$n2]) || ($ifn4[$n1] == $ifn2[$n2]) || ($ifn4[$n1] == $ifn3[$n2])
-								 || ($ifn4[$n1] == $ifn4[$n2]) || ($ifn4[$n1] == $ifn5[$n2]) ) {
+								if(($ifn4z == $ifn1[$n2]) || ($ifn4z == $ifn2[$n2]) || ($ifn4z == $ifn3[$n2])
+								 || ($ifn4z == $ifn4[$n2]) || ($ifn4z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn5[$n1] != '') {
+						if($ifn5z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn5[$n1] == $ifn1[$n2]) || ($ifn5[$n1] == $ifn2[$n2]) || ($ifn5[$n1] == $ifn3[$n2])
-								 || ($ifn5[$n1] == $ifn4[$n2]) || ($ifn5[$n1] == $ifn5[$n2]) ) {
+								if(($ifn5z == $ifn1[$n2]) || ($ifn5z == $ifn2[$n2]) || ($ifn5z == $ifn3[$n2])
+								 || ($ifn5z == $ifn4[$n2]) || ($ifn5z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
@@ -2167,10 +2297,10 @@ else
 //			
 						if($neg < 2) {
 //						
-							if($ifd2[$n1] != '') {
+							if($ifd2z != '') {
 								if($ifd2[$n2] != '') {
 									$ant++;
-									if($ifd2[$n1] == $ifd2[$n2]) {
+									if($ifd2z == $ifd2[$n2]) {
 										$pos++;
 									}
 									else {
@@ -2179,10 +2309,10 @@ else
 								}
 							}
 //						
-							if($ifd3[$n1] != '') {
+							if($ifd3z != '') {
 								if($ifd3[$n2] != '') {
 									$ant++;
-									if($ifd3[$n1] == $ifd3[$n2]) {
+									if($ifd3z == $ifd3[$n2]) {
 										$pos++;
 									}
 									else {
@@ -2191,10 +2321,10 @@ else
 								}
 							}
 //						
-							if($ifp[$n1] != '') {
+							if($ifpz != '') {
 								if($ifp[$n2] != '') {
 									$ant++;
-									if($ifp[$n1] == $ifp[$n2]) {
+									if($ifpz == $ifp[$n2]) {
 										$pos++;
 									}
 									else {
@@ -2206,10 +2336,10 @@ else
 //			
 							if($neg < 2) {
 //						
-								if($idd2[$n1] != '') {
+								if($idd2z != '') {
 									if($idd2[$n2] != '') {
 										$ant++;
-										if($idd2[$n1] == $idd2[$n2]) {
+										if($idd2z == $idd2[$n2]) {
 											$pos++;
 										}
 										else {
@@ -2218,10 +2348,10 @@ else
 									}
 								}
 //						
-								if($idd3[$n1] != '') {
+								if($idd3z != '') {
 									if($idd3[$n2] != '') {
 										$ant++;
-										if($idd3[$n1] == $idd3[$n2]) {
+										if($idd3z == $idd3[$n2]) {
 											$pos++;
 										}
 										else {
@@ -2230,10 +2360,10 @@ else
 									}
 								}
 //						
-								if($idp[$n1] != '') {
+								if($idpz != '') {
 									if($idp[$n2] != '') {
 										$ant++;
-										if($idp[$n1] == $idp[$n2]) {
+										if($idpz == $idp[$n2]) {
 											$pos++;
 										}
 										else {
@@ -2246,11 +2376,11 @@ else
 								if($neg < 2) {
 //	Boost					
 									$ntest = 0;
-									if($ien[$n1] != '') {
+									if($ienz != '') {
 										if($ien[$n2] != '') {
-											if($ien[$n1] == $ien[$n2]) {
+											if($ienz == $ien[$n2]) {
 												$bon++;
-												if($ien[$n1] != $ien1[$n1]) {
+												if($ienz != $ien1z) {
 													$bon++;
 												}	
 												$ntest++;
@@ -2258,30 +2388,30 @@ else
 										}
 									}
 //						
-									if($ien1[$n1] != '') {
+									if($ien1z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien1[$n1] == $ien1[$n2]) || ($ien1[$n1] == $ien2[$n2]) || ($ien1[$n1] == $ien3[$n2])) {
+											if(($ien1z == $ien1[$n2]) || ($ien1z == $ien2[$n2]) || ($ien1z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
 										}
 									}
 //						
-									if($ien2[$n1] != '') {
+									if($ien2z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien2[$n1] == $ien1[$n2]) || ($ien2[$n1] == $ien2[$n2]) || ($ien2[$n1] == $ien3[$n2])) {
+											if(($ien2z == $ien1[$n2]) || ($ien2z == $ien2[$n2]) || ($ien2z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
 										}
 									}
 //						
-									if($ien3[$n1] != '') {
+									if($ien3z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien3[$n1] == $ien1[$n2]) || ($ien3[$n1] == $ien2[$n2]) || ($ien3[$n1] == $ien3[$n2])) {
+											if(($ien3z == $ien1[$n2]) || ($ien3z == $ien2[$n2]) || ($ien3z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
@@ -2291,49 +2421,49 @@ else
 										$halv++;
 									}
 //	Boost					
-									if($kp1[$n1] != '') {
+									if($kp1z != '') {
 										if($kp1[$n2] != '') {
-											if(($kp1[$n1] == $kp1[$n2]) && (strlen($ifd[$n1]) == 8)) {
+											if(($kp1z == $kp1[$n2]) && (strlen($ifdz) == 8)) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp2[$n1] != '') {
+									if($kp2z != '') {
 										if($kp2[$n2] != '') {
-											if(($kp2[$n1] == $kp2[$n2]) && (strlen($idd[$n1]) == 8)) {
+											if(($kp2z == $kp2[$n2]) && (strlen($iddz) == 8)) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp3[$n1] != '') {
+									if($kp3z != '') {
 										if($kp3[$n2] != '') {
-											if($kp3[$n1] == $kp3[$n2]) {
+											if($kp3z == $kp3[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp4[$n1] != '') {
+									if($kp4z != '') {
 										if($kp4[$n2] != '') {
-											if($kp4[$n1] == $kp4[$n2]) {
+											if($kp4z == $kp4[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp5[$n1] != '') {
+									if($kp5z != '') {
 										if($kp5[$n2] != '') {
-											if($kp5[$n1] == $kp5[$n2]) {
+											if($kp5z == $kp5[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp6[$n1] != '') {
+									if($kp6z != '') {
 										if($kp6[$n2] != '') {
-											if($kp6[$n1] == $kp6[$n2]) {
+											if($kp6z == $kp6[$n2]) {
 												$bon++;
 											}
 										}
@@ -2341,23 +2471,23 @@ else
 //	Tolka betydelsen av familj FAMC 
 //					
 //	Båda har barmfamilj men olika familjer
-									if($fmc[$n1] != '') {
+									if($fmcz != '') {
 										if($fmc[$n2] != '') {
-											if($fmc[$n1] != $fmc[$n2]) {
+											if($fmcz != $fmc[$n2]) {
 												$plus = '?';
 												$halv++;
 											}
 										}
 									}
 //	En saknar barnfamilj (mor/dotter - far/som)					
-									if($fmc[$n1] != '') {
+									if($fmcz != '') {
 										if($fmc[$n2] == '') {
 											$plus = '+';
 											$bon++;
 										}
 									}
 //	En saknar barnfamilj (mor/dotter - far/som)					
-									if($fmc[$n1] == '') {
+									if($fmcz == '') {
 										if($fmc[$n2] != '') {
 											$plus = '+';
 											$bon++;
@@ -2392,7 +2522,7 @@ else
 							}
 //
 							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför:"
-							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1]." med:"
+							.$numz.", ".$nradz.", ".$dradz.", ".$pradz." med:"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
 						}
@@ -2753,6 +2883,41 @@ else
 		$min = $max;
 		$nsist = $max - 1;
 		while($n1 <= $nsist) {
+//	Ladda z
+			$numz = $num[$n1];
+			$nradz = $nrad[$n1];
+			$dradz = $drad[$n1];
+			$pradz = $prad[$n1];
+//
+			$isexz = $isex[$n1];
+			$fmcz = $fmc[$n1];
+			$ifpz = $ifp[$n1];
+			$ifdz = $ifd[$n1];
+			$ifd1z = $ifd1[$n1];
+			$ifd2z = $ifd2[$n1];
+			$ifd3z = $ifd3[$n1];
+			$ifnz = $ifn[$n1];
+			$ifn1z = $ifn1[$n1];
+			$ifn2z = $ifn2[$n1];
+			$ifn3z = $ifn3[$n1];
+			$ifn4z = $ifn4[$n1];
+			$ifn5z = $ifn5[$n1];
+			$idpz = $idp[$n1];
+			$iddz = $idd[$n1];
+			$idd1z = $idd1[$n1];
+			$idd2z = $idd2[$n1];
+			$idd3z = $idd3[$n1];
+			$ienz = $ien[$n1];
+			$ien1z = $ien1[$n1];
+			$ien2z = $ien2[$n1];
+			$ien3z = $ien3[$n1];
+			$kp1z = $kp1[$n1];
+			$kp2z = $kp2[$n1];
+			$kp3z = $kp3[$n1];
+			$kp4z = $kp4[$n1];
+			$kp5z = $kp5[$n1];
+			$kp6z = $kp6[$n1];
+//		
 //	Loop 2	
 			$n2 = $n1 + 1;
 			while($n2 <= $max) {
@@ -2764,45 +2929,45 @@ else
 				$halv = 0;
 				$plus = ' ';
 //	Individerna har olika kön					
-				if($isex[$n1] != '') {
+				if($isexz != '') {
 					if($isex[$n2] != '') {
-						if($isex[$n1] != $isex[$n2]) {
+						if($isexz != $isex[$n2]) {
 							$neg++;
 						}		
 					}
 				}
 //	Båda har barnfamilj och dessutom samma familj (syskon)					
-				if($fmc[$n1] != '') {
+				if($fmcz != '') {
 					if($fmc[$n2] != '') {
-						if($fmc[$n1] == $fmc[$n2]) {
+						if($fmcz == $fmc[$n2]) {
 							$plus = '-';
 							$neg++;
 						}		
 					}
 				}
 //	Boost					
-				if(($ifd[$n1] != '') && (strlen($ifd[$n1]) == 8)) {
+				if(($ifdz != '') && (strlen($ifdz) == 8)) {
 					if($ifd[$n2] != '') {
-						if($ifd[$n1] == $ifd[$n2]) {
+						if($ifdz == $ifd[$n2]) {
 							$bon++;
 						}
 					}
 				}
-				if($ifd1[$n1] != '') {
+				if($ifd1z != '') {
 					if($ifd1[$n2] != '') {
 						$ant++;
-						if($ifd1[$n1] == $ifd1[$n2]) {
+						if($ifd1z == $ifd1[$n2]) {
 							$pos++;
 						}
 						else {
 							$neg++;
-							if($ifd1[$n1] < $ifd1[$n2]) {
-								if(($ifd1[$n1] + 10) < $ifd1[$n2]) {
+							if($ifd1z < $ifd1[$n2]) {
+								if(($ifd1z + 10) < $ifd1[$n2]) {
 									$neg++;
 								}
 							}	
 							else {
-								if(($ifd1[$n2] + 10) < $ifd1[$n1]) {
+								if(($ifd1[$n2] + 10) < $ifd1z) {
 									$neg++;
 								}
 							}
@@ -2810,17 +2975,17 @@ else
 					}
 				}
 //	Bryt om ett dödår är mindre än det andra födelseåret
-				if($ifd1[$n1] != '') {
+				if($ifd1z != '') {
 					if($idd1[$n2] != '') {
-						if($idd1[$n2] < $ifd1[$n1]) {
+						if($idd1[$n2] < $ifd1z) {
 							$neg++;
 							$neg++;
 						}
 					}
 				}
 				if($ifd1[$n2] != '') {
-					if($idd1[$n1] != '') {
-						if($idd1[$n1] < $ifd1[$n2]) {
+					if($idd1z != '') {
+						if($idd1z < $ifd1[$n2]) {
 							$neg++;
 							$neg++;
 						}
@@ -2830,29 +2995,29 @@ else
 				if($neg < 2){
 //						
 //	Boost					
-					if(($idd[$n1] != '') && (strlen($idd[$n1]) == 8)) {
+					if(($iddz != '') && (strlen($iddz) == 8)) {
 						if($idd[$n2] != '') {
-							if($idd[$n1] == $idd[$n2]) {
+							if($iddz == $idd[$n2]) {
 								$bon++;
 							}
 						}
 					}
 //						
-					if($idd1[$n1] != '') {
+					if($idd1z != '') {
 						if($idd1[$n2] != '') {
 							$ant++;
-							if($idd1[$n1] == $idd1[$n2]) {
+							if($idd1z == $idd1[$n2]) {
 								$pos++;
 							}
 							else {
 								$neg++;
-								if($idd1[$n1] < $idd1[$n2]) {
-									if(($idd1[$n1] + 10) < $idd1[$n2]) {
+								if($idd1z < $idd1[$n2]) {
+									if(($idd1z + 10) < $idd1[$n2]) {
 										$neg++;
 									}
 								}	
 								else {
-									if(($idd1[$n2] + 10) < $idd1[$n1]) {
+									if(($idd1[$n2] + 10) < $idd1z) {
 										$neg++;
 									}
 								}
@@ -2864,11 +3029,11 @@ else
 //						
 //	Boost		
 						$ntest = 0;
-						if($ifn[$n1] != '') {
+						if($ifnz != '') {
 							if($ifn[$n2] != '') {
-								if($ifn[$n1] == $ifn[$n2]) {
+								if($ifnz == $ifn[$n2]) {
 									$bon++;
-									if($ifn[$n1] != $ifn1[$n1]) {
+									if($ifnz != $ifn1z) {
 										$bon++;
 									}	
 									$ntest++;
@@ -2876,55 +3041,55 @@ else
 							}
 						}
 //						
-						if($ifn1[$n1] != '') {
+						if($ifn1z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn1[$n1] == $ifn1[$n2]) || ($ifn1[$n1] == $ifn2[$n2]) || ($ifn1[$n1] == $ifn3[$n2])
-								 || ($ifn1[$n1] == $ifn4[$n2]) || ($ifn1[$n1] == $ifn5[$n2]) ) {
+								if(($ifn1z == $ifn1[$n2]) || ($ifn1z == $ifn2[$n2]) || ($ifn1z == $ifn3[$n2])
+								 || ($ifn1z == $ifn4[$n2]) || ($ifn1z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}	
 						}
 //						
-						if($ifn2[$n1] != '') {
+						if($ifn2z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn2[$n1] == $ifn1[$n2]) || ($ifn2[$n1] == $ifn2[$n2]) || ($ifn2[$n1] == $ifn3[$n2])
-								 || ($ifn2[$n1] == $ifn4[$n2]) || ($ifn2[$n1] == $ifn5[$n2]) ) {
+								if(($ifn2z == $ifn1[$n2]) || ($ifn2z == $ifn2[$n2]) || ($ifn2z == $ifn3[$n2])
+								 || ($ifn2z == $ifn4[$n2]) || ($ifn2z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn3[$n1] != '') {
+						if($ifn3z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn3[$n1] == $ifn1[$n2]) || ($ifn3[$n1] == $ifn2[$n2]) || ($ifn3[$n1] == $ifn3[$n2])
-								 || ($ifn3[$n1] == $ifn4[$n2]) || ($ifn3[$n1] == $ifn5[$n2]) ) {
+								if(($ifn3z == $ifn1[$n2]) || ($ifn3z == $ifn2[$n2]) || ($ifn3z == $ifn3[$n2])
+								 || ($ifn3z == $ifn4[$n2]) || ($ifn3z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn4[$n1] != '') {
+						if($ifn4z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn4[$n1] == $ifn1[$n2]) || ($ifn4[$n1] == $ifn2[$n2]) || ($ifn4[$n1] == $ifn3[$n2])
-								 || ($ifn4[$n1] == $ifn4[$n2]) || ($ifn4[$n1] == $ifn5[$n2]) ) {
+								if(($ifn4z == $ifn1[$n2]) || ($ifn4z == $ifn2[$n2]) || ($ifn4z == $ifn3[$n2])
+								 || ($ifn4z == $ifn4[$n2]) || ($ifn4z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
 							}
 						}
 //					
-						if($ifn5[$n1] != '') {
+						if($ifn5z != '') {
 							if($ifn1[$n2] != '') {
 								$ant++;
-								if(($ifn5[$n1] == $ifn1[$n2]) || ($ifn5[$n1] == $ifn2[$n2]) || ($ifn5[$n1] == $ifn3[$n2])
-								 || ($ifn5[$n1] == $ifn4[$n2]) || ($ifn5[$n1] == $ifn5[$n2]) ) {
+								if(($ifn5z == $ifn1[$n2]) || ($ifn5z == $ifn2[$n2]) || ($ifn5z == $ifn3[$n2])
+								 || ($ifn5z == $ifn4[$n2]) || ($ifn5z == $ifn5[$n2]) ) {
 									$pos++;
 									$ntest++;
 								}
@@ -2936,10 +3101,10 @@ else
 //			
 						if($neg < 2) {
 //						
-							if($ifd2[$n1] != '') {
+							if($ifd2z != '') {
 								if($ifd2[$n2] != '') {
 									$ant++;
-									if($ifd2[$n1] == $ifd2[$n2]) {
+									if($ifd2z == $ifd2[$n2]) {
 										$pos++;
 									}
 									else {
@@ -2948,10 +3113,10 @@ else
 								}
 							}
 //						
-							if($ifd3[$n1] != '') {
+							if($ifd3z != '') {
 								if($ifd3[$n2] != '') {
 									$ant++;
-									if($ifd3[$n1] == $ifd3[$n2]) {
+									if($ifd3z == $ifd3[$n2]) {
 										$pos++;
 									}
 									else {
@@ -2960,10 +3125,10 @@ else
 								}
 							}
 //						
-							if($ifp[$n1] != '') {
+							if($ifpz != '') {
 								if($ifp[$n2] != '') {
 									$ant++;
-									if($ifp[$n1] == $ifp[$n2]) {
+									if($ifpz == $ifp[$n2]) {
 										$pos++;
 									}
 									else {
@@ -2975,10 +3140,10 @@ else
 //			
 							if($neg < 2) {
 //						
-								if($idd2[$n1] != '') {
+								if($idd2z != '') {
 									if($idd2[$n2] != '') {
 										$ant++;
-										if($idd2[$n1] == $idd2[$n2]) {
+										if($idd2z == $idd2[$n2]) {
 											$pos++;
 										}
 										else {
@@ -2987,10 +3152,10 @@ else
 									}
 								}
 //						
-								if($idd3[$n1] != '') {
+								if($idd3z != '') {
 									if($idd3[$n2] != '') {
 										$ant++;
-										if($idd3[$n1] == $idd3[$n2]) {
+										if($idd3z == $idd3[$n2]) {
 											$pos++;
 										}
 										else {
@@ -2999,10 +3164,10 @@ else
 									}
 								}
 //						
-								if($idp[$n1] != '') {
+								if($idpz != '') {
 									if($idp[$n2] != '') {
 										$ant++;
-										if($idp[$n1] == $idp[$n2]) {
+										if($idpz == $idp[$n2]) {
 											$pos++;
 										}
 										else {
@@ -3015,11 +3180,11 @@ else
 								if($neg < 2) {
 //	Boost				
 									$ntest = 0;
-									if($ien[$n1] != '') {
+									if($ienz != '') {
 										if($ien[$n2] != '') {
-											if($ien[$n1] == $ien[$n2]) {
+											if($ienz == $ien[$n2]) {
 												$bon++;
-												if($ien[$n1] != $ien1[$n1]) {
+												if($ienz != $ien1z) {
 													$bon++;
 												}	
 												$ntest++;
@@ -3027,30 +3192,30 @@ else
 										}
 									}
 //						
-									if($ien1[$n1] != '') {
+									if($ien1z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien1[$n1] == $ien1[$n2]) || ($ien1[$n1] == $ien2[$n2]) || ($ien1[$n1] == $ien3[$n2])) {
+											if(($ien1z == $ien1[$n2]) || ($ien1z == $ien2[$n2]) || ($ien1z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
 										}
 									}
 //						
-									if($ien2[$n1] != '') {
+									if($ien2z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien2[$n1] == $ien1[$n2]) || ($ien2[$n1] == $ien2[$n2]) || ($ien2[$n1] == $ien3[$n2])) {
+											if(($ien2z == $ien1[$n2]) || ($ien2z == $ien2[$n2]) || ($ien2z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
 										}
 									}
 //						
-									if($ien3[$n1] != '') {
+									if($ien3z != '') {
 										if($ien1[$n2] != '') {
 											$ant++;
-											if(($ien3[$n1] == $ien1[$n2]) || ($ien3[$n1] == $ien2[$n2]) || ($ien3[$n1] == $ien3[$n2])) {
+											if(($ien3z == $ien1[$n2]) || ($ien3z == $ien2[$n2]) || ($ien3z == $ien3[$n2])) {
 												$pos++;
 											}
 											$ntest++;
@@ -3060,49 +3225,49 @@ else
 										$halv++;
 									}
 //	Boost					
-									if($kp1[$n1] != '') {
+									if($kp1z != '') {
 										if($kp1[$n2] != '') {
-											if(($kp1[$n1] == $kp1[$n2]) && (strlen($ifd[$n1]) == 8)) {
+											if(($kp1z == $kp1[$n2]) && (strlen($ifdz) == 8)) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp2[$n1] != '') {
+									if($kp2z != '') {
 										if($kp2[$n2] != '') {
-											if(($kp2[$n1] == $kp2[$n2]) && (strlen($idd[$n1]) == 8)) {
+											if(($kp2z == $kp2[$n2]) && (strlen($iddz) == 8)) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp3[$n1] != '') {
+									if($kp3z != '') {
 										if($kp3[$n2] != '') {
-											if($kp3[$n1] == $kp3[$n2]) {
+											if($kp3z == $kp3[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp4[$n1] != '') {
+									if($kp4z != '') {
 										if($kp4[$n2] != '') {
-											if($kp4[$n1] == $kp4[$n2]) {
+											if($kp4z == $kp4[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp5[$n1] != '') {
+									if($kp5z != '') {
 										if($kp5[$n2] != '') {
-											if($kp5[$n1] == $kp5[$n2]) {
+											if($kp5z == $kp5[$n2]) {
 												$bon++;
 											}
 										}
 									}
 //	Boost					
-									if($kp6[$n1] != '') {
+									if($kp6z != '') {
 										if($kp6[$n2] != '') {
-											if($kp6[$n1] == $kp6[$n2]) {
+											if($kp6z == $kp6[$n2]) {
 												$bon++;
 											}
 										}
@@ -3110,23 +3275,23 @@ else
 //	Tolka betydelsen av familj FAMC 
 //					
 //	Båda har barmfamilj men olika familjer
-									if($fmc[$n1] != '') {
+									if($fmcz != '') {
 										if($fmc[$n2] != '') {
-											if($fmc[$n1] != $fmc[$n2]) {
+											if($fmcz != $fmc[$n2]) {
 												$plus = '?';
 												$halv++;
 											}
 										}
 									}
 //	En saknar barnfamilj (mor/dotter - far/som)					
-									if($fmc[$n1] != '') {
+									if($fmcz != '') {
 										if($fmc[$n2] == '') {
 											$plus = '+';
 											$bon++;
 										}
 									}
 //	En saknar barnfamilj (mor/dotter - far/som)					
-									if($fmc[$n1] == '') {
+									if($fmcz == '') {
 										if($fmc[$n2] != '') {
 											$plus = '+';
 											$bon++;
@@ -3161,7 +3326,7 @@ else
 							}
 //
 							$fellista[]="Poäng = ".$tots."(".$plus.") Jämför:"
-							.$num[$n1].", ".$nrad[$n1].", ".$drad[$n1].", ".$prad[$n1]." med:"
+							.$numz.", ".$nradz.", ".$dradz.", ".$pradz." med:"
 							.$num[$n2].", ".$nrad[$n2].", ".$drad[$n2].", ".$prad[$n2];
 							$kant++;
 						}
@@ -3176,6 +3341,12 @@ else
 //
 		if($kant > 0) {
 //
+//	Disgen Ask
+			if($dg == 'JA') {
+				$handu2=fopen($fileu2,"w");
+				fwrite($handu2,$stig."\r\n");
+			}
+//	Ask end			
 			$fellista=array_unique($fellista);
 			rsort($fellista);
 			$kant = 0;
@@ -3185,26 +3356,91 @@ else
 				$xlen = 0;
 				$xant = 0;
 				$xblock = '';
+//	Disgen Ask
+				$yblk1 = '';
+				$yblk2 = '';
+				$yblk3 = '';
+				$yblock = '';
+//	Ask end				
 				$xlen = strlen($felrad);
 				while($xant <= $xlen) {
 					$xtkn = substr($felrad,$xant,1);
 					if($xtkn == ':') {
 						$xblock = $xblock.$xtkn;
-//						echo $xblock."<br/>";
+//echo $xblock."<br/>";
 						fwrite($handut,$xblock." \r\n");
 						$xblock = '';
 					}
 					else {
+//	Disgen Ask
+						if($xtkn == '(') {
+							if($yblk1 == '') {
+								$yblk1 = substr($xblock,9,1);
+							}
+						}
+						if($xtkn == ',') {
+							if($yblk2 == '') {
+								$ylen = strlen($xblock);
+								$yblk2 = substr($xblock,1,$ylen);
+							}
+						}
+//	Ask end
 						$xblock = $xblock.$xtkn;
 					}
 					$xant++;
 				}
-//				echo $xblock."<br/>";
-//				echo "<br/>";
+//	Disgen Ask
+//echo $xblock."<br/>";
+				$xlen = 0;
+				$xant = 1;
+				$xlen = strlen($xblock);
+				while($xant <= $xlen) {
+					$xtkn = substr($xblock,$xant,1);
+					if($xtkn == ',') {
+							$xant = $xlen;
+					}
+					else {
+						$yblk3 = $yblk3.$xtkn;
+					}
+					$xant++;
+				}
+//	Disgen Ask
+							$toty = $yblk1 + 11;
+							if($toty == 14) {
+								$toty++;
+							}
+							if($toty == 13) {
+								$toty++;
+							}
+							if($toty == 12) {
+								$toty++;
+								$toty++;
+							}
+//	Ask end			
+				$yblock = $toty.','.$yblk2.','.$yblk3;
+/*
+echo "<br/>";
+echo "1 /".$yblk1."/ <br/>";
+echo "1 /".$toty."/ <br/>";
+echo "2 /".$yblk2."/ <br/>";
+echo "3 /".$yblk3."/ <br/>";
+echo $yblock."<br/>";
+echo "<br/>";
+*/
+				if($dg == 'JA') {
+					fwrite($handu2,$yblock."\r\n");
+					$yblock = '';
+				}
+//	Ask end
 				fwrite($handut,$xblock." \r\n");
 				fwrite($handut," \r\n");
 				$xblock = '';
 			}
+// Disgen Ask
+			if($dg == 'JA') {
+				fclose($handu2);
+			}
+//	Ask end
 			echo "<br/>";
 			if($kant > 1) {
 				echo "Bearbetningen sökte fram ".$kant." dubblettkandidater <br/>";
@@ -3237,7 +3473,6 @@ else
 			fwrite($handut,"Förutom dubbletter, kan stora likheter även vara en ");
 			fwrite($handut,"larmsignal för andra typer av felaktigheter. \r\n");
 			fwrite($handut," \r\n");
-
 		}
 		else {
 			echo "<br/>";
@@ -3247,7 +3482,6 @@ else
 			fwrite($handut,"Inga kandidater hittade, sökningen avslutad. \r\n");
 		}
 	fclose($handut);
-//
 	}
 //**** extra fixen
 	}

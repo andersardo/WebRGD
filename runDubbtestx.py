@@ -27,3 +27,5 @@ except OSError as e:
     os.system('echo "dubbtstx OSError= '+str(e)+'\n" > UtvidgadDubblett.txt')
 print 'Time:',time.time() - t0
 print 'Resultat i <a href="/getFile?fil='+workdir+'/'+dbName.split('_', 1)[1]+u'/RGDXL.txt" target="_blank">RGDXL.txt</a>'
+if os.path.isfile('./DgDub.txt'):
+    print '<b><a href="/getFile?fil='+workdir+'/'+dbName.split('_', 1)[1]+u'/DgDub.txt" target="_blank">DgDub.txt</a> - Dubblett s&ouml;kning</b> Fil till DISGEN<br>'
