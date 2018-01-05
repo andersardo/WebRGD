@@ -119,4 +119,5 @@ def listOldLogs( user, database ):
         break
     zipf.close()
     mess += '<a href="/getFile?fil='+'./files/'+user+'/'+db+'/Logs.zip'+'">All logs as zip-archive</a><br>'
+    mess += '<a href="/getFile?fil='+'./files/'+user+'/'+db+'/DgDub.txt'+'">Dubblettfil till DISGEN</a><br>'
     return mess
