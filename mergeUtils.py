@@ -59,6 +59,7 @@ def mergeEvent(events):
         else: break
     ev = mergeEventLongest(mergeEvents)
     ev['quality'] = mergeEvents[0]['quality']
+    ev['tag'] = mergeEvents[0]['tag']
     return ev
 
 def mergeOrgDataPers(personUid, personDB, originalDataDB):
@@ -75,11 +76,18 @@ def mergeOrgDataPers(personUid, personDB, originalDataDB):
         if field in rawData:
             persDict[field] = mergeSimple(rawData[field])
     #events
-    for ev in ('birth', 'death'):
-        try:
-            persDict[ev] = mergeEvent(rawData[ev])
-        except:
-            pass  #KOLLA tomma events ska finnas i DB
+    events = defaultdict(list)
+    for evTyp in ('birth', 'death'):
+        for ev in rawData[evTyp]:
+            events[ev['tag']].append(ev)
+    if 'BIRT' in events:
+        persDict['birth'] = mergeEvent(events['BIRT'])
+    elif 'CHR' in events:
+        persDict['birth'] = mergeEvent(events['CHR'])
+    if 'DEAT' in events:
+        persDict['death'] = mergeEvent(events['DEAT'])
+    elif 'BURI' in events:
+        persDict['death'] = mergeEvent(events['BURI'])
     return persDict
 
 def mergeOrgDataFam(recordid, families, originalDataDB):
@@ -89,7 +97,7 @@ def mergeOrgDataFam(recordid, families, originalDataDB):
     rawdataMar = []
     famDict = {}
     for uid in reverseFmap[recordid]:
-        orgRec = originalDataDB.find_one({'recordId': uid}) # evt 'type': 'person'?
+        orgRec = originalDataDB.find_one({'recordId': uid}) # evt 'type': 'family'?
         if 'marriage' in orgRec['data'][0]['record']:    #KOLLA - finns fler records i listan
             rawdataMar.append(orgRec['data'][0]['record']['marriage'])
     try:

@@ -275,7 +275,7 @@ for ind in config['persons'].find({}):
     try: birth[ind['_id']] = ind['birth']['date']
     except:  birth[ind['_id']] = 0
     for ev in ('birth', 'death'):
-        if ev in ind:
+        if ev in ind and ind[ev]['tag'] in ('BIRT', 'DEAT'):
             if 'date' in ind[ev] or 'place' in ind[ev] or 'source' in ind[ev]:
                 print "1", mapGedcom[ev]
                 for item in ('date', 'place', 'source'):

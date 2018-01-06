@@ -112,18 +112,22 @@ def pers_dict(p):
        pers['sex'] = 'O'
    if p.birth():
       pers['birth'] = _handleEvent(p.birth())
+      pers['birth']['tag'] = 'BIRT'
    else:
        ###extend by using CHR event if no BIRT available
        for ev in p.other_events:
            if ev.tag == 'CHR':
                pers['birth'] = _handleEvent(ev)
+               pers['birth']['tag'] = 'CHR'
    if p.death():
       pers['death']= _handleEvent(p.death())
+      pers['death']['tag'] = 'DEAT'
    else:
        ###extend by using BURI event if no DEAT available
        for ev in p.other_events:
            if ev.tag == 'BURI':
                pers['death'] = _handleEvent(ev)
+               pers['death']['tag'] = 'BURI'
    return pers
 
 def fam_dict(fam):
