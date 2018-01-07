@@ -150,6 +150,7 @@ def fam_dict(fam):
    try:
        if fam.marriage():
            familj['marriage'] = _handleEvent(fam.marriage())
+           familj['marriage']['tag'] = 'MARR'
    except:
        pass
    return (familj,relations)

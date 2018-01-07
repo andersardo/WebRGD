@@ -201,7 +201,8 @@ for s in d.values():
               config['relations'].remove({'_id': ids['uniqueIds'][1]})
 
       #merge all marriage events
-      config['families'].update_one({'_id': F['_id']}, {'$set':
+      if marrEvents:
+          config['families'].update_one({'_id': F['_id']}, {'$set':
                                               {'marriage': mergeEvent(marrEvents)}})
 #SAVE Fmap
 if FmapChange: config['originalData'].insert_one({'type': 'Fmap', 'data': pickle.dumps(Fmap)})
