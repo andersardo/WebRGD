@@ -47,6 +47,7 @@ Visa information<input type="radio" name="action" value="info" checked="checked"
 <p><input type="submit" value="GO" />
 </form>
 
+<!--
 <h2>Databas debug</h2>
 <p>
 <form action="/DBdebug" method="GET">
@@ -93,6 +94,7 @@ dbII familj:
 
 </ul>
 %end
+-->
 
 </body>
 </html>
