@@ -99,6 +99,7 @@ def cleanUp(activeUser, dir):
 
 
 def listOldLogs( user, database ):
+    if not database: return "Ingen databas vald<br>"
     import zipfile
     mess = 'Logfiler ' + database + "<br>\n"
     (tmp, db) = database.split('_', 1)
