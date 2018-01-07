@@ -263,3 +263,7 @@ from luceneUtils import setupDir, index
 setupDir(dbName)
 index(config['persons'],config['families'],config['relations'])
 logging.info('Time %s',time.time() - t0)
+#stats
+antPers = config['persons'].find().count()
+antFam = config['families'].find().count()
+logging.info('STATS:: Imported persons: %d, families %d', antPers, antFam)
