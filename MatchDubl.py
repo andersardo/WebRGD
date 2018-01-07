@@ -42,16 +42,16 @@ try:
     #while testing - FIX so that kdublTmp is not needed.
     for (key, val) in kdublTmp.iteritems():
         (id1,id2) = key.split(';')
-        kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])] = {}
-        kdubl[';'.join(['gedcom_'+id1,'gedcom_'+id2])]['XL'] = val
+        kdubl[';'.join([id1,id2])] = {}
+        kdubl[';'.join([id1,id2])]['XL'] = val
     maxks = max(kdublTmp.values())
     if maxks == 0: maxks = 1
     minks = min(kdublTmp.values())
     print 'Hittat', len(kdubl), 'kandidater i dbxl.dat'
 except Exception, e:
-    maxks = 1 
+    maxks = 1
     minks = 0
-    print 'Cant find the file', dbName.split('_',1)[1]+'/dbxl.dat'
+    print 'Hittar inte filen:', dbName.split('_',1)[1]+'/dbxl.dat'
 
 #KOLLA imports
 import common
@@ -117,30 +117,50 @@ def nodeSimQ(p1,p2):
         return (0, 0.0)
 
 def haveChild(pid):
-    if fam_list.find({'children': pid}).count() > 0: return True
-    else: return False
+    #if fam_list.find({'children': pid}).count() > 0: return True  #Testar fel?
+    #else: return False
+    for fam in config['relations'].find({'persId': pid}):
+        if ( (fam['relTyp'] in ('husb', 'wife')) and
+             config['relations'].find_one({'relTyp': 'child', 'famId': fam['famId']}) ):
+            return True
+    return False
+
 
 def haveParent(pid):
-    if fam_list.find({'$or': [{'husb': pid}, {'wife': pid}]}).count() > 0:
+    #if fam_list.find({'$or': [{'husb': pid}, {'wife': pid}]}).count() > 0:  #Testar fel?
+    #    return True
+    #else: return False
+    if config['relations'].find_one({'relTyp': 'child', 'persId': pid}):
         return True
-    else: return False
+    return False
 
-def commonParents(p1,p2):
-    p1F = fam_list.find_one({'children': p1})
+
+def commonParents(p1, p2):
+    #p1F = fam_list.find_one({'children': p1})
+    p1F = config['relations'].find_one({'relTyp': 'child', 'persId': p1})
     if not p1F: return 0
-    p2F = fam_list.find_one({'children': p2})
+    #p2F = fam_list.find_one({'children': p2})
+    p2F = config['relations'].find_one({'relTyp': 'child', 'persId': p2})
     if not p2F: return 0
     ant = 0
     for p in ('husb', 'wife'):
-        if (p in p1F) and (p in p2F):
-            if p1F[p] == p2F[p]: ant += 1
+        F1 = config['relations'].find_one({'relTyp': p, 'famId': p1F['famId']})
+        F2 = config['relations'].find_one({'relTyp': p, 'famId': p2F['famId']})
+        if F1 and F2 and F1['persId']==F2['persId']: ant += 1
     return ant
 
-def sameFamily(p1,p2):
-    for fam in fam_list.find({'$or': [{'husb': p1}, {'wife': p1}]}, {'_id': 1}):
-        if fam_list.find_one({'_id': fam['_id'], 'children': p2}): return True
-    for fam in fam_list.find({'$or': [{'husb': p2}, {'wife': p2}]}, {'_id': 1}):
-        if fam_list.find_one({'_id': fam['_id'], 'children': p1}): return True
+def sameFamily(p1, p2):
+    #as p1/p2 = parent/child or child/parent
+    #for fam in fam_list.find({'$or': [{'husb': p1}, {'wife': p1}]}, {'_id': 1}):
+    #    if fam_list.find_one({'_id': fam['_id'], 'children': p2}): return True
+    for fam in config['relations'].find({'persId': p1, '$or': [{'relTyp': 'husb'}, {'relTyp': 'wife'}]}):
+        if config['relations'].find_one({'persId': p2, 'famId': fam['famId'], 'relTyp': 'child'}):
+            return True
+    #for fam in fam_list.find({'$or': [{'husb': p2}, {'wife': p2}]}, {'_id': 1}):
+    #    if fam_list.find_one({'_id': fam['_id'], 'children': p1}): return True
+    for fam in config['relations'].find({'persId': p2, '$or': [{'relTyp': 'husb'}, {'relTyp': 'wife'}]}):
+        if config['relations'].find_one({'persId': p1, 'famId': fam['famId'], 'relTyp': 'child'}):
+            return True
     return False
 
 def birthDateOK(p1, p2, limit):
@@ -165,7 +185,7 @@ for p in person_list.find().batch_size(50):
     ptid = (time.time() - t0)/pant
 #    print 'Time:',time.time() - t0, pant, ptid, p['refId'],p['name']
 
-    matchtxt = mt_tmp.matchtextPerson(p, person_list, fam_list)
+    matchtxt = mt_tmp.matchtextPerson(p, person_list, fam_list, config['relations'])
     #Ta bort * och ? från matchtxt? KOLLA
     if not matchtxt:
         print 'No matchtextdata',p['_id'],p['refId']
@@ -177,10 +197,10 @@ for p in person_list.find().batch_size(50):
             matches.insert({'workid': p['_id'], 'matchid': p['_id'], 'status': 'EjOK'})
             continue
 #Dont match A->B and B->A
-        key = str(p['_id'])+':'+str(candId)
+        key = p['_id']+':'+candId
         if key in done: continue
         done.append(key)
-        key = str(candId)+':'+str(p['_id'])
+        key = candId+':'+p['_id']
         if key in done: continue
         done.append(key)
         #ingen förälder gemensam
