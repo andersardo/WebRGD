@@ -83,7 +83,7 @@ dbII familj:
 <li>Ändra lösenord
       <form action="reset_password" method="post" name="password_reset">
           <!--Användarnamn: <input type="text" name="username"
-          value=""/>-->
+          value=""/>
 	  <input type="hidden" name="username" value="{{user}}" />
           Email: <input type="text" name="email_address" value=""/>
 
