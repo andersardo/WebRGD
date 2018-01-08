@@ -61,7 +61,7 @@ Ger som resultat valideringslistor (textfiler <!-- - per mail om så önskas-->)
 <li> Skapa temporär databas för matchning
 </ol>
 <form enctype="multipart/form-data" action="/workflow/combined" method="POST">
-Ange var GEDCOM filen finns genom att anväda bläddra-funktionen:
+Ange var GEDCOM filen finns genom att använda bläddra-funktionen:
 <input name="gedcomfile" type="file" />
 
 <!--
