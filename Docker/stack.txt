@@ -1,7 +1,0 @@
-  233  sudo docker run --name rgdmysql -e MYSQL_ROOT_PASSWORD=rgddev -d mysql
-  237  sudo docker run --name rgdmongo -d mongo
-  238  sudo docker ps
-  256  sudo docker run -it --link rgdmysql:mysql --rm mysql sh -c 'exec mysql -h"$MYSQL_PORT_3306_TCP_ADDR" -P"$MYSQL_PORT_3306_TCP_PORT" -uroot -p"$MYSQL_ENV_MYSQL_ROOT_PASSWORD"'
-
-#INIT MYSQL RGDindatavalid
-  296  sudo docker run --name rgdmysql -v `pwd`/sqlinit:/docker-entrypoint-initdb.d -e MYSQL_ROOT_PASSWORD=rgddev -d mysql
