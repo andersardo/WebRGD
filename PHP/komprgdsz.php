@@ -671,11 +671,16 @@ echo '***** Borde vara utskriven i tidigare skede <br/>';
 		echo "<br/>";
 		echo "Församlingar på: ".(int)($pant/$tant*100+0.5)."% av F-V-D händelser <br/>";
 		echo "<br/>";
-		echo "Med angivna källor: ".$sant." (".(int)($sant/$tant*100+0.5)."%) <br/>";
-		echo "Identifierade originalkällor ".$gant." (".(int)($gant/$sant*100+0.5)."%) <br/>";
-		echo "Övriga sekundära kyrkbokskällor ".$kant." (".(int)($kant/$sant*100+0.5)."%) <br/>";
-		echo "Övriga sekundära noterade källor ".$xant." (".(int)($xant/$sant*100+0.5)."%) <br/>";
-		echo "Övriga oidentifierade källor ".$zant." (".(int)($zant/$sant*100+0.5)."%) <br/>";
+		if($sant > 0) {
+			echo "Med angivna källor: ".$sant." (".(int)($sant/$tant*100+0.5)."%) <br/>";
+			echo "Identifierade originalkällor ".$gant." (".(int)($gant/$sant*100+0.5)."%) <br/>";
+			echo "Övriga sekundära kyrkbokskällor ".$kant." (".(int)($kant/$sant*100+0.5)."%) <br/>";
+			echo "Övriga sekundära noterade källor ".$xant." (".(int)($xant/$sant*100+0.5)."%) <br/>";
+			echo "Övriga oidentifierade källor ".$zant." (".(int)($zant/$sant*100+0.5)."%) <br/>";
+		}
+		else {
+			echo 'Källor saknas <br/>';
+		}
 		echo "<br/>";
 		echo "Filen ".$fileut." har skapats <br/>";
 		echo "<br/>";

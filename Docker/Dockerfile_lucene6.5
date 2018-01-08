@@ -4,9 +4,9 @@ MAINTAINER Anders Ardo (anders.ardo@gmail.com)
 
 ENV DEBIAN_FRONTEND noninteractive
 
-# MongoDB 3.4
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
-RUN echo "deb http://repo.mongodb.org/apt/debian jessie/mongodb-org/3.4 main" | tee /etc/apt/sources.list.d/mongodb-org-3.4.list
+# MongoDB 3.6
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
+RUN echo "deb http://repo.mongodb.org/apt/debian jessie/mongodb-org/3.6 main" | tee /etc/apt/sources.list.d/mongodb-org-3.6.list
 # For java openjdk-8
 RUN echo "deb http://debian.lth.se/debian jessie-backports main contrib non-free" | tee /etc/apt/sources.list.d/jessie-backports.list
 
@@ -56,18 +56,20 @@ RUN make
 RUN make install
 
 WORKDIR /
-# Skapa MySQL databas som används av PHP-programmet för 
-# indatavalidering.
-COPY RGDindatavalid.sql ./RGDindatavalid.sql
-COPY SQLsetup.sql ./SQLsetup.sql
-RUN service mysql start && mysql --user=root --password=rgd < SQLsetup.sql
-
 #version of svmutils 3.12-1 without annoying print
 COPY svmutil.py /usr/share/pyshared/svmutil.py
 
-#starts everything
+#startup everything
 COPY supervisorRGD.conf /etc/supervisor/conf.d/openRGD.conf
+
+# Skapa MySQL databas som används av PHP-programmet för
+# indatavalidering.
+COPY RGDindatavalid.sql ./RGDindatavalid.sql
+COPY SQLsetup.sql ./SQLsetup.sql
+#RUN chown -R mysql.mysql /var/lib/mysql*
+RUN find /var/lib/mysql -type f -exec touch {} \; \
+    && service mysql start \
+    && mysql --user=root --password=rgd < SQLsetup.sql
 
 EXPOSE 8085
 ENTRYPOINT /bin/bash
-

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta content="text/html; charset=utf-8" http-equiv="content-type">
-  <title>openRGD</title>
+  <title>TEST openRGD</title>
 </head>
 <body>
 <div id="hbox">
@@ -21,14 +21,19 @@
   </div>
 <div class="info">
 <p>&nbsp;
-<b>openRGD version 1.0</b><p>&nbsp;<br>
+<b>TEST openRGD version 2.0</b><p>&nbsp;<br>
 Detta är openRGDs Web-tjänster - logga in som "guest" utan lösenord för att prova
   systemet. OBS filer för "guest" sparas inte mellan sessioner.
 <br><br>
 För att skapa ett personligt konto, kontakta <a href="mailto:carl-johan.gustafsson@telia.com">Carl-Johan Gustavsson</a> och glöm inte att skicka med ditt medlemsnummer i DIS.
+<br>
+Notera att varken GEDCOM fil eller resultat i openRGD är synligt för någon annan
+än ni själva. Är ni inloggade som guest tas alla uppgifter bort automatiskt,
+efter att ni loggat ut. Har ni personligt konto sköter ni borttaget själva i
+funktionen “Visa lagrad information”.
 
 <p><hr><p>
-Note - the UI is in Swedish.<br>
+Note - the UI is in Swedish.
 This is the top openRGD page - login as "guest" with no password if you dont
   have an account.
 Files for guests are not saved.
@@ -37,6 +42,9 @@ Files for guests are not saved.
 <br style="clear: left;" />
 <h4>Nyheter/Händelser/Meddelanden</h4>
 <ul>
+  <li> 2018-01-05: Ny databas-design, förbättrad matchning och sammanslagning,
+    bättre tolerans för relationsfel
+  <li> 2018-01-05: <b>Version 2.0</b><br>
   <li> 2017-05-21: Ny funktionalitet - export av alla matchade familjer
   <li> 2017-02: Förbättrad GEDCOM export
   <li> 2016-03-15: Det ser ut som openRGD nu har stabiliserats.

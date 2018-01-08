@@ -1,0 +1,57 @@
+#Created 2016-02-05 by Anders Ardo
+FROM debian:jessie
+MAINTAINER Anders Ardo (anders.ardo@gmail.com)
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# For java openjdk-8
+RUN echo "deb http://debian.lth.se/debian jessie-backports main contrib non-free" | tee /etc/apt/sources.list.d/jessie-backports.list
+
+# Några standardpaket
+RUN apt-get update && apt-get install -y \
+        locales supervisor libsvm-dev python-libsvm openssl \
+        python-setuptools python-dev gcc g++ make wget graphviz \
+        openjdk-8-jdk-headless openjdk-8-jdk \
+        openjdk-8-jre-headless openjdk-8-jre \
+        ca-certificates-java=20161107~bpo8+1 ant \
+        && wget https://bootstrap.pypa.io/get-pip.py \
+	      && python get-pip.py \
+        && pip install pymongo bottle Beaker cheroot bottle-cork openpyxl \
+        && apt-get purge -y python-setuptools wget \
+        && apt-get autoremove -y \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
+
+RUN dpkg-reconfigure locales && \
+    locale-gen C.UTF-8 && \
+    /usr/sbin/update-locale LANG=C.UTF-8
+RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen &&  locale-gen
+# Set the locale
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8
+
+#pylucene
+COPY pylucene-6.5.0-src.tar.gz ./pylucene-6.5.0-src.tar.gz
+#unpack
+RUN tar zxf ./pylucene-6.5.0-src.tar.gz
+#fix makefile
+COPY Makefile.pylucene ./pylucene-6.5.0/Makefile
+#jcc
+WORKDIR /pylucene-6.5.0/jcc
+ENV JCC_JDK /usr/lib/jvm/java-8-openjdk-amd64
+RUN python setup.py build && python setup.py install
+#pylucene
+WORKDIR /pylucene-6.5.0
+RUN make
+RUN make install
+
+#version of svmutils 3.12-1 without annoying print
+COPY svmutil.py /usr/share/pyshared/svmutil.py
+
+#starts everything
+COPY supervisorRGD.conf /etc/supervisor/conf.d/openRGD.conf
+
+EXPOSE 8085
+ENTRYPOINT /bin/bash
+

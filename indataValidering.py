@@ -63,8 +63,9 @@ if dubl:
     import subprocess
     try:
         retcode = subprocess.call("php ../../../PHP/dubbtest.php >> Log", shell=True)
-        os.system('echo "dubbtst retcode= '+str(retcode)+'\n" >> Log') 
+        os.system('echo "dubbtest retcode= '+str(retcode)+'\n" >> Log') 
         filLista.append('RGDD.txt')
+        filLista.append('DgDub.txt')
     except OSError as e:
         os.system('echo "dubbtst OSError= '+str(e)+'\n" >> Log')
 #Temporarily disabled - takes long time
@@ -91,6 +92,8 @@ if ort and os.path.isfile('./RGDO.txt'):
     print '<b><a href="/getFile?fil='+rootdir+u'/RGDO.txt" target="_blank">RGDO.txt</a> - Ortnamn / Platser som ej kunnat identifieras som f&ouml;rsamlingar i GEDCOM filen</b><br>'
 if dubl and os.path.isfile('./RGDD.txt'):
     print '<b><a href="/getFile?fil='+rootdir+u'/RGDD.txt" target="_blank">RGDD.txt</a> - Dubblett s&ouml;kning</b><br>'
+if dubl and os.path.isfile('./DgDub.txt'):
+    print '<b><a href="/getFile?fil='+rootdir+u'/DgDub.txt" target="_blank">DgDub.txt</a> - Dubblett s&ouml;kning</b> Fil till DISGEN<br>'
 if sour and os.path.isfile('./RGDK.CSV'):
     print '<b><a href="/getFile?fil='+rootdir+u'/RGDK.CSV" target="_blank">RGDK.CSV</a> - Saknade k&auml;llor</b><br>'
 
@@ -110,6 +113,8 @@ os.system('mv RGD1.GED '+os.path.basename(fn)+'_UTF8')
 os.system('mv RGD9.GED saveRGD9.GED')
 os.system('rm RGD?.GED')
 os.system('mv saveRGD9.GED RGD9.GED')
+#RGD1 used by dubbtestx
+os.system('ln '+os.path.basename(fn)+'_UTF8 RGD1.GED')
 #
 if not email: sys.exit()
 os.system('echo "Email= '+email+'\n" >> Log')

@@ -99,6 +99,7 @@ def cleanUp(activeUser, dir):
 
 
 def listOldLogs( user, database ):
+    if not database: return "Ingen databas vald<br>"
     import zipfile
     mess = 'Logfiler ' + database + "<br>\n"
     (tmp, db) = database.split('_', 1)
@@ -119,4 +120,5 @@ def listOldLogs( user, database ):
         break
     zipf.close()
     mess += '<a href="/getFile?fil='+'./files/'+user+'/'+db+'/Logs.zip'+'">All logs as zip-archive</a><br>'
+    mess += '<a href="/getFile?fil='+'./files/'+user+'/'+db+'/DgDub.txt'+'">Dubblettfil till DISGEN</a><br>'
     return mess

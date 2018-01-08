@@ -407,7 +407,11 @@ for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManu
             antFixed += 1
 logging.info('%d family matchings Manuell -> OK', antFixed)
 logging.info('Time %s',time.time() - t0)
-#for f in fam_matches.find({'workid': 'F_354430'}):
-#    print f
 logging.info('Matching All done')
-#print matches.find_one({'workid': 'P_1110398'})
+#stats
+pOK = config['matches'].find({'status': {'$in': list(common.statOK)}}).count()
+fOK = config['fam_matches'].find({'status': {'$in': list(common.statOK)}}).count()
+pMan = config['matches'].find({'status': {'$in': list(common.statManuell)}}).count()
+fMan = config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).count()
+logging.info('STATS:: Matches: %d persons, %d families; Manuell: %d persons, %d families',
+             pOK, fOK, pMan, fMan)

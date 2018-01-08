@@ -29,8 +29,13 @@ def persDisp(p):
     else:
         return ['-','-','-']
 
-def persMatchDisp(role, pm, workfamId = None, matchfamId = None):
-#FIX color dep status
+def persMatchDisp(role, pmI, workfamId = None, matchfamId = None):
+    #HACK because status of persons in database fam_match are not always updated
+    try:
+        pm = common.config['matches'].find_one({'workid': pmI['workid'], 'matchid': pmI['matchid']})
+    except:
+        pm = pmI
+    #FIX color dep status
     ignargs = {'where': 'res', 'what': '/actions/ignoreRelation', 'role': role,
                'workFam': str(workfamId), 'matchFam': str(matchfamId)}
     ign1 = ''

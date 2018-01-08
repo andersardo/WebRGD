@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # This Python file uses the following encoding: utf-8
 """
@@ -91,7 +90,7 @@ for fam in people.family_list():
     if (fam.husband()): familyMembers[str(fam)] += 1
     if (fam.wife()): familyMembers[str(fam)] += 1
 
-#UPDATE Fmap, Imap with identity maps
+#UPDATE Fmap, Imap with identity maps??
 logging.info('Persons')
 for person in people.individual_list():
     pp = pers_dict(person)
@@ -134,7 +133,10 @@ for fam in people.family_list():
         for rel in relations:
             rel['famId'] = ff['_id']
         orgData['relation'] = relations
-        config['relations'].insert_many(relations)
+        try:
+            config['relations'].insert_many(relations)
+        except:
+            pass
         orgData['recordId'] = fam.pid
         config['originalData'].insert(orgData)
 #    else: print 'SkipFam', str(fam), 'with', familyMembers[str(fam)], 'member'
@@ -150,9 +152,9 @@ from collections import defaultdict
 from mergeUtils import mergeEvent
 d = defaultdict(set)
 #generate Fmap
-Fmap = defaultdict(list)
+Fmap = defaultdict(set)
 FmapChange = False
-for F in families.find({}, {'_id': 1} ): Fmap[F['_id']].append(F['_id'])
+for F in families.find({}, {'_id': 1} ): Fmap[F['_id']].add(F['_id'])
 for husb in config['relations'].find({'relTyp': 'husb'}):
     for wife in config['relations'].find({'$and':
                         [{'famId': husb['famId']}, {'relTyp': 'wife'}]}):
@@ -179,7 +181,7 @@ for s in d.values():
           print 'Merging family %s into %s' % (fam2beMerged['_id'], FId)
 
           config['families'].delete_one({'_id': fam2beMerged['_id']})
-          Fmap[fam2beMerged['_id']] = [F['_id']]
+          Fmap[fam2beMerged['_id']] = F['_id'] #KOLLA?
           config['relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
                                                {'$or': [{'relTyp': 'husb'},
                                                         {'relTyp': 'wife'}]}
@@ -189,17 +191,18 @@ for s in d.values():
                                           {'$set': {'famId': F['_id']}})
           #remove duplicates
           for ids in config['relations'].aggregate([
-              { "$group": { 
+              { "$group": {
                   "_id": { "persId": "$persId", "relTyp": "$relTyp", 'famId': '$famId' }, 
                   "uniqueIds": { "$addToSet": "$_id" },
-                  "count": { "$sum": 1 } 
-                }}, 
+                  "count": { "$sum": 1 }
+                }},
               { "$match": { "count": { "$gt": 1 } } }
           ]):
               config['relations'].remove({'_id': ids['uniqueIds'][1]})
 
       #merge all marriage events
-      config['families'].update_one({'_id': F['_id']}, {'$set':
+      if marrEvents:
+          config['families'].update_one({'_id': F['_id']}, {'$set':
                                               {'marriage': mergeEvent(marrEvents)}})
 #SAVE Fmap
 if FmapChange: config['originalData'].insert_one({'type': 'Fmap', 'data': pickle.dumps(Fmap)})
@@ -260,3 +263,7 @@ from luceneUtils import setupDir, index
 setupDir(dbName)
 index(config['persons'],config['families'],config['relations'])
 logging.info('Time %s',time.time() - t0)
+#stats
+antPers = config['persons'].find().count()
+antFam = config['families'].find().count()
+logging.info('STATS:: Imported persons: %d, families %d', antPers, antFam)
