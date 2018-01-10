@@ -116,18 +116,13 @@ logging.info('Time %s',time.time() - t0)
 #############################################################
 #print 'Only keep families with more than 1 member'
 for fam in people.family_list():
-#Redmine 543
+#Keep all families - see Redmine 543
 #    if familyMembers[str(fam)] > 1:
         (ff, relations) = fam_dict(fam)
         orgData = { 'type': 'family', 'data': [] }
         fixGedcom(fam)
-        #DISserver
         orgData['data'].append({'contributionId': contributionId, 'record': ff,
                                 'gedcom': fam.gedcom()})
-        #New - how about merge?
-        #orgData['contributionId'] = contributionId
-        #orgData['record'] = ff
-        #orgData['gedcom'] = fam.gedcom()
         ff['_id'] = common.get_id('F')
         fam.pid = families.insert( ff )
         for rel in relations:

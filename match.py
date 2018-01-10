@@ -44,6 +44,8 @@ if featureSet:
     config['featureSet'] = featureSet
 if famfeatureSet:
     config['famfeatureSet'] = famfeatureSet
+else:
+    config['famfeatureSet'] = 'famExtended'  #Default - best performance
 
 common.config = config
 setupDir(mDBname)
@@ -74,7 +76,7 @@ for p in person_list.find({}, no_cursor_timeout=True):
     for (kid,score) in candidates:
         #do not break if little data - WORSE
         #if score < 35.0 and (len(matchtxt.split())>10): break  #breakoff score point for considering  match
-        if score < 34.0: break  #breakoff score point for considering  match
+        if score < 30.0: break  #breakoff score point for considering  match
         if (score> sc): sc = score
         candidate = match_person.find_one({'_id': kid})
         matchdata = matchPers(p, candidate, config, score)
