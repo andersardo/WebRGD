@@ -219,6 +219,16 @@ def getfile():
         f = codecs.open(fn, "r")
         mess = f.read()
         f.close()
+    elif os.path.basename(fn) == 'DgDub.txt':
+        response.add_header('Expires', '0')
+        response.add_header('Cache-Control', "must-revalidate, post-check=0, pre-check=0")
+        response.set_header('Content-Type', "application/force-download")
+        response.add_header('Content-Type', "application/download")
+        response.add_header('Content-Type', "text/plain")
+        response.add_header('Content-Disposition', 'attachment; filename=DgDub.txt')
+        f = codecs.open(fn, "r")
+        mess = f.read()
+        f.close()
 	return mess
     else:
         response.set_header('Content-Type', "text/html; charset=UTF-8")
