@@ -1,0 +1,88 @@
+Lucene6.5 max score identity search per database
+db              persons max
+kalle_demomatch 8550  296.5
+kalle_testp1   9369
+kalle_testp2   222     175.4
+kalle_testp3   9193
+kalle_testp4   11356   291.1
+kalle_testp5   22173   291.9
+vallon_A       78116   356.7
+vallon_B       38741
+
+
+Baseline med match.py
+======================
+SUMMED RESULTS
+Facit 31284.0
+matchManinFacit 20.0
+matchOKinFacit 31103.0
+matchOK 31332.0
+matchMan 105.0
+  Precision= 0.992691178348 Recall= 0.994214294847 F-score= 0.993452152804
+  fel matchade OK= 229.0 missade OK= 181.0 Tot= 410.0 ( 1.31057409538 %)
+real	57m20.216s
+user	18m10.424s
+sys	1m47.064s
+
+Tester med matchDeb.py
+======================
+A.
+No cut-off based on score
+SUMMED RESULTS
+Facit 31284.0
+matchManinFacit 30.0
+matchOKinFacit 31117.0
+matchOK 31379.0
+matchMan 226.0
+  fel matchade OK= 262.0 missade OK= 167.0 Tot= 429.0 ( 1.37130801688 %)
+
+real	98m29.375s
+user	37m16.372s
+sys	3m21.176s
+
+
+B.
+cut-off score = 34
+Use famExtended model
+SUMMED RESULTS
+Facit 31284.0
+matchManinFacit 5.0
+matchOKinFacit 31145.0
+matchOK 31361.0
+matchMan 94.0
+  fel matchade OK= 216.0 missade OK= 139.0 Tot= 355.0 ( 1.13476537527 %)
+
+real	57m52.826s
+user	18m13.048s
+sys	1m48.032s
+
+C. BÄSTA
+cut-off score = 30
+Use famExtended model
+
+SUMMED RESULTS
+Facit 31284.0
+F-score 10.2030834897
+Recall 9.97111167986
+Precision 10.772808678
+matchManinFacit 9.0
+matchOKinFacit 31152.0
+ant 11.0
+matchOK 31370.0
+matchMan 134.0
+  fel matchade OK= 218.0 missade OK= 132.0 Tot= 350.0
+
+D.
+cut-off score = 25
+Use famExtended model
+SUMMED RESULTS
+Facit 31284.0
+F-score 10.0814874427
+Recall 9.99318109284
+Precision 10.2051090538
+matchManinFacit 13.0
+matchOKinFacit 31157.0
+ant 11.0
+matchOK 31387.0
+matchMan 182.0
+  fel matchade OK= 230.0 missade OK= 127.0 Tot= 357.0 344.0 ( 1.14115841964 %)

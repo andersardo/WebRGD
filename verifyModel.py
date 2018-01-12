@@ -67,7 +67,9 @@ class Facit:
 
     def runCommand(self, cmd):
         print 'OScmd:', cmd
-        os.system(cmd)
+        r = os.system(cmd)
+        print 'Res=', r
+        return r
 
     def importGedcom(self, name, gedcomPath=None, user='anders'):
         filesUserDir = 'files/'+user
@@ -144,16 +146,19 @@ class Facit:
             #self.OK[f['type']][f['dbIgedcomID']+';'+f['dbIIgedcomID']] = 1
             self.OK[f['type']][f['dbIgedcomID'].replace('gedcom_', '')+';'+f['dbIIgedcomID'].replace('gedcom_', '')] = 1
         print 'Facit: persons=', len(self.OK['person']), 'families=', len(self.OK['family'])
+        #TEMP don't care about families
+        return
         #Fix merged families!
         wMap = {}
         mMap = {}
         map = self.config['originalData'].find_one({'type': 'Fmap'})
         if map:
             for (k,v) in pickle.loads(map['data']).iteritems():
-                if k != v[0]:
+                if k not in v:
+                    recId = next(iter(v.difference(set(k))))
                     #get refId
                     f = self.config['originalData'].find_one({'type': 'family', 'recordId': k})
-                    fMap = self.config['originalData'].find_one({'type': 'family', 'recordId': v[0]})
+                    fMap = self.config['originalData'].find_one({'type': 'family', 'recordId': recId})
                     wMap[f['data'][0]['record']['refId']] = fMap['data'][0]['record']['refId']
                     #if len(f['data'])>1: print 'wf',len(f['data'])
                     #if len(fMap['data'])>1: print 'wfMap',len(fMap['data'])
@@ -165,10 +170,11 @@ class Facit:
         map = self.config['match_originalData'].find_one({'type': 'Fmap'})
         if map:
             for (k,v) in pickle.loads(map['data']).iteritems():
-                if k != v[0]:
+                if k not in v:
+                    recId = next(iter(v.difference(set(k))))
                     #get refId
                     f = self.config['match_originalData'].find_one({'type': 'family', 'recordId': k})
-                    fMap = self.config['match_originalData'].find_one({'type': 'family', 'recordId': v[0]})
+                    fMap = self.config['match_originalData'].find_one({'type': 'family', 'recordId': recId})
                     mMap[f['data'][0]['record']['refId']] = fMap['data'][0]['record']['refId']
                     #if len(f['data'])>1: print 'mf',len(f['data'])
                     #if len(fMap['data'])>1: print 'mfMap',len(fMap['data'])
@@ -193,6 +199,8 @@ class Facit:
                 featureOpt += ' --famfeatureset ' + famFeature
             if command == 'match':
                 self.runCommand('python match.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
+            if command == 'matchDeb':
+                self.runCommand('python matchDeb.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
             elif  command == 'famMatch':
                 self.runCommand('python -m cProfile -o prof.cprof famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
                 #self.runCommand('python famMatch.py '+ featureOpt + ' '+self.dbI+' '+self.dbII)
@@ -291,6 +299,71 @@ class Facit:
         #print tmp['refId'], rgd['refId'], n, score
         if score == 0.0: return None
         return score
+
+    def getDataFacit(self):
+        """
+        Generate default feature vectors for pairs from dbI and dbII
+        Facit determines which are OK, positive examples
+        """
+        setupDir(self.dbII)  #lucene
+        res = []
+        for okPair in self.OK['person']:
+            (pI, pII) = okPair.split(';')
+            mt = self.config['matches'].find_one({'pwork.refId': pI, 'pmatch.refId': pII})
+            if mt and mt['score']:
+                res.append([mt['nodesim'], mt['familysim'], mt['cosScore'], mt['score']])
+                #print mt['nodesim'], mt['familysim'], mt['cosScore'], mt['score']
+            else:
+                p1 = self.config['persons'].find_one({'refId': pI})
+                rgdP = self.config['match_persons'].find_one({'refId': pII})
+
+                nodeScore = nodeSim(p1, rgdP)
+                pFam = getFamilyFromChild(p1['_id'], self.config['families'], self.config['relations'])
+                rgdFam = getFamilyFromChild(rgdP['_id'], self.config['match_families'], self.config['match_relations'])
+                famScore = familySim(pFam, self.config['persons'],
+                                     rgdFam, self.config['match_persons']) 
+                cand_matchtxt = self.mt_tmp.matchtextPerson(rgdP, self.config['match_persons'],
+                                                                  self.config['match_families'],
+                                                            self.config['match_relations'])
+                matchtxt = self.mt_tmp.matchtextPerson(p1, self.config['persons'],
+                                                           self.config['families'],
+                                                       self.config['relations'])
+                score = self.getLuceneScore(p1, rgdP, self.config)
+                cosScore = cos(matchtxt, cand_matchtxt)
+                res.append([nodeScore,famScore,cosScore,score])
+                #print nodeScore,famScore,cosScore,score
+        return res
+
+    def getDataMiss(self):
+        """
+        Generate default feature vectors for pairs from dbI and dbII
+        Matches not found in Facit and Manual matches define these negative examples
+        """
+        setupDir(self.dbII)  #lucene
+        res = []
+        for match in self.matches.find({'status': {'$in': list(common.statOK.union(common.statManuell))}}):
+            if match['pwork']['refId']+';'+match['pmatch']['refId'] not in self.OK['person']:
+                pI = match['pwork']['refId']
+                pII = match['pmatch']['refId']
+                p1 = match['pwork']
+                rgdP = match['pmatch']
+
+                nodeScore = nodeSim(p1, rgdP)
+                pFam = getFamilyFromChild(p1['_id'], self.config['families'], self.config['relations'])
+                rgdFam = getFamilyFromChild(rgdP['_id'], self.config['match_families'], self.config['match_relations'])
+                famScore = familySim(pFam, self.config['persons'], rgdFam,
+                                           self.config['match_persons']) 
+                cand_matchtxt = self.mt_tmp.matchtextPerson(rgdP, self.config['match_persons'],
+                                                                  self.config['match_families'],
+                                                            self.config['match_relations'])
+                matchtxt = self.mt_tmp.matchtextPerson(p1, self.config['persons'],
+                                                           self.config['families'],
+                                                       self.config['relations'])
+                cosScore = cos(matchtxt, cand_matchtxt)
+                score = self.getLuceneScore(p1, rgdP, self.config)
+                res.append([nodeScore,famScore,cosScore,score])
+                #print nodeScore,famScore,cosScore,score
+        return res
 
     def genTrainDataFacit(self):
         """
