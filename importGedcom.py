@@ -94,16 +94,12 @@ for fam in people.family_list():
 logging.info('Persons')
 for person in people.individual_list():
     pp = pers_dict(person)
-    orgData = { 'type': 'person', 'data': [] }
     fixGedcom(person)
-    #New - how about merge?
-    #orgData['contributionId'] = contributionId
-    #orgData['record'] = pp
-    #orgData['gedcom'] = person.gedcom()
     pp['_id'] = common.get_id('P')
     person.pid = persons.insert( pp )
+    orgData = { 'type': 'person', 'recordId': person.pid, 'data': [] }
     orgData['data'].append({'contributionId': contributionId, 'record': pp,
-                             'recordId': person.pid, 'gedcom': person.gedcom()})
+                             'gedcom': person.gedcom()})
     config['originalData'].insert(orgData)
     fam =  person.get_parent_families()  #Children
     if fam:
@@ -117,7 +113,6 @@ for fam in people.family_list():
 #Keep all families - see Redmine 543
 #    if familyMembers[str(fam)] > 1:
         (ff, relations) = fam_dict(fam)
-        orgData = { 'type': 'family', 'data': [] }
         fixGedcom(fam)
         ff['_id'] = common.get_id('F')
         fam.pid = families.insert( ff )
@@ -127,8 +122,8 @@ for fam in people.family_list():
             config['relations'].insert_many(relations)
         except:
             pass
+        orgData = { 'type': 'family', 'recordId': fam.pid, 'relation': relations, 'data': [] }
         orgData['data'].append({'contributionId': contributionId, 'record': ff,
-                                'recordId': fam.pid, 'relation': relations,
                                 'gedcom': fam.gedcom()})
         config['originalData'].insert(orgData)
 #    else: print 'SkipFam', str(fam), 'with', familyMembers[str(fam)], 'member'
