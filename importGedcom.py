@@ -96,16 +96,14 @@ for person in people.individual_list():
     pp = pers_dict(person)
     orgData = { 'type': 'person', 'data': [] }
     fixGedcom(person)
-    #DISserver
-    orgData['data'].append({'contributionId': contributionId, 'record': pp,
-                             'gedcom': person.gedcom()})
     #New - how about merge?
     #orgData['contributionId'] = contributionId
     #orgData['record'] = pp
     #orgData['gedcom'] = person.gedcom()
     pp['_id'] = common.get_id('P')
     person.pid = persons.insert( pp )
-    orgData['recordId'] = person.pid
+    orgData['data'].append({'contributionId': contributionId, 'record': pp,
+                             'recordId': person.pid, 'gedcom': person.gedcom()})
     config['originalData'].insert(orgData)
     fam =  person.get_parent_families()  #Children
     if fam:
@@ -121,18 +119,17 @@ for fam in people.family_list():
         (ff, relations) = fam_dict(fam)
         orgData = { 'type': 'family', 'data': [] }
         fixGedcom(fam)
-        orgData['data'].append({'contributionId': contributionId, 'record': ff,
-                                'gedcom': fam.gedcom()})
         ff['_id'] = common.get_id('F')
         fam.pid = families.insert( ff )
         for rel in relations:
             rel['famId'] = ff['_id']
-        orgData['relation'] = relations
         try:
             config['relations'].insert_many(relations)
         except:
             pass
-        orgData['recordId'] = fam.pid
+        orgData['data'].append({'contributionId': contributionId, 'record': ff,
+                                'recordId': fam.pid, 'relation': relations,
+                                'gedcom': fam.gedcom()})
         config['originalData'].insert(orgData)
 #    else: print 'SkipFam', str(fam), 'with', familyMembers[str(fam)], 'member'
 logging.info('Time %s',time.time() - t0)
@@ -176,7 +173,8 @@ for s in d.values():
           print 'Merging family %s into %s' % (fam2beMerged['_id'], FId)
 
           config['families'].delete_one({'_id': fam2beMerged['_id']})
-          Fmap[fam2beMerged['_id']] = F['_id'] #KOLLA?
+          #Fmap[fam2beMerged['_id']] = F['_id'] #KOLLA?
+          Fmap[fam2beMerged['_id']].add(F['_id'])
           config['relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
                                                {'$or': [{'relTyp': 'husb'},
                                                         {'relTyp': 'wife'}]}

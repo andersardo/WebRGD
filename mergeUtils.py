@@ -62,7 +62,7 @@ def mergeEvent(events):
     ev['tag'] = mergeEvents[0]['tag']
     return ev
 
-def mergeOrgDataPers(personUid, personDB, originalDataDB):
+def mergeOrgDataPers(personUid, originalDataDB):
     #reverseImap matchId -> set(person uids)
     persDict = {}
     rawData = defaultdict(list)
@@ -90,7 +90,7 @@ def mergeOrgDataPers(personUid, personDB, originalDataDB):
         persDict['death'] = mergeEvent(events['BURI'])
     return persDict
 
-def mergeOrgDataFam(recordid, families, originalDataDB):
+def mergeOrgDataFam(recordid, originalDataDB):
     """ Merge orginalData for 'recordid' into a
         combined record used in RGD.
         marriage uses maxdict to determine which value to keep"""
@@ -103,11 +103,29 @@ def mergeOrgDataFam(recordid, families, originalDataDB):
     try:
         famDict['marriage'] = mergeEvent(rawdataMar)
     except:
-        pass  #KOLLA om tomma events ska finnas i DB 
+        pass  #KOLLA om tomma events ska finnas i DB
     return famDict
 
+def mergeOrgDataRel(recordPid, recordFid, originalDataDB):
+    """ Merge orginalData for 'recordid' into a
+        combined record used in RGD.
+    """
+    #rawRels = defaultdict(list)
+    rels = []
+    for fid in reverseFmap[recordFid]:
+        #for pid in reverseImap[recordPid]:
+            orgRec = originalDataDB.find_one({'recordId': fid}) # evt 'type': 'family'?
+            for r in orgRec['relation']:
+                if '_id' in r: del r['_id']  #Needed??
+                if r['persId'] in Imap: r['persId'] = next(iter(Imap[r['persId']])) #FIX!!
+                if r['famId'] in Fmap: r['famId'] = next(iter(Fmap[r['famId']]))    #FIX!!
+                #rawRels[r['relTyp']].append(r) #Howmany?? choose best
+                rels.append(r)
+    #print 'rels=', rels
+    return rels
+
 def checkFam(wid,mid):
-  #wid, mid family refId 
+  #wid, mid family refId
   fams = set()
   for role in ('husb', 'wife', 'children'):
     tFam = common.config['families'].find({role: wid}, {'_id': 1, 'marriage.date': 1} )
@@ -141,24 +159,19 @@ def checkFam(wid,mid):
 def createMap(config):
     #creates map work -> match for all statusOK
     #
+    err = False
     cnt=0
     #families
     #get map from earlier merge's
     map = config['match_originalData'].find_one({'type': 'Fmap'})
     if map:
-        Fmap['_id'] = map['_id']
+        #Fmap['_id'] = map['_id']
         for (k,v) in pickle.loads(map['data']).iteritems(): Fmap[k] = v
     else:  #initialize with identity map from match
         for F in config['match_families'].find({}, {'_id': 1}): Fmap[F['_id']].add(F['_id'])
     for famMatch in config['fam_matches'].find({'status': {'$in': list(common.statOK)}}):
         if famMatch['workid'] in Fignore: continue
         cnt += 1
-        if famMatch['workid'] in Fmap and Fmap[famMatch['workid']] != famMatch['matchid']:
-            print 'Family', famMatch['workid'], 'in dbI matches', Fmap[famMatch['workid']], famMatch['matchid'], 'in dbII'
-            print 'NO - IGNORE THIS'
-            #del Fmap[famMatch['workid']]
-            #Fignore.append(famMatch['workid'])
-            #continue
         Fmap[famMatch['workid']].add(famMatch['matchid'])
         workOrg = config['originalData'].find_one({'recordId': famMatch['workid'], 'type': 'family'})
         for rec in workOrg['data']:
@@ -173,14 +186,12 @@ def createMap(config):
     #get map from earlier merge's
     map = config['match_originalData'].find_one({'type': 'Imap'})
     if map:
-        Imap['_id'] = map['_id'] #KOLLA Imap is dict of set
+        #Imap['_id'] = map['_id'] #KOLLA Imap is dict of set
         for (k,v) in pickle.loads(map['data']).iteritems(): Imap[k] = v
     else:  #initialize with identity map from match
         for P in config['match_persons'].find({}, {'_id': 1}): Imap[P['_id']].add(P['_id'])
     for match in config['matches'].find({'status': {'$in': list(common.statOK)}}):
         cnt += 1
-        if match['workid'] in match:
-            print match['pwork']['refId'], 'Person dubble map'
         Imap[match['workid']].add(match['matchid'])
         workOrg = config['originalData'].find_one({'recordId': match['workid'], 'type': 'person'})
         for rec in workOrg['data']:
@@ -188,38 +199,18 @@ def createMap(config):
         matchOrg = config['match_originalData'].find_one({'recordId': match['matchid'], 'type': 'person'})
         for rec in matchOrg['data']:
             Imap[rec['record']['_id']].add(match['matchid'])
-        """
-        #Find familes that person is child in
-        workfam = config['families'].find_one({'children': match['workid']})
-        matchfam = config['match_families'].find_one({'children': match['matchid']})
-        if workfam and matchfam:
-            #FIX KOLLA check status för fam-match workfam-matchfam
-            if workfam['_id'] in Fmap and Fmap[workfam['_id']] != matchfam['_id']:
-                print 'Fam-map child disagree', match['pwork']['refId'], match['pmatch']['refId'],
-                print 'In fams', workfam['refId'], matchfam['refId']
-                print 'matched child', match['pwork']['refId'], match['pmatch']['refId']
-                #print workfam
-                #print matchfam
-                checkFam(match['pwork']['refId'], match['pmatch']['refId'])
-
-        #Find matched OK familes that person is husb or wife in
-        for famMatch in config['fam_matches'].find({'status': {'$in': list(common.statOK)},
-             '$or': [{'husb.pwork._id': match['workid'],'husb.pmatch._id': match['matchid'] },
-                     {'wife.pwork._id': match['workid'],'wife.pmatch._id': match['matchid'] },
-                    ]}):
-            if famMatch['workid'] in Fmap and Fmap[famMatch['workid']] != famMatch['matchid']:
-                print 'Personmap husb/wife disagree', match['pwork']['refId'], match['pmatch']['refId']
-                #print '  In fams', famMatch['workrefId'], famMatch['matchrefId']
-        #KOLLA OM data i originalData också OK??
-        """
-        #reverse maps
-        for pers in Imap.keys():
-            for P in Imap[pers]:
-                reverseImap[P].add(pers)
-        for fam  in Fmap.keys():
-            for F in Fmap[fam]:
-                reverseFmap[F].add(fam)
-
-
     print 'Matched persons', cnt, 'out of', config['persons'].count(), '; Mappings:', len(Imap)
-    return
+    #reverse maps
+    for pers in Imap.keys():
+        if len(Imap[pers])>1:
+            #print 'Multimatch person dbI', pers, '; dbI', Imap[pers]
+            err = True
+        for P in Imap[pers]:
+            reverseImap[P].add(pers)
+    for fam  in Fmap.keys():
+        if len(Fmap[fam])>1:
+            #print 'Multimatch family dbI', fam, 'dbII', Fmap[fam]
+            err = True
+        for F in Fmap[fam]:
+            reverseFmap[F].add(fam)
+    return err
