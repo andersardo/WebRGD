@@ -96,67 +96,7 @@ for p in person_list.find({}, no_cursor_timeout=True):
         if (sc/score > 3.0): break
 logging.info('%d person matchings inserted', ant)
 logging.info('Time %s',time.time() - t0)
-#print matches.find_one({'workid': 'P_1110398'})
-"""
-#Mönster för att upplösa multimatch för individer
-#Flera OK matchindivid i tmp; alla i samma familj
-#Välj den individmatch med högst nodeSim och samma födelsedatum
-#  om 2 lika behåll manuell koll
-ant = 0
-for (ind,listrgdid) in dubltmp.iteritems():
-    if len(listrgdid)>1:
-        rdubl = None
-        rdublNs = -1.0
-        patternOK = False
-        pp =person_list.find_one({'_id': ind})
-#Om tvillingar kanske ta flera från person_list? för att få hela bilden?
-        for rgdid in listrgdid:
-            rgdpp = match_person.find_one({'_id': rgdid})
-            #same birthdate
-            try:
-                if pp['birth']['date'] == rgdpp['birth']['date']:
-                #same family
-                    if not rdubl:
-                        rdubl = rgdid
-                    elif match_person.find_one({ 'children': rgdid})==match_person.find_one({ 'children': rdubl}):
-                        #highest nodeSim
-                        if dbltmpNs[ind,rgdid] > dbltmpNs[ind,rdubl]:
-                            rdubl = rgdid
-                        patternOK = True
-                    else:
-                        patternOK = False
-                        break
-                else:
-                    patternOK = False
-                    break
-            except:
-                patternOK = False
-                break
-        if patternOK:
-            logging.debug('Multimatch resolved %s -> %s from %s',ind,rdubl,listrgdid)
-            ant += 1
-            logging.debug('set status for matches %s,* and *,%s to rEjOK',ind,rdubl)
-            matches.update({'$or': [{'workid': ind},{'matchid': rdubl}]},
-                           {'$set': {'status': 'rEjOK'}}, multi=True)
-            logging.debug('set status for match %s -> %s to rOK',ind,rdubl)
-            matches.update({'workid': ind, 'matchid': rdubl}, {'$set': {'status': 'rOK'}})
-logging.info('%d Multimatch individer (tvillingar/syskon) fixade', ant)
-logging.info('Time %s',time.time() - t0)
 
-#Ta bort individ med status Manuell om finns OK och  nodeSim < 0 och SVM < 0.5
-###BEHÖVS INTE endast 2 I HELA FACIT
-ant=0
-for mt in matches.find({'status': {'$in': list(common.statOK)}}, {'_id': 1, 'workid': 1}):
-    for check in matches.find({'status': {'$in': list(common.statManuell)}, 'workid': mt['workid'],
-                               'nodesim': {'$lte': 0.0}, 'svmscore': {'$lt': 0.5}
-                               }):
-        logging.debug('Set persons %s %s status=rEjOK',
-                      check['pwork']['refId'],check['pmatch']['refId'])
-        matches.update({'_id': check['_id']}, {'$set': {'status': 'rEjOK'}})
-        ant += 1
-logging.info('%d Individer med status Manuell => rEjOK fixade', ant)
-logging.info('Time %s',time.time() - t0)
-"""
 #Families match-status calculated from person match-status => No SVM
 ant = 0
 fams = set()
@@ -164,12 +104,8 @@ for match in  matches.find({'status': {'$in': list(common.statOK.union(common.st
     for role in ('husb', 'wife', 'child'):
         tFam = []
         rFam = []
-        #tFam = fam_list.find({role: match['workid']}, {'_id': 1, 'marriage.date': 1} )
-        #for tRel in config['relations'].find({role: match['workid']}):
         for tRel in config['relations'].find({'relTyp': role, 'persId': match['workid']}):
             tFam.append(fam_list.find_one({'_id': tRel['famId']}, {'_id': 1, 'marriage.date': 1}))
-        #rFam = match_family.find({role: match['matchid']}, {'_id': 1, 'marriage.date': 1} )
-        #for tRel in config['match_relations'].find({role: match['matchid']}):
         for tRel in config['match_relations'].find({'relTyp': role, 'persId': match['matchid']}):
             rFam.append(match_family.find_one({'_id': tRel['famId']},
                                               {'_id': 1, 'marriage.date': 1}))
@@ -193,147 +129,14 @@ for match in  matches.find({'status': {'$in': list(common.statOK.union(common.st
 famMatchSummary = {}
 for (tFamId,rFamId) in fams:    #  for all involved families
     famMatchData = matchFam(tFamId, rFamId, config)
-    #if tFamId == 'F_354430': print famMatchData
-    #famMatchSummary[(tFamId,rFamId)] = famMatchData['summary']
     fam_matches.insert(famMatchData)
     ant += 1
 logging.info('%d family matchings inserted', ant)
 logging.info('Time %s',time.time() - t0)
-#print matches.find_one({'workid': 'P_1110398'})
+
 ############################
 #EVT SVM for fam-matches?
 ############################
-"""
-logging.info('Do multimatch reduction rules')
-def analyzeMatchPattern(match):
-    # parameter match is a fam_match
-    chMatches = set()
-    parMatches = []
-    #workid,matchid _id; *RefId gedcom ID
-    famlist = [['F',match['workid'],match['matchid']]]
-    for partner in ('husb', 'wife'):
-        stat = match.get(partner,None)
-        if stat['status'] in common.statOK:
-            parMatches.append('OK')
-            #work finns inte i match
-            famlist.append(['P', match[partner]['workid'], match[partner]['matchid']])
-        elif stat['status'] in common.statManuell:
-            parMatches.append('Check')
-            famlist.append(['P', match[partner]['workid'], match[partner]['matchid']])
-        elif stat['status'] in common.statEjOK.union([None]): 
-            #Kolla om det finns en annan pers match med grön status för denna partner
-            if matches.find_one({'$and': [{'status': {'$in': list(common.statOK)}},
-                                          {'$or': [{'_id': match[partner]['workid']},
-                                                   {'_id': match[partner]['matchid']}
-                                                  ] }
-                                         ] } ):
-                parMatches.append('NotOK2')
-            elif stat: parMatches.append('NotOK')
-            else: parMatches.append('?')
-        else: parMatches.append('?')
-    for ch in match.get('children',[]):
-        if ch['status'] in common.statOK: chMatches.add('OK')
-        elif ch['status'] in common.statManuell: chMatches.add('Check')
-        elif ch['status'] in common.statEjOK: chMatches.add('NotOK')
-        else: chMatches.add('?')
-        if ch['status'] in common.statOK.union(common.statManuell):
-            famlist.append(['P', ch['workid'], ch['matchid']])
-    return (parMatches, chMatches, famlist)
-
-def checkPattern1(mt1, mt2):
-    (pMa, cMa, fLa) = mt1
-    (pMb, cMb, fLb) = mt2
-    if ( ('OK' in cMa) and ('OK' not in cMb) and
-         ('OK' in pMa) and ('NotOK2' not in pMa) and
-         ('NotOK' not in cMa) and ('Check' not in cMa) ):
-#        print 'Pattern 1 hits'
-        return True
-    return False
-
-def checkPattern2(mtList):
-    (pMa, cMa, fLa) = mtList[0]
-    (pMb, cMb, fLb) = mtList[1]
-    #Om ingen av familjerna har färgade barn (bara vita eller inga alls)
-    st = cMa.union(cMb)
-    if ( ('OK' not in st) and ('Check' not in st) and ('NotOK' not in st) and ('Manuell' not in st) ):
-        #logging.debug( 'Pattern 2 hits')
-        return True
-    else: return False
-
-def checkPattern3(mt1):
-    (pMa, cMa, fLa) = mt1
-    if ( (len(pMa)==2) and (pMa[0]=='OK') and (pMa[1]=='OK') ):
-        #logging.debug( 'Pattern 3 hits')
-        return True
-    return False
-
-for multiiter in (1,2):
-    dubl = defaultdict(list) #Only use 1 list - since we have uniq id's
-    #List all multi-matches
-    #Maybe use aggregation to save only real multimatches??
-    for match in fam_matches.find({'status': {'$in': list(common.statOK.union(common.statManuell))}}):
-        dubl[match['workid']].append(match)
-        dubl[match['matchid']].append(match)
-
-    #Kalles mönster för multimatch-fix
-    #PATTERN1
-    #Kalle email 2014-02-27
-    #Det finns bara GRÖNA barn i EN AV FAMILJERNA och
-    #Den FAMILJEN har minst EN GRÖN FÖRÄLDER och
-    #ALLA BARNEN i den FAMILJEN är GRÖNA eller VITA
-    #Om en RÖD förälder in den familjen och den föräldern har en annan grön match (NotOK2) => BRYT
-    #PATTERN2
-    #Kalle email 2014-03-20
-    #Reducerings regel 2 för Multimatch:
-    #Om ingen av familjerna har färgade barn (bara vita eller inga alls)
-    #if ( ('OK' not in cMa) and ('Check' not in cMa) and ('NotOK' not in cMa) and ('Nm/Fd' not in cMa) and
-    #     ('OK' not in cMb) and ('Check' not in cMb) and ('NotOK' not in cMb) and ('Nm/Fd' not in cMb) ):
-    #PATTERN3
-    #Får familjen med 2 gröna föräldrar OK (jag kan inte se någon situation när
-    #två familjer skulle kunna ha två gröna föräldrar)
-    #    if ( (len(pMa)==2) and (pMa[0]=='OK') and (pMa[1]=='OK') ):
-    #        OK
-    #    elif ( (len(pMb)==2) and (pMb[0]=='OK') and (pMb[1]=='OK') ):
-    #        OK
-    for (ind,dlist) in dubl.iteritems():
-        if len(dlist)>=2:
-            mts = []
-            for dbl in dlist:
-                mts.append(analyzeMatchPattern(dbl))
-            #Now mts=[(pM, cM, fL), (pM, cM, fL)]
-            (pMa, cMa, fLa) = mts[0]
-            (pMb, cMb, fLb) = mts[1]
-            if checkPattern1(mts[0], mts[1]):
-                #for (typ, workid, matchid, wrefid, mrefid) in fLb:
-                for (typ, workid, matchid) in fLb:
-                    if typ == 'F':
-#                        if workid=='F_397987': print 'fLb', typ, workid, matchid
-                        setEjOKfamily(str(workid), str(matchid), code = 'rEjOK')
-                        break
-                setFamOK(None, None, config, famlist = fLa, button = False)
-                if matches.find_one({'workid': 'P_1110398'})['status'] != 'Match':
-#                    print 'fLa=', fLa
-#                    sys.exit()
-            elif checkPattern1(mts[1], mts[0]):
-                #for (typ, workid, matchid, wrefid, mrefid) in fLa:
-                for (typ, workid, matchid) in fLa:
-                    if typ == 'F':
-#                        if workid=='F_397987': print 'fLa', typ, workid, matchid
-                        setEjOKfamily(str(workid), str(matchid), code = 'rEjOK')
-                        break
-                setFamOK(None, None, config, famlist = fLb, button = False)
-#                if matches.find_one({'workid': 'P_1110398'})['status'] != 'Match': print 'Fla1', typ, workid, matchid
-            elif checkPattern2(mts):
-                if checkPattern3(mts[0]):
-                    setFamOK(None, None, config, famlist = fLa, button = False)
-#                    if matches.find_one({'workid': 'P_1110398'})['status'] != 'Match': print 'p2', typ, workid, matchid
-                elif checkPattern3(mts[1]):
-                    setFamOK(None, None, config, famlist = fLb, button = False)
-#                    if matches.find_one({'workid': 'P_1110398'})['status'] != 'Match': print 'p3', typ, workid, matchid
-#print matches.find_one({'workid': 'P_1110398'})
-#AA LOGGING STATS HOW MANY RESOLVED
-logging.info('Time %s',time.time() - t0)
-"""
 if noFamSVM: #default
     logging.info('Matching All done')
     sys.exit()
@@ -341,18 +144,14 @@ logging.info('Doing SVM family match, incl split-ifying')
 
 from uiUtils import nameDiff, eventDiff
 from utils import updateFamMatch
-#USE famfeatureSet!!
 if 'famfeatureSet' in config:
     famSVMfeatures = getattr(importlib.import_module('featureSet'), config['famfeatureSet'])
     svmFamModel = svm_load_model('conf/' + config['famfeatureSet'] + '.model')
 else:
-    #from SVMfeatures import famSVMfeatures
-    #svmFamModel = svm_load_model('conf/family.model')
     famSVMfeatures = getattr(importlib.import_module('featureSet'), 'famBaseline')
     svmFamModel = svm_load_model('conf/famBaseline.model')
 antChanged = 0
 antSVM = 0
-##for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).batch_size(50):
 ###Test all family matches gives better results
 for fmatch in config['fam_matches'].find().batch_size(50):
     work = getFamilyFromId(fmatch['workid'] , config['families'], config['relations'])
@@ -389,12 +188,12 @@ for fmatch in config['fam_matches'].find().batch_size(50):
         antSVM += 1
 logging.info('%d families updated after split; %d set to OK by SVM', antChanged, antSVM)
 logging.info('Time %s',time.time() - t0)
-#print matches.find_one({'workid': 'P_1110398'})
+
 #Rule:
 #  if all children Green
 #     and 1 partner Green and 1 partner Yellow
 #   set family to OK
-logging.info('Fix fams manual')
+logging.info('Fix manual families')
 antFixed = 0
 for fmatch in config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}):
     husb = fmatch['summary']['husb']

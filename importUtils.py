@@ -6,29 +6,9 @@
 """
 
 import re
-"""
-monthmap = {}
-monthmap['JAN'] = '1'
-monthmap['FEB'] = '2'
-monthmap['MAR'] = '3'
-monthmap['APR'] = '4'
-monthmap['MAY'] = '5'
-monthmap['JUN'] = '6'
-monthmap['JUL'] = '7'
-monthmap['AUG'] = '8'
-monthmap['SEP'] = '9'
-monthmap['OCT'] = '10'
-monthmap['NOV'] = '11'
-monthmap['DEC'] = '12'
-
-def parsergdnname(p):
-    #Numeric ids
-   fnid = ' '.join(set(p.rgdfname().split(',')))
-   snid = ' '.join(set(p.rgdename().split(',')))
-   return (fnid, snid)
-"""
 #json maps from indataValidering
 import json
+from common import RGDadm 
 namMap = {}
 datMap = {}
 placMap = {}
@@ -46,6 +26,14 @@ def loadMaps(dir):
     except: err += "ERROR - datumfil saknas\n"
     try: sourMap = json.load(open(dir + '/sour.dat'))
     except: err += "ERROR - sourcefil saknas\n"
+    try:
+        RGDadm.datMap.insert_many([{'_id': key, 'val': val} for key,val in datMap.iteritems()],
+                                  ordered= False)
+    except: pass
+    try:
+        RGDadm.sourMap.insert_many([{'_id': key, 'val': val} for key,val in sourMap.iteritems()],
+                                   ordered=False)
+    except: pass
     return err
 
 def namestr(p):
