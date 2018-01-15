@@ -688,9 +688,16 @@ def downloadFamMatches():
                 k2 = ''
             key = k1+';'+k2
             done.add(key)
+            if 'Ignorerad' in r[0]: ignRelI = True
+            else: ignRelI = False
+            if 'Ignorerad' in r[8]: ignRelII = True
+            else: ignRelII = False
+            ignFam = False
             #remove html-code for buttons
             try:
+                if 'Ignorerad' in r[4]: ignFam = True
                 r[4] = r[4].split('<')[0]
+                if ign: r[4] += ' Ignorerad'
             except:
                 pass
             if r == ['', '', '', '', '', '', '', '', '']:
@@ -702,9 +709,12 @@ def downloadFamMatches():
                 green = False
                 yellow = False
                 red = False
-                if r[4].endswith(('EjMatch', 'EjOK', 'rEjOK')): red = True
-                elif r[4].endswith(('Manuell', 'rManuell')): yellow = True
-                elif r[4].endswith(('Match', 'OK', 'rOK')): green = True
+                #if r[4].endswith(('EjMatch', 'EjOK', 'rEjOK')): red = True
+                #elif r[4].endswith(('Manuell', 'rManuell')): yellow = True
+                #elif r[4].endswith(('Match', 'OK', 'rOK')): green = True
+                if ('EjMatch' in r[4]) or ('EjOK' in r[4]): red = True
+                elif ('Match' in r[4]) or ('OK' in r[4]): green = True
+                elif 'Manuell' in r[4]: yellow = True
                 for val in r[1:8]:
                     i+=1
                     if i == 4: #separator between workDB and matchDB
@@ -724,7 +734,10 @@ def downloadFamMatches():
                             cell.border = Border(top=thick, left=thick, right=thick, bottom=thin)
                         else:
                             cell.border = Border(top=thick, left=thin, right=thin, bottom=thin)
-                    if green: cell.fill = greenFill
+                    if (i == 4) and ignFam: cell.fill = redFill
+                    elif (i==1) and ignRelI: cell.fill = redFill
+                    elif (i==8) and ignRelII: cell.fill = redFill
+                    elif green: cell.fill = greenFill
                     elif yellow:  cell.fill = yellowFill
                     elif red:  cell.fill = redFill
                     rowVals.append(cell)
