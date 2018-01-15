@@ -96,14 +96,24 @@ def gedcomNoRGD(self):
     for e in self.children_lines():
         if e.tag() in ('PLAC'): plac = e.value()
     for e in self.children_lines():
-        result += '\n' + e.gedcom()
         if e.tag() in ('SOUR'):
-                #use mapped or not?
-                try:
-                        t = sourMap[plac+'-'+e.value()]
-                        result += u'\n2 NOTE RGD källa: ' + t
-                except:
-                        pass
+            try:
+                t = sourMap[plac+'-'+e.value()]
+                result += u'\n2 SOUR ' + t
+                result += u'\n2 NOTE Orginal källa: ' + e.value()
+            except:
+                result += '\n' + e.gedcom()
+        else:
+            result += '\n' + e.gedcom()
+
+#        result += '\n' + e.gedcom()
+#        if e.tag() in ('SOUR'):
+#                #use mapped or not?
+#                try:
+#                        t = sourMap[plac+'-'+e.value()]
+#                        result += u'\n2 NOTE RGD källa: ' + t
+#                except:
+#                        pass
     return result
 
 mapGedcom = {'birth': 'BIRT', 'death': 'DEAT', 'marriage': 'MARR',
