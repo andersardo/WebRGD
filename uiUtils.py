@@ -116,10 +116,12 @@ def famDisp( tmpfid, rgdfid, match = None ):
     flag = common.config['flags'].find_one({"typ" : "IgnoreFamilyMatch",
                                             "workFam" : match['workid'],
                                             "matchFam" : match['matchid']})
+    ignargs = {'where': 'res', 'what': '/actions/ignoreRelation', 'role': 'family',
+               'workFam': str(match['workid']), 'matchFam': str(match['matchid'])}
+    ignButt = '<br><button onclick="doAction('+str(ignargs)+')">Ignorera Match</button>'
     ign = 'Marriage/ '+match['status']
     if flag: ign += '<br><b>Ingnorerad</b>'
-    else: ign += ''
-    #marr.extend(['-', '<button onclick="doAction('+str(args)+')">Ignore Fam Match</button>', match['matchRefId']])
+    else: ign += ignButt
     marr.extend(['', ign, match['matchRefId']])
     try: marr.append(eventDisp(match['marriage']['match']))
     except: marr.append('-')
@@ -457,13 +459,15 @@ def addFlag(personId, famId, fltext):
     return getFlags(personId, famId, '')
 """
 def ignoreRelation(persId, famId, role, workFam=None, matchFam=None):
-    common.config['flags'].insert_one({'typ': 'IgnoreRelation', 'persId': persId, 'relTyp': role,
-                                   'famId': famId})
-    res = 'Flagga: IgnoreRelation person=%s roll=%s familj=%s<br>' % (persId, role, famId)
-    common.config['flags'].insert_one({'typ': 'IgnoreFamilyMatch', 'workFam': workFam,
+    if role == 'family':
+        common.config['flags'].insert_one({'typ': 'IgnoreFamilyMatch', 'workFam': workFam,
                                    'matchFam': matchFam})
-    res += 'Flagga: IgnoreFamilyMatch %s -> %s<br>' % (workFam, matchFam)
-    return res
+        return 'Flagga: IgnoreFamilyMatch %s -> %s<br>' % (workFam, matchFam)
+    else:
+        common.config['flags'].insert_one({'typ': 'IgnoreRelation', 'persId': persId,
+                                           'relTyp': role, 'famId': famId})
+        return 'Flagga: IgnoreRelation person=%s roll=%s familj=%s<br>' % (persId, role, famId)
+    return ''
 
 #Skillnad
 def nameDiff(work, match):

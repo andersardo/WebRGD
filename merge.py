@@ -54,53 +54,19 @@ print 'Time:',time.time() - t0
 
 print 'Process flags'
 relIgnore = []
-"""
-###TESTING
-Vid sammanslagning uppstår 4 fall
-Rel1 mot Rel2 (upptäcks i multiMatch, createMap)
-1. dbI.A splitas så att dbI.C1 flyttas till dbII.B, resten slås ihop med dbII.C (split i DBI)
-     flag on dbI.C1 move -> dbII.B, remove match dbI.A -> dbII.B Ignore
-2. A, B, C slås samman (sammanslagning DBII)
-     flag on dbII.B merge -> dbII.C: Detect same family after merge Auto+Warn
-Rel2 mot Rel1 (upptäcks i multiMatch, ej i merge)
-3. B, C, A slås samman (vanlig mappning DBI)
-     -
-4. dbII.A splitas så att dbI.C1 flyttas till dbI.B, resten slås ihop med dbI.C (split DBII)
-     flag on dbII.C1 move -> dbI.B, remove match dbI.B -> dbII.A Ignore
-###TESTING
-
-#Fall 1 
-#Modify Fmap (görs bättre i createMap?) Fmap['F192']=[F197, F199] A=C, B
-Fmap['F_192'].remove('F_199') #Flag Ignore famMatch workFamId -> matchFamId
-#Relationseditor för att fixa C1 in 2 families?
-#eller Flag Ignore Relation C1 (P_419) child dbI.A (F_192)
-relIgnore = [{'persId': 'P_419', 'relTyp': 'child', 'famId': 'F_192'}]
-
-#Fall 2
-#Detect same family after merge Auto+Warn - OK
-
-#Fall 3
-#OK
-
-#Fall 4
-##Fmap['F_235'].remove('F_228') #Flag Ignore famMatch workFamId -> matchFamId
-Fmap['F_244'].remove('F_237') #Flag Ignore famMatch workFamId -> matchFamId
-##relIgnore = [{'persId': 'P_499', 'relTyp': 'child', 'famId': 'F_228'}]
-relIgnore = [{'persId': 'P_519', 'relTyp': 'child', 'famId': 'F_237'}]
-"""
-#flags
 for flag in config['flags'].find():
     if flag['typ'] == 'IgnoreRelation':
         relIgnore.append({'persId': flag['persId'], 'relTyp': flag['relTyp'], 'famId': flag['famId']})
     elif flag['typ'] == 'IgnoreFamilyMatch':
-        Fmap[flag['workFam']].remove(flag['matchFam']) #WORKS with sets in Fmap?
+        Fmap[flag['workFam']].remove(flag['matchFam'])
+        if not Fmap[flag['workFam']]: del(Fmap[flag['workFam']])
+        #reverseFmap
+        reverseFmap[flag['matchFam']].remove(flag['workFam'])
+        if not reverseFmap[flag['matchFam']]: del(reverseFmap[flag['matchFam']])
     else:
         print 'Unknown flag:', flag
-for k in Fmap.keys(): #delete empty maps
-    if not Fmap[k]: del(Fmap[k])
-for rel in relIgnore:
-    res = config['match_relations'].remove(rel)
-    #In case of errors needs to be inserted again - done below in error handling
+#for k in Fmap.keys(): #delete empty maps
+#    if not Fmap[k]: del(Fmap[k])
 
 print 'Time:',time.time() - t0
 
@@ -190,7 +156,13 @@ print 'Time:',time.time() - t0
 #Relations
 inscnt=0
 updcnt=0
-for rel in config['relations'].find():
+for rel in config['relations'].find({}, {'_id': 0}):
+    found = False
+    for r in relIgnore:
+        if cmp(r, rel) == 0:
+            found = True
+            break
+    if found: continue
     if rel['persId'] in Imap and rel['famId'] in Fmap:
         updcnt += 1
         matchPid = Imap[rel['persId']]
@@ -200,7 +172,7 @@ for rel in config['relations'].find():
             ERRORS = True
         else:
             for r in mergeOrgDataRel(next(iter(matchPid)), next(iter(matchFid)),
-                            config['match_originalData']):
+                                     config['match_originalData'], relIgnore):
                 updcnt += 1
                 #config['match_relations'].replace_one(r, r, upsert=True) #??
                 CHANGES.append([config['match_relations'], 'replace_one', r, r])
@@ -291,6 +263,8 @@ if ERRORS:
     sys.exit()
 #All OK execute CHANGES
 print 'Actually updating databases'
+for rel in relIgnore:
+    res = config['match_relations'].remove(rel)
 for op in CHANGES:
     if op[1]=='replace_one' and len(op)==4:
         op[0].replace_one(op[2], op[3], upsert=True)
@@ -380,3 +354,4 @@ for mdb in common.admClient.database_names():
 #3: alla databasers matchningsinfo mot mDBname tas bort
             print 'Dropping', mdb, coll
             common.admClient[mdb][coll].drop()
+print dbName, 'merged into', mDBname, 'succesfully'

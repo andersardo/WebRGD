@@ -106,7 +106,7 @@ def mergeOrgDataFam(recordid, originalDataDB):
         pass  #KOLLA om tomma events ska finnas i DB
     return famDict
 
-def mergeOrgDataRel(recordPid, recordFid, originalDataDB):
+def mergeOrgDataRel(recordPid, recordFid, originalDataDB, relIgnore):
     """ Merge orginalData for 'recordid' into a
         combined record used in RGD.
     """
@@ -116,13 +116,24 @@ def mergeOrgDataRel(recordPid, recordFid, originalDataDB):
         #for pid in reverseImap[recordPid]:
             orgRec = originalDataDB.find_one({'recordId': fid}) # evt 'type': 'family'?
             for r in orgRec['relation']:
-                if '_id' in r: del r['_id']  #Needed??
+                if '_id' in r: del r['_id']
+
+                found = False
+                for rr in relIgnore:
+                    if cmp(rr, r) == 0:
+                        found = True
+                        break
+                if found: continue
+
                 if r['persId'] in Imap: r['persId'] = next(iter(Imap[r['persId']])) #FIX!!
                 if r['famId'] in Fmap: r['famId'] = next(iter(Fmap[r['famId']]))    #FIX!!
                 #rawRels[r['relTyp']].append(r) #Howmany?? choose best
                 rels.append(r)
     #print 'rels=', rels
-    return rels
+    #return rels
+    import numpy as np 
+    relsUniq = list(np.unique(np.array(rels)))
+    return relsUniq
 
 def checkFam(wid,mid):
   #wid, mid family refId

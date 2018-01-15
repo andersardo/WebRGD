@@ -57,6 +57,7 @@ matches = config['matches']
 matches.drop()
 fam_matches = config['fam_matches']
 fam_matches.drop()
+config['flags'].drop()
 
 match_person = config['match_persons']
 match_family = config['match_families']
