@@ -116,8 +116,12 @@ i <select name="databas">
   %else:
     <tr>
   %end
-    %for cell in r:
-      <td>{{!cell}}</td>
+  %for cell in r:
+       %if type(cell) is str and cell.find('Ignorerad')>=0:
+          <td bgcolor="#FF5050">{{!cell}}</td>
+       %else:
+          <td>{{!cell}}</td>
+       %end
     %end
   </tr>
 %end

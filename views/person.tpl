@@ -11,7 +11,11 @@
     <tr>
   %end
   %for cell in prow:
-    <td>{{!cell}}</td>
+       %if type(cell) is str and cell.find('Ignorerad')>=0:
+          <td bgcolor="#FF5050">{{!cell}}</td>
+       %else:
+          <td>{{!cell}}</td>
+       %end
   %end
 </tr></table>
   %if buttons:

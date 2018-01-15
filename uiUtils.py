@@ -120,7 +120,7 @@ def famDisp( tmpfid, rgdfid, match = None ):
                'workFam': str(match['workid']), 'matchFam': str(match['matchid'])}
     ignButt = '<br><button onclick="doAction('+str(ignargs)+')">Ignorera Match</button>'
     ign = 'Marriage/ '+match['status']
-    if flag: ign += '<br><b>Ingnorerad</b>'
+    if flag: ign += '<br><b>Ignorerad</b>'
     else: ign += ignButt
     marr.extend(['', ign, match['matchRefId']])
     try: marr.append(eventDisp(match['marriage']['match']))

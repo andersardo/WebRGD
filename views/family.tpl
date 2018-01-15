@@ -2,7 +2,9 @@
 <hr>
 <table border=1>
 %for r in rows:
-  %if ('EjMatch' in r[4]) or ('EjOK' in r[4]):
+  %if ('Ignorerad' in r[4]):
+    <tr bgcolor="#FF5050">
+  %elif ('EjMatch' in r[4]) or ('EjOK' in r[4]):
     <tr bgcolor="#FF5050">
   %elif 'notMatched' in r[4]:
     <tr bgcolor="#FFFFFF">
@@ -13,9 +15,13 @@
   %else:
     <tr>
   %end
-    %for cell in r:
-      <td>{{!cell}}</td>
+  %for cell in r:
+    %if type(cell) is str and cell.find('Ignorerad')>=0:
+       <td bgcolor="#FF5050">{{!cell}}</td>
+    %else:
+       <td>{{!cell}}</td>
     %end
+  %end
   </tr>
 %end
 </table>
