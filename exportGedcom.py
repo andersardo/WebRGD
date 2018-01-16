@@ -89,31 +89,22 @@ def parseGedcom(ged,frag):
         for e in ged.line_list():
             e._init()
 
-def gedcomNoRGD(self):
+def gedcomNoRGD(gtag):
     """ Return GEDCOM code for this line and all of its sub-lines """
-    result = unicode(self)
+    result = unicode(gtag)
     plac = ''
-    for e in self.children_lines():
+    for e in gtag.children_lines():
         if e.tag() in ('PLAC'): plac = e.value()
-    for e in self.children_lines():
-        if e.tag() in ('SOUR'):
-            try:
-                t = sourMap[plac+'-'+e.value()]
-                result += u'\n2 SOUR ' + t
-                result += u'\n2 NOTE Orginal källa: ' + e.value()
-            except:
+    for e in gtag.children_lines():
+        if (gtag.tag() in ('BIRT', 'CHR', 'DEAT', 'BURI', 'MARR')) and e.tag() in ('SOUR'):
+            if plac+'-'+e.value() in sourMap:
+                result += u'\n2 SOUR ' + sourMap[plac+'-'+e.value()]
+            elif e.value() in sourMap:
+                result += u'\n2 SOUR ' + sourMap[e.value()]
+            else:
                 result += '\n' + e.gedcom()
         else:
             result += '\n' + e.gedcom()
-
-#        result += '\n' + e.gedcom()
-#        if e.tag() in ('SOUR'):
-#                #use mapped or not?
-#                try:
-#                        t = sourMap[plac+'-'+e.value()]
-#                        result += u'\n2 NOTE RGD källa: ' + t
-#                except:
-#                        pass
     return result
 
 mapGedcom = {'birth': 'BIRT', 'death': 'DEAT', 'marriage': 'MARR',
