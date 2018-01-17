@@ -82,7 +82,7 @@ for p in person_list.find({}, no_cursor_timeout=True):
         candidate = match_person.find_one({'_id': kid})
         matchdata = matchPers(p, candidate, config, score)
         #FIX EVT: lägg in mönster (autoOK, autoCheck -> EjOK) (multimatch Resolve) här
-        logging.debug('Insert main matching for %s, %s',p['refId'], candidate['refId'])
+        #logging.debug('Insert main matching for %s, %s',p['refId'], candidate['refId'])
         matches.insert(matchdata)
 #        if p['_id']=='P_980100': print matchdata
         ant += 1
@@ -170,21 +170,21 @@ for fmatch in config['fam_matches'].find().batch_size(50):
         if (nameDiff(workchild, matchchild) and 
             eventDiff(workchild, matchchild, ('birth','death'), ('date',))):
             changes = True
-            logging.debug('Set status split for %s, %s',
-                          workchild['refId'], matchchild['refId'])
+            #logging.debug('Set status split for %s, %s',
+            #              workchild['refId'], matchchild['refId'])
             config['matches'].update({'_id': mt['_id']}, {'$set': {'status': 'split'}})
     if changes:
         updateFamMatch((fmatch['workid'],), config)
         antChanged += 1
         #FIX if not Manuell: continue
     v = famSVMfeatures(work, match, config)
-    logging.debug('SVMvect=%s, work=%s, match=%s', v, work, match)
+    #logging.debug('SVMvect=%s, work=%s, match=%s', v, work, match)
     p_labels, p_acc, p_vals = svm_predict([0],[v],svmFamModel,options="-b 1")
     svmstat = p_vals[0][0]
     if svmstat>0.9:
-        logging.debug('setFamOK workid=%s %s matchid=%s %s', fmatch['workid'],
-                      fmatch['workRefId'], fmatch['matchid'], fmatch['matchRefId'])
-        logging.debug('svmstat=%s vect=%s', svmstat, v)
+        #logging.debug('setFamOK workid=%s %s matchid=%s %s', fmatch['workid'],
+        #              fmatch['workRefId'], fmatch['matchid'], fmatch['matchRefId'])
+        #logging.debug('svmstat=%s vect=%s', svmstat, v)
         setFamOK(fmatch['workid'], fmatch['matchid'], config)
         antSVM += 1
 logging.info('%d families updated after split; %d set to OK by SVM', antChanged, antSVM)

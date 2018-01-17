@@ -130,10 +130,7 @@ def mergeOrgDataRel(recordPid, recordFid, originalDataDB, relIgnore):
                 #rawRels[r['relTyp']].append(r) #Howmany?? choose best
                 rels.append(r)
     #print 'rels=', rels
-    #return rels
-    import numpy as np 
-    relsUniq = list(np.unique(np.array(rels)))
-    return relsUniq
+    return rels
 
 def checkFam(wid,mid):
   #wid, mid family refId

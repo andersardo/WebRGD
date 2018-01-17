@@ -5,6 +5,7 @@ import common
 
 import argparse, time, sys, os
 import pickle
+import numpy as np 
 import codecs, locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8') #sorting??
 sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
@@ -12,10 +13,11 @@ sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 parser = argparse.ArgumentParser()
 parser.add_argument("workDB", help="Working database name" )
 parser.add_argument("matchDB", help="Database to match against")
-
+parser.add_argument("--noStrict", help="Accept relations errors", action='store_true' )
 args = parser.parse_args()
 workDB = args.workDB
 matchDB = args.matchDB
+noStrict = args.noStrict
 
 dbName  = os.path.basename(workDB).split('.')[0]  #No '.' or '/' in databasenames
 mDBname = os.path.basename(matchDB).split('.')[0]
@@ -26,6 +28,9 @@ ERRORS = False
 WARNINGS = False
 CHANGES = []
 print 'Merging', dbName, 'into', mDBname
+if noStrict: print 'Accept relation errors when merging'
+else: print 'Do not accept relation errors when merging'
+
 from mergeUtils import createMap, mergeOrgDataPers, mergeOrgDataFam, mergeOrgDataRel
 from mergeUtils import Imap, reverseImap, Fmap, reverseFmap, Fignore
 
@@ -98,13 +103,14 @@ for person in config['persons'].find():
         updcnt += 1
         matchid = Imap[person['_id']]
         #generate merged record
-        if len(matchid)  == 1:
+        if (len(matchid) == 1) or noStrict:
             #config['match_persons'].update({'_id': next(iter(matchid))},
             #                    mergeOrgDataPers(next(iter(matchid)), config['match_persons'],
             #                                     config['match_originalData']) )
-            CHANGES.append([config['match_persons'], 'update', {'_id': next(iter(matchid))},
-                        mergeOrgDataPers(next(iter(matchid)), config['match_originalData'])
-                          ])
+            for mid in matchid:
+                CHANGES.append([config['match_persons'], 'update', {'_id': mid},
+                        mergeOrgDataPers(mid, config['match_originalData'])
+                ])
         else:
             print 'ERROR multimap person:', person['_id'], '=', matchid
             ERRORS = True
@@ -134,13 +140,14 @@ for family in config['families'].find():
     if family['_id'] in Fmap:
         updcnt += 1
         matchid = Fmap[family['_id']]
-        if len(matchid) == 1:
+        if (len(matchid) == 1) or noStrict:
             #config['match_families'].update({'_id': next(iter(matchid))},
             #                    mergeOrgDataFam(next(iter(matchid)), config['match_families'],
             #                                     config['match_originalData']) )
-            CHANGES.append([config['match_families'], 'update', {'_id': next(iter(matchid))},
-                            mergeOrgDataFam(next(iter(matchid)), config['match_originalData'])
-            ])
+            for mid in matchid:
+                CHANGES.append([config['match_families'], 'update', {'_id': mid},
+                            mergeOrgDataFam(mid, config['match_originalData'])
+                ])
         else:
             print 'ERROR multimap family:', family['_id'], '=', matchid
             ERRORS = True
@@ -155,7 +162,7 @@ print 'Time:',time.time() - t0
 
 #Relations
 inscnt=0
-updcnt=0
+rels = []
 for rel in config['relations'].find({}, {'_id': 0}):
     found = False
     for r in relIgnore:
@@ -167,20 +174,55 @@ for rel in config['relations'].find({}, {'_id': 0}):
         updcnt += 1
         matchPid = Imap[rel['persId']]
         matchFid = Fmap[rel['famId']]
-        if len(matchPid)>1 or len(matchFid)>1:
+        if (len(matchPid)>1 or len(matchFid)>1) and not noStrict:
             print 'ERROR relation multimap in person', matchPid, 'or family', matchFid
             ERRORS = True
         else:
-            for r in mergeOrgDataRel(next(iter(matchPid)), next(iter(matchFid)),
-                                     config['match_originalData'], relIgnore):
-                updcnt += 1
-                #config['match_relations'].replace_one(r, r, upsert=True) #??
-                CHANGES.append([config['match_relations'], 'replace_one', r, r])
+            for mPid in matchPid:
+                for mFid in matchFid:
+                    rels.extend(mergeOrgDataRel(mPid, mFid,
+                                                config['match_originalData'], relIgnore))
+            #for r in mergeOrgDataRel(next(iter(matchPid)), next(iter(matchFid)),
+            #                         config['match_originalData'], relIgnore):
     else:
         #config['match_relations'].insert_one(rel)
         CHANGES.append([config['match_relations'], 'insert_one', rel])
         inscnt += 1
-print 'Relations: total=', updcnt+inscnt, 'updated=', updcnt
+for r in list(np.unique(np.array(rels))):
+    updcnt += 1
+    #config['match_relations'].replace_one(r, r, upsert=True) #??
+    CHANGES.append([config['match_relations'], 'replace_one', r, r])
+print 'Relations: updated=', updcnt, 'inserted=', inscnt
+print 'Time:',time.time() - t0
+
+if WARNINGS:
+    print 'Some warnings - check log above'
+
+#ERROR handling
+if ERRORS:
+    print 'ERRORS present => NOT updating databases'
+    print 'Merging NOT done'
+    #Undo delete of relIgnore records from flag handling
+    for rel in relIgnore:
+        config['match_relations'].insert(rel)
+    #Undo copying of orginalData
+    for rec in config['originalData'].find():
+        config['match_originalData'].delete_one(rec)
+    print 'Time:',time.time() - t0
+    sys.exit()
+#All OK execute CHANGES
+print 'Actually updating databases'
+for rel in relIgnore:
+    res = config['match_relations'].remove(rel)
+for op in CHANGES:
+    if op[1]=='replace_one' and len(op)==4:
+        op[0].replace_one(op[2], op[3], upsert=True)
+    elif op[1]=='update' and len(op)==4:
+        op[0].update(op[2], op[3])
+    elif op[1]=='insert_one' and len(op)==3:
+        op[0].insert_one(op[2])
+    else:
+        print 'ERROR - unkown database operation', op
 print 'Time:',time.time() - t0
 
 print 'Check and merge duplicate families'
@@ -211,24 +253,21 @@ for s in d.values():
           #FIX check marriage dates - see pattern notes
           #Enl Rolf: Marr  datum kan vara olika eller blanka
           fam2beMerged = config['match_families'].find_one({'_id': fd})
-          print 'Dubl', fd, fam2beMerged
+          #print 'Dubl', fd, fam2beMerged
           if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
           print 'Merging family %s into %s' % (fam2beMerged['_id'], FId)
 
           config['match_families'].delete_one({'_id': fam2beMerged['_id']})
-          #CHANGES
           #Fmap[fam2beMerged['_id']] = [F['_id']]
           Fmap[fam2beMerged['_id']] = F['_id'] #KOLLA
           config['match_relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
                                                {'$or': [{'relTyp': 'husb'},
                                                         {'relTyp': 'wife'}]}
                                            ]})
-          #CHANGES
           #only children in fam2beMerged left - move to new family
           config['match_relations'].update_many({'famId': fam2beMerged['_id']},
                                           {'$set': {'famId': F['_id']}})
-          #CHANGES
-          #remove duplicates
+          #remove duplicates ???? FIX!!!
           for ids in config['match_relations'].aggregate([
               { "$group": { 
                   "_id": { "persId": "$persId", "relTyp": "$relTyp", 'famId': '$famId' }, 
@@ -238,42 +277,10 @@ for s in d.values():
               { "$match": { "count": { "$gt": 1 } } }
           ]):
               config['match_relations'].remove({'_id': ids['uniqueIds'][1]})
-              #CHANGES
       #merge all marriage events
       if marrEvents:
           config['match_families'].update_one({'_id': F['_id']}, {'$set':
                                               {'marriage': mergeEvent(marrEvents)}})
-          #CHANGES
-print 'Time:',time.time() - t0
-
-if WARNINGS:
-    print 'Some warnings - check log above'
-
-#ERROR handling
-if ERRORS:
-    print 'ERRORS present => NOT updating databases'
-    print 'Merging NOT done'
-    #Undo delete of relIgnore records from flag handling
-    for rel in relIgnore:
-        config['match_relations'].insert(rel)
-    #Undo copying of orginalData
-    for rec in config['originalData'].find():
-        config['match_originalData'].delete_one(rec)
-    print 'Time:',time.time() - t0
-    sys.exit()
-#All OK execute CHANGES
-print 'Actually updating databases'
-for rel in relIgnore:
-    res = config['match_relations'].remove(rel)
-for op in CHANGES:
-    if op[1]=='replace_one' and len(op)==4:
-        op[0].replace_one(op[2], op[3], upsert=True)
-    elif op[1]=='update' and len(op)==4:
-        op[0].update(op[2], op[3])
-    elif op[1]=='insert_one' and len(op)==3:
-        op[0].insert_one(op[2])
-    else:
-        print 'ERROR - unkown database operation'
 print 'Time:',time.time() - t0
 
 #SANITY CHECKS
