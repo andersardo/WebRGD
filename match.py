@@ -80,6 +80,9 @@ for p in person_list.find({}, no_cursor_timeout=True):
         if score < 30.0: break  #breakoff score point for considering  match
         if (score> sc): sc = score
         candidate = match_person.find_one({'_id': kid})
+        ##PROBLEM FIX Lucene indexing
+        if not candidate: continue
+        ##PROBLEM
         matchdata = matchPers(p, candidate, config, score)
         #FIX EVT: lägg in mönster (autoOK, autoCheck -> EjOK) (multimatch Resolve) här
         #logging.debug('Insert main matching for %s, %s',p['refId'], candidate['refId'])

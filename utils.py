@@ -42,11 +42,10 @@ def matchFam(tFamId, rFamId, conf):
     tFam = getFamilyFromId( tFamId, conf['families'], conf['relations'])
     #rFam =conf['match_families'].find_one({'_id': rFamId})
     rFam = getFamilyFromId( rFamId, conf['match_families'], conf['match_relations'])
-    famMatchData['workRefId'] = tFam['refId']
-    try:
-        famMatchData['matchRefId'] = rFam['refId']
-    except:
-        famMatchData['matchRefId'] = rFamId
+    try: famMatchData['workRefId'] = tFam['refId']
+    except: famMatchData['workRefId'] = tFamId
+    try: famMatchData['matchRefId'] = rFam['refId']
+    except: famMatchData['matchRefId'] = rFamId
     famMatchData['marriage'] = {}
     if 'marriage' in tFam: famMatchData['marriage']['work'] = tFam['marriage']
     if 'marriage' in rFam: famMatchData['marriage']['match'] = rFam['marriage']

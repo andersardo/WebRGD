@@ -32,19 +32,20 @@ function syncload(url, where) {
 }
 function doAction(args) {
 //FIX better handling of args
-    var mid = args.mid || ''
-    var fid = args.fid || ''
-    var role = args.role || ''
-    var fltext = args.fltext || ''
+    var person = args.person;
+    var family = args.family;
+    var id1 = '&id1=' + (args.id1 || '')
+    var id2 = '&id2=' + (args.id2 || '')
+    var typ  = args.typ;
     if (args.where == 'visa') {
       document.getElementById('verif').innerHTML = ''
       document.getElementById('res').innerHTML = ''
     }
     if (args.what.indexOf('/actions') == 0) {
-      syncload(args.what + '?wid='+args.wid+'&mid='+mid+'&fid='+fid+'&role='+role+'&fltext='+fltext,document.getElementById(args.where));
+      syncload(args.what + '?m'+id1+id2,document.getElementById(args.where));
       window.location.reload(true);
     } else {
-      load(args.what + '?wid='+args.wid+'&mid='+mid+'&fid='+fid+'&role='+role,document.getElementById(args.where));
+      load(args.what + '?person='+person+'&family='+family+'&typ='+typ,document.getElementById(args.where));
     }
 }
 </script>
@@ -52,11 +53,18 @@ function doAction(args) {
 
 <body>
 <h1>RGD {{title}}</h1>
+<h3>  <a href="/relationsEditor/child">Barn i mer än 2 familjer</a>
+  ||  <a href="/relationsEditor/family">Familjer med mer än 1 HUSB/WIFE</a>
+  ||  <a href="/relationsEditor/relation">Personer/Familjer utan relationer</a>
+  ||  <a href="/">Tillbaks till startsida</a>
+</h3>
 
-%if len(childErr)>1:
+<div id="visa"></div>
+
+%if len(childErrs)>1:
 <H3>Barn i mer än 2 familjer</H3>
 <table border=1 id="childerr">
-%for r in childErr:
+%for r in childErrs:
   <tr>
     %for cell in r:
       <td>{{!cell}}</td>
@@ -66,10 +74,23 @@ function doAction(args) {
 </table> 
 %end
 
-%if len(famErr)>1:
+%if len(famErrs)>1:
 <H3>Familjer med mer än 1 HUSB/WIFE</H3>
 <table border=1 id="famerr">
-%for r in famErr:
+%for r in famErrs:
+  <tr>
+    %for cell in r:
+      <td>{{!cell}}</td>
+    %end
+  </tr>
+%end
+</table> 
+%end
+
+%if len(relErrs)>1:
+<H3>Personer utan relationer</H3>
+<table border=1 id="relerr">
+%for r in relErrs:
   <tr>
     %for cell in r:
       <td>{{!cell}}</td>
@@ -81,7 +102,6 @@ function doAction(args) {
 
 <div id="verif"></div>
 <div id="res"></div>
-<div id="visa"></div>
 <div id="graph"></div>
 </body>
 </html>

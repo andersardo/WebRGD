@@ -64,7 +64,7 @@ def mergeEvent(events):
 
 def mergeOrgDataPers(personUid, originalDataDB):
     #reverseImap matchId -> set(person uids)
-    persDict = {}
+    persDict = {'type': 'person', 'refId': personUid}
     rawData = defaultdict(list)
     for uid in reverseImap[personUid]:
         orgRec = originalDataDB.find_one({'recordId': uid}) # evt 'type': 'person'?
@@ -95,7 +95,7 @@ def mergeOrgDataFam(recordid, originalDataDB):
         combined record used in RGD.
         marriage uses maxdict to determine which value to keep"""
     rawdataMar = []
-    famDict = {}
+    famDict = {'type': 'family', 'refId': recordid}
     for uid in reverseFmap[recordid]:
         orgRec = originalDataDB.find_one({'recordId': uid}) # evt 'type': 'family'?
         if 'marriage' in orgRec['data'][0]['record']:    #KOLLA - finns fler records i listan
@@ -124,7 +124,6 @@ def mergeOrgDataRel(recordPid, recordFid, originalDataDB, relIgnore):
                         found = True
                         break
                 if found: continue
-
                 if r['persId'] in Imap: r['persId'] = next(iter(Imap[r['persId']])) #FIX!!
                 if r['famId'] in Fmap: r['famId'] = next(iter(Fmap[r['famId']]))    #FIX!!
                 #rawRels[r['relTyp']].append(r) #Howmany?? choose best
@@ -132,6 +131,7 @@ def mergeOrgDataRel(recordPid, recordFid, originalDataDB, relIgnore):
     #print 'rels=', rels
     return rels
 
+"""
 def checkFam(wid,mid):
   #wid, mid family refId
   fams = set()
@@ -163,6 +163,7 @@ def checkFam(wid,mid):
             if famMatchData['status'] in common.statOK.union(common.statManuell):
                 #fam_matches.insert(famMatchData)
                 print 'NY MATCH - NOT SAVED',famMatchData['workRefId'],famMatchData['workRefId'],famMatchData['status']
+"""
 
 def createMap(config):
     #creates map work -> match for all statusOK
@@ -222,3 +223,25 @@ def createMap(config):
         for F in Fmap[fam]:
             reverseFmap[F].add(fam)
     return err
+
+def createMapSimple(config):
+    #creates map work -> match for all statusOK
+    global Imap, Fmap
+    Imap.clear()
+    Fmap.clear()
+    cnt=0
+    for famMatch in config['fam_matches'].find({'status': {'$in': list(common.statOK)}}):
+        if famMatch['workid'] in Fignore: continue
+        cnt += 1
+        Fmap[famMatch['workid']].add(famMatch['matchid'])
+    print 'Matched families', cnt, 'out of', config['families'].count(), '; Mappings:', len(Fmap)
+    cnt=0
+    for match in config['matches'].find({'status': {'$in': list(common.statOK)}}):
+        cnt += 1
+        Imap[match['workid']].add(match['matchid'])
+    print 'Matched persons', cnt, 'out of', config['persons'].count(), '; Mappings:', len(Imap)
+    for pers in Imap.keys():
+        if len(Imap[pers])>1: return True  # err = True
+    for fam  in Fmap.keys():
+        if len(Fmap[fam])>1: return True   # err = True
+    return False

@@ -372,7 +372,7 @@ onmouseout="this.width='397'; this.style='position: reslative;right: 0px;'" />
 <table style="width: 100%"><tr><td style="vertical-align: top;">
 <h2>7A. Relationseditor - <a href="#Edit">Läs mera</a></h2>
 <p><br><br>
-<form action="/relationsEditor" method="GET">
+<form action="/relationsEditor/alla" method="GET">
 Databas
 <select name="workDB">
 <option value="">Välj databas</option>

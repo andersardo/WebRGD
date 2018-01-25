@@ -285,8 +285,29 @@ for ind in config['persons'].find({}):
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
-            parseGedcom(ged, rec['gedcom'])
-            parsedGed.append(ged.individual_list()[0])
+            #parseGedcom(ged, rec['gedcom'])
+            #parsedGed.append(ged.individual_list()[0])
+#New
+            testGed = []
+            try:
+                parseGedcom(ged, rec['gedcom'])
+                parsedGed.append(ged.individual_list()[0])
+            except:
+                #try to remove strange utf8 characters
+                import unicodedata
+                for l in rec['gedcom'].split('\n'):
+                    line = ''
+                    for x in l:
+                        try:
+                            y = unicodedata.name(x)
+                            line+=x
+                        except:
+                            pass
+                    testGed.append(line)
+                ged = Gedcom('/dev/null')
+                parseGedcom(ged, '\n'.join(testGed))
+                parsedGed.append(ged.individual_list()[0])
+#
     #Events
     gedEvents = defaultdict(list)
     gedTags = defaultdict(list)

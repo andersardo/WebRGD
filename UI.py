@@ -9,6 +9,8 @@ from utils import setOKfamily, setEjOKfamily, setOKperson, setEjOKperson, split#
 from uiUtils import dbfind,familyViewAll
 from workFlow import workFlowUI, doUpload, cleanUp, getDBselect, listOldLogs
 from graphUtils import genGraph
+from relationEdit import editList, viewChildErr, viewPartnerErr, viewNoRelErr
+from errRelationUtils import mergeFam, mergePers
 import conf.config, common
 #print conf.config
 
@@ -573,60 +575,23 @@ def listSkillnad(typ):
                            tot = tot, prow=rows, buttons=buttons, difftyp=difftyp)
 
 #Relation editor
-@bottle.route('/relationsEditor')
+@bottle.route('/relationsEditor/<typ>')
 @authorize()
-def relationEditor():
-    tit = 'Relations editor'
-    #SANITY CHECKS
-    #can only be child in 1 family
-    childErr = []
-    aggrPipe = [
-        {'$match': {'relTyp': 'child'}},
-        {'$project': {'persId': '$persId', 'famId': '$famId', 'count': {'$concat': ['1']}}},
-        {'$group': {'_id': '$persId', 'count': {'$sum': 1}, 'fams': {'$addToSet': '$famId'}}},
-        {'$match': {'count': {'$gt': 1}}}
-    ]
-    for multiChild in common.config['relations'].aggregate(aggrPipe):
-        #print multiChild
-        #print 'Relation ERROR Child', multiChild['_id'], 'in', multiChild['count'], 'families'
-        persRec = common.config['persons'].find_one({'_id': multiChild['_id']})
-        child = "%s %s" % (persRec['_id'], persRec['name'])
-        #Get alla child relations;
-        for famId in multiChild['fams']:
-            errRow = [child, famId]
-            #print 'famId', famId
-            husbRel = common.config['relations'].find_one({'famId': famId, 'relTyp': 'husb'})
-            #print 'Far', husbRel
-            text = ''
-            if husbRel:
-                persRec = common.config['persons'].find_one({'_id': husbRel['persId']})
-                text = "%s %s" % (persRec['_id'], persRec['name'])
-            errRow.append(text)
-            wifeRel = common.config['relations'].find_one({'famId': famId, 'relTyp': 'wife'})
-            #print 'Mor', wifeRel
-            text = ''
-            if wifeRel:
-                persRec = common.config['persons'].find_one({'_id': wifeRel['persId']})
-                text = "%s %s" % (persRec['_id'], persRec['name'])
-            errRow.append(text)
-            errRow.append('OK button')
-            childErr.append(errRow) 
-            #what if multiple parents in family??
-        childErr.append(['-']) #empty line
-    """
-    #NEW Same parents in several families
-
-    #1 husb/wife per family
-    for partner in ('husb', 'wife'):
-        aggrPipe = [
-            {'$match': {'relTyp': partner}},
-            {'$project': {'famId': '$famId', 'count': {'$concat': ['1']}}},
-            {'$group': {'_id': '$famId', 'count': {'$sum': 1}}},
-            {'$match': {'count': {'$gt': 1}}}]
-        for multiPartner in common.config['relations'].aggregate(aggrPipe):
-            #print 'Relation ERROR Family', multiPartner['_id'], 'have', multiPartner['count'], partner
-    """
-    return bottle.template('listEdit', title = tit, childErr=childErr, famErr = [])
+def relationEditor(typ):
+    (tit, childErrs, famErrs, relErrs) = editList(common.config, typ)
+    return bottle.template('listEdit', title = tit, childErrs=childErrs,
+                           famErrs=famErrs, relErrs=relErrs)
+def viewRelErr(person, family, typ):
+    if typ == 'child':
+        (res, graph) = viewChildErr(person, family.split(':'), common.config)
+    elif typ == 'partner':
+        (res, graph) = viewPartnerErr(person.split(':'), family, common.config)
+    elif typ == 'noRel':
+        (res, graph) = viewNoRelErr(person, None, common.config)
+    else:
+        res = [[u'Okänd feltyp', typ, '', '', '']]
+        graph = ''
+    return bottle.template('viewEdit', rows=res, graph=graph, buttons=None)
 
 #Likheter
 @bottle.route('/downloadFamMatches')
@@ -842,6 +807,9 @@ def views(typ):
         resL = personView(bottle.request.query.wid, bottle.request.query.mid)
     elif typ == 'families':
         resL = familyView(bottle.request.query.wid, bottle.request.query.mid)  #How do a list? KOLLA
+    elif typ == 'relErr':
+        return viewRelErr(bottle.request.query.person, bottle.request.query.family,
+                          bottle.request.query.typ)
     elif typ == 'flags':
         flags = getFlags(bottle.request.query.wid, bottle.request.query.fid,
                          role = bottle.request.query.role)
@@ -915,12 +883,36 @@ def act5():
                           bottle.request.query.role,
                           bottle.request.query.workFam, bottle.request.query.matchFam)
 
+@bottle.route('/actions/mergeFam')
+@authorize()
+def act5():
+    print 'mergeFam', bottle.request.query.id1, bottle.request.query.id2
+    return mergeFam(bottle.request.query.id1, bottle.request.query.id2,
+                    common.config['persons'], common.config['families'],
+                    common.config['relations'], common.config['originalData'])
+
+@bottle.route('/actions/mergePers')
+@authorize()
+def act5():
+    print 'mergePers', bottle.request.query.id1, bottle.request.query.id2
+    return mergePers(bottle.request.query.id1, bottle.request.query.id2,
+                    common.config['persons'], common.config['families'],
+                    common.config['relations'], common.config['originalData'])
+
+@bottle.route('/actions/delRelation')
+@authorize()
+def act5():
+    print 'delRelation', bottle.request.query.id1, bottle.request.query.id2
+    common.config['relations'].delete_one({'persId': bottle.request.query.id1,
+                                    'famId': bottle.request.query.id2})
+    return
+
 #################ADMIN################
 @bottle.route('/oldLogs')
 @authorize()
 def oldlogs():
     mess = listOldLogs(bottle.request.session['activeUser'], bottle.request.query.workDB)
-    (tmpf, dbs, tmpwd, tmpu) = workFlowUI(aaa.current_user.username, bottle.request.session['directory'])    
+    (tmpf, dbs, tmpwd, tmpu) = workFlowUI(aaa.current_user.username, bottle.request.session['directory'])
     return bottle.template('dbadmin', dbs=dbs, message = mess,
                            user=bottle.request.session['activeUser'],
                            role=aaa.current_user.role)

@@ -1,14 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # This Python file uses the following encoding: utf-8
-import common
-
+"""
+merges database workDB into database matchDB.
+does not take any data from originalData
+Try to repair obvious errors
+"""
 import argparse, time, sys, os
 import pickle
 import numpy as np 
+import shutil
 import codecs, locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8') #sorting??
 sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+from errRelationUtils import sanity, repairChild, repairFam, repairRel
+import common
 
 parser = argparse.ArgumentParser()
 parser.add_argument("workDB", help="Working database name" )
@@ -28,10 +34,13 @@ ERRORS = False
 WARNINGS = False
 CHANGES = []
 print 'Merging', dbName, 'into', mDBname
-if noStrict: print 'Accept relation errors when merging'
-else: print 'Do not accept relation errors when merging'
-
-from mergeUtils import createMap, mergeOrgDataPers, mergeOrgDataFam, mergeOrgDataRel
+if noStrict:
+    print 'Accept relation errors when merging'
+    strict = False
+else:
+    print 'Do not accept relation errors when merging'
+    strict = True
+from mergeUtils import createMapSimple, mergeEvent
 from mergeUtils import Imap, reverseImap, Fmap, reverseFmap, Fignore
 
 t0 = time.time()
@@ -51,7 +60,7 @@ if config['fam_matches'].find({'status': {'$in': list(common.statManuell)}}).cou
 print 'Time:',time.time() - t0
 
 print 'Creating match map persons/families'
-if createMap(config): #Creates/updates Imap, Fmap
+if createMapSimple(config): #Creates Imap, Fmap
     print 'WARNING multi-mappings present - might cause problems in merging'
     WARNINGS = True
 
@@ -66,59 +75,105 @@ for flag in config['flags'].find():
         Fmap[flag['workFam']].remove(flag['matchFam'])
         if not Fmap[flag['workFam']]: del(Fmap[flag['workFam']])
         #reverseFmap
-        reverseFmap[flag['matchFam']].remove(flag['workFam'])
-        if not reverseFmap[flag['matchFam']]: del(reverseFmap[flag['matchFam']])
+        #reverseFmap[flag['matchFam']].remove(flag['workFam'])
+        #if not reverseFmap[flag['matchFam']]: del(reverseFmap[flag['matchFam']])
     else:
         print 'Unknown flag:', flag
-#for k in Fmap.keys(): #delete empty maps
-#    if not Fmap[k]: del(Fmap[k])
+
+def inRelIgnore(relation):
+    global relIgnore
+    for r in relIgnore:
+        if cmp(r, relation) == 0:
+            return True
+    return False
 
 print 'Time:',time.time() - t0
+
+def sanityChecks(config):
+    global ERRORS
+    global WARNINGS
+    (childErr, famErr, relErr) = sanity(config['match_persons'], config['match_families'],
+                                    config['match_relations'])
+    for (pers, chFams) in childErr:
+        print 'Relation ERROR Child', pers['name'], pers['_id'], chFams
+        ERRORS = True
+    for (famId, persList) in famErr:
+        pStr = ''
+        for p in persList:
+            pStr += p['_id']+' '+p['name']+';'
+        print 'Relation ERROR Family', famId, 'have multiple husb/wife', pStr
+        ERRORS = True
+    for p in relErr:
+        print 'Relation WARNING Person without relations:', p['_id'], p['name']
+        WARNINGS = True
+    return (ERRORS, WARNINGS)
+
+print 'Check if OK to merge'
+if strict:
+    for person in config['persons'].find():
+        try:
+            if len(Imap[person['_id']])>1:
+                print 'ERROR multimap person:', person['_id'], '=', Imap[person['_id']]
+                ERRORS = True
+        except: pass
+    for family in config['families'].find():
+        try:
+            if len(Fmap[family['_id']])>1:
+                print 'ERROR multimap family:', family['_id'], '=', Fmap[family['_id']]
+                ERRORS = True
+        except: pass
+    sanityChecks(config)  #Assigns global ERRORS, WARNINGS
+
+    if ERRORS:
+        print 'ERRORS present => NOT updating databases'
+        print 'Merging NOT done'
+        print 'Time:',time.time() - t0
+        sys.exit()
 
 #LOCK matchDB
 #Redo mapping??
 
-#config['match_originalData'].insert_one({'type': 'admin', 'time': time.time(),
-#                                     'mergedWith': dbName})
-CHANGES.append([config['match_originalData'], 'insert_one', {'type': 'admin', 'time': time.time(),
-                                                         'mergedWith': dbName}])
+config['match_originalData'].insert_one({'type': 'admin', 'time': time.time(),
+                                     'mergedWith': dbName})
+
 print 'Attempt merging ...'
 #persons
 """
 copy all work.originalData to match.originalData (covers persons, families, relations)
 for all work.persons
     if matched OK:
-        merge match_originalData records to match_person
+        merge records
     else:
         copy to match_person
 """
 recs = config['originalData'].find()
 config['match_originalData'].insert_many(recs)
-#If errors undone below
 
 inscnt=0
 updcnt=0
 for person in config['persons'].find():
-    if person['_id'] in Imap:
+    #if person['_id'] in Imap:
+    if len(Imap[person['_id']])>0:
         updcnt += 1
         matchid = Imap[person['_id']]
-        #generate merged record
-        if (len(matchid) == 1) or noStrict:
-            #config['match_persons'].update({'_id': next(iter(matchid))},
-            #                    mergeOrgDataPers(next(iter(matchid)), config['match_persons'],
-            #                                     config['match_originalData']) )
+        #merge birth/death
+        for ev in ('birth', 'death'):
             for mid in matchid:
-                CHANGES.append([config['match_persons'], 'update', {'_id': mid},
-                        mergeOrgDataPers(mid, config['match_originalData'])
-                ])
-        else:
-            print 'ERROR multimap person:', person['_id'], '=', matchid
-            ERRORS = True
+                Events = []
+                event = config['persons'].find_one({'_id': person['_id']},
+                                               {'_id': False, ev: True})
+                if event: Events.append(event[ev])
+                event = config['match_persons'].find_one({'_id': mid},
+                                                {'_id': False, ev: True})
+                if event: Events.append(event[ev])
+                if Events:
+                    config['match_persons'].update_one({'_id': mid},
+                                        {'$set': {ev: mergeEvent(Events)}})
+        for mid in matchid:
+           config['match_originalData'].update_one({'recordId': mid, 'type': 'person'},
+                                            {'$push': {'map': person['_id']}})
     else:
-        #config['match_persons'].insert_one(person)
-        CHANGES.append([config['match_persons'], 'insert_one', person])
-        Imap[person['_id']].add(person['_id'])  #Identity map
-        reverseImap[person['_id']].add(person['_id'])  #Identity map
+        config['match_persons'].insert_one(person)
         inscnt+=1
 print 'Persons new=',inscnt,'updated=',updcnt
 print 'Time:',time.time() - t0
@@ -126,104 +181,66 @@ print 'Time:',time.time() - t0
 """
 for all families
     if matched OK:
-        merge match_origialData records to match_family
+        merge records
     else:
         copy to match.families
 """
 inscnt=0
 updcnt=0
 for family in config['families'].find():
-    #New ignore KOLLA FIX
-    #if family['_id'] in Fignore:
-    #    continue
-    #end
-    if family['_id'] in Fmap:
+    #if family['_id'] in Fmap:
+    if len(Fmap[family['_id']])>0:
         updcnt += 1
         matchid = Fmap[family['_id']]
-        if (len(matchid) == 1) or noStrict:
-            #config['match_families'].update({'_id': next(iter(matchid))},
-            #                    mergeOrgDataFam(next(iter(matchid)), config['match_families'],
-            #                                     config['match_originalData']) )
-            for mid in matchid:
-                CHANGES.append([config['match_families'], 'update', {'_id': mid},
-                            mergeOrgDataFam(mid, config['match_originalData'])
-                ])
-        else:
-            print 'ERROR multimap family:', family['_id'], '=', matchid
-            ERRORS = True
+        for mid in matchid:
+            Events = []
+            event = config['families'].find_one({'_id': family['_id']},
+                                           {'_id': False, 'marriage': True})
+            if event: Events.append(event['marriage'])
+            #merge marriage
+            event = config['match_families'].find_one({'_id': mid},
+                                            {'_id': False, 'marriage': True})
+            if event: Events.append(event['marriage'])
+            if Events:
+                config['match_families'].update_one({'_id': mid},
+                                    {'$set': {'marriage': mergeEvent(Events)}})
+                config['match_originalData'].update_one({'recordId': mid, 'type': 'family'},
+                                            {'$push': {'map': family['_id']}})
     else:
-        #config['match_families'].insert_one(family)
-        CHANGES.append([config['match_families'], 'insert_one', family])
-        Fmap[family['_id']].add(family['_id'])  #Identity map
-        reverseFmap[family['_id']].add(family['_id'])  #Identity map
+        config['match_families'].insert_one(family)
         inscnt += 1
 print 'Families new=',inscnt,'updated=',updcnt
 print 'Time:',time.time() - t0
 
 #Relations
-inscnt=0
-rels = []
-for rel in config['relations'].find({}, {'_id': 0}):
-    found = False
-    for r in relIgnore:
-        if cmp(r, rel) == 0:
-            found = True
-            break
-    if found: continue
-    if rel['persId'] in Imap and rel['famId'] in Fmap:
-        updcnt += 1
-        matchPid = Imap[rel['persId']]
-        matchFid = Fmap[rel['famId']]
-        if (len(matchPid)>1 or len(matchFid)>1) and not noStrict:
-            print 'ERROR relation multimap in person', matchPid, 'or family', matchFid
-            ERRORS = True
-        else:
-            for mPid in matchPid:
-                for mFid in matchFid:
-                    rels.extend(mergeOrgDataRel(mPid, mFid,
-                                                config['match_originalData'], relIgnore))
-            #for r in mergeOrgDataRel(next(iter(matchPid)), next(iter(matchFid)),
-            #                         config['match_originalData'], relIgnore):
-    else:
-        #config['match_relations'].insert_one(rel)
-        CHANGES.append([config['match_relations'], 'insert_one', rel])
-        inscnt += 1
-for r in list(np.unique(np.array(rels))):
-    updcnt += 1
-    #config['match_relations'].replace_one(r, r, upsert=True) #??
-    CHANGES.append([config['match_relations'], 'replace_one', r, r])
-print 'Relations: updated=', updcnt, 'inserted=', inscnt
-print 'Time:',time.time() - t0
+for r in config['relations'].find({}, {'_id': 0}):
+    if inRelIgnore(r): continue
+    #if r['persId'] in Imap: pids = Imap[r['persId']]
+    if len(Imap[r['persId']])>0: pids = Imap[r['persId']]
+    else: pids = [r['persId']]
+    #if r['famId'] in Fmap: fids = Fmap[r['famId']]
+    if len(Fmap[r['famId']])>0: fids = Fmap[r['famId']]
+    else: fids = [r['famId']]
+    for pid in pids:
+        for fid in fids:
+            r['persId'] = pid
+            r['famId'] = fid
+            config['match_relations'].replace_one(r, r, upsert=True)
 
-if WARNINGS:
-    print 'Some warnings - check log above'
-
-#ERROR handling
-if ERRORS:
-    print 'ERRORS present => NOT updating databases'
-    print 'Merging NOT done'
-    #Undo delete of relIgnore records from flag handling
-    for rel in relIgnore:
-        config['match_relations'].insert(rel)
-    #Undo copying of orginalData
-    for rec in config['originalData'].find():
-        config['match_originalData'].delete_one(rec)
-    print 'Time:',time.time() - t0
-    sys.exit()
-#All OK execute CHANGES
-print 'Actually updating databases'
-for rel in relIgnore:
-    res = config['match_relations'].remove(rel)
-for op in CHANGES:
-    if op[1]=='replace_one' and len(op)==4:
-        op[0].replace_one(op[2], op[3], upsert=True)
-    elif op[1]=='update' and len(op)==4:
-        op[0].update(op[2], op[3])
-    elif op[1]=='insert_one' and len(op)==3:
-        op[0].insert_one(op[2])
-    else:
-        print 'ERROR - unkown database operation', op
-print 'Time:',time.time() - t0
+print 'Try to repair any new relation errors'
+#FIX bästa ordningen?? Fam, child, rel ??
+(childErr, famErr, relErr) = sanity(config['match_persons'], config['match_families'],
+                                    config['match_relations'], do=['child'])
+resChild = repairChild(childErr, config['match_persons'], config['match_families'],
+                  config['match_relations'], config['match_originalData'])
+(childErr, famErr, relErr) = sanity(config['match_persons'], config['match_families'],
+                                    config['match_relations'], do=['family'])
+resFam = repairFam(famErr, config['match_persons'], config['match_families'],
+          config['match_relations'], config['match_originalData'])
+#(childErr, famErr, relErr) = sanity(config['match_persons'], config['match_families'],
+#                                    config['match_relations'], do=['match_child'])
+#repairRel(relErr, config['match_persons'], config['match_families'],
+#          config['match_relations'], config['match_originalData'])
 
 print 'Check and merge duplicate families'
 #Check for duplicate families: Fall 2 relationserror
@@ -242,6 +259,7 @@ for s in d.values():
       fdubl = list(s)
       #merge all into fdubl[0]
       F = config['match_families'].find_one({'_id': fdubl[0]})
+      print 'Fdubl=', fdubl
       if 'marriage'in F:
           marrEvents = [F['marriage']]
       else:
@@ -256,10 +274,9 @@ for s in d.values():
           #print 'Dubl', fd, fam2beMerged
           if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
           print 'Merging family %s into %s' % (fam2beMerged['_id'], FId)
-
+          config['match_originalData'].update_one({'recordId': FId, 'type': 'family'},
+                                            {'$push': {'map': fam2beMerged['_id']}})
           config['match_families'].delete_one({'_id': fam2beMerged['_id']})
-          #Fmap[fam2beMerged['_id']] = [F['_id']]
-          Fmap[fam2beMerged['_id']] = F['_id'] #KOLLA
           config['match_relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
                                                {'$or': [{'relTyp': 'husb'},
                                                         {'relTyp': 'wife'}]}
@@ -283,51 +300,13 @@ for s in d.values():
                                               {'marriage': mergeEvent(marrEvents)}})
 print 'Time:',time.time() - t0
 
-#SANITY CHECKS
-print 'Doing sanity checks'
-#can only be child in 1 family
-aggrPipe = [
-    {'$match': {'relTyp': 'child'}},
-    {'$project': {'persId': '$persId', 'count': {'$concat': ['1']}}},
-    {'$group': {'_id': '$persId', 'count': {'$sum': 1}}},
-    {'$match': {'count': {'$gt': 1}}}
-]
-for multiChild in config['match_relations'].aggregate(aggrPipe):
-    pers = config['match_persons'].find_one({'_id': multiChild['_id']})
-    print 'Relation ERROR Child', pers['name'], multiChild['_id'], 'in', multiChild['count'], 'families'
-    ERRORS = True
-#1 husb/wife per family
-for partner in ('husb', 'wife'):
-    aggrPipe = [
-        {'$match': {'relTyp': partner}},
-        {'$project': {'famId': '$famId', 'count': {'$concat': ['1']}}},
-        {'$group': {'_id': '$famId', 'count': {'$sum': 1}}},
-        {'$match': {'count': {'$gt': 1}}}]
-    for multiPartner in config['match_relations'].aggregate(aggrPipe):
-        print 'Relation ERROR Family', multiPartner['_id'], 'have', multiPartner['count'], partner
-        ERRORS = True
-#Persons without relations
-for pers in config['match_persons'].find():
-    rel = config['match_relations'].find_one({'persId': pers['_id']})
-    if not rel:
-        print 'Relation WARNING Person without relations:', pers['_id'], pers['name']
-        WARNINGS = True
+if WARNINGS:
+    print 'Some warnings - check log above'
 
-#Save Imap, Fmap in match_originalData to be used in next merge
-map = config['match_originalData'].find_one({'type': 'Imap'}, {'_id': 1})
-#if '_id' in Imap:
-#    config['match_originalData'].save({'_id': Imap['_id'], 'type': 'Imap', 'data': pickle.dumps(Imap)})
-if map:
-    config['match_originalData'].save({'_id': map['_id'], 'type': 'Imap', 'data': pickle.dumps(Imap)})
-else:
-    config['match_originalData'].save({'type': 'Imap', 'data': pickle.dumps(Imap)})
-map = config['match_originalData'].find_one({'type': 'Fmap'}, {'_id': 1})
-#if '_id' in Fmap:
-#    config['match_originalData'].save({'_id': Fmap['_id'], 'type': 'Fmap', 'data': pickle.dumps(Fmap)})
-if map:
-    config['match_originalData'].save({'_id': map['_id'], 'type': 'Fmap', 'data': pickle.dumps(Fmap)})
-else:
-    config['match_originalData'].save({'type': 'Fmap', 'data': pickle.dumps(Fmap)})
+print 'Time:',time.time() - t0
+#SANITY CHECKS
+print 'Doing sanity checks after merge'
+sanityChecks(config)
 
 #Gedcom xrefs
 workOrgData = config['originalData'].find_one({'type': 'gedcomRecords'})
@@ -338,6 +317,9 @@ for rec in workOrgData['data']:
 print 'Time:',time.time() - t0
 print 'Indexing'
 #EVT only reindex affected persons, families; Delete old index?
+(user,db) = mDBname.split('_', 1)
+directory = "./files/"+user+'/'+db+'/LuceneIndex'
+if os.path.isdir(directory): shutil.rmtree(directory)
 from luceneUtils import setupDir, index
 setupDir(mDBname)
 index(config['match_persons'], config['match_families'], config['match_relations'])
