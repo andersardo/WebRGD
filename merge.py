@@ -321,7 +321,7 @@ print 'Indexing'
 directory = "./files/"+user+'/'+db+'/LuceneIndex'
 if os.path.isdir(directory): shutil.rmtree(directory)
 from luceneDB import luceneDB
-searchDB = luceneDB(dbName)
+searchDB = luceneDB(mDBname)
 searchDB.index(config['persons'],config['families'],config['relations'])
 print 'Indexed', mDBname, 'in Lucene'
 print 'Time:',time.time() - t0

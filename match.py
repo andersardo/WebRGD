@@ -34,8 +34,6 @@ from dbUtils import getFamilyFromId
 from utils import matchFam, setFamOK, setEjOKfamily, setOKperson
 from matchtext import matchtext
 #from luceneUtils import setupDir, search
-from luceneDB import luceneDB
-searchDB = luceneDB(dbName)
 
 mt_tmp = matchtext()
 
@@ -50,7 +48,9 @@ else:
     config['famfeatureSet'] = 'famExtended'  #Default - best performance
 
 common.config = config
-setupDir(mDBname)
+#setupDir(mDBname)
+from luceneDB import luceneDB
+searchDB = luceneDB(mDBname)
 
 person_list = config['persons']
 fam_list = config['families']
