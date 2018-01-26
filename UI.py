@@ -9,7 +9,7 @@ from utils import setOKfamily, setEjOKfamily, setOKperson, setEjOKperson, split#
 from uiUtils import dbfind,familyViewAll
 from workFlow import workFlowUI, doUpload, cleanUp, getDBselect, listOldLogs
 from graphUtils import genGraph
-from relationEdit import editList, viewChildErr, viewPartnerErr, viewNoRelErr
+from relationEdit import editList, viewChildErr, viewPartnerErr, viewNoRelErr, viewDubbl
 from errRelationUtils import mergeFam, mergePers
 import conf.config, common
 #print conf.config
@@ -65,6 +65,7 @@ def setupCommon():
     matchDB = bottle.request.query.matchDB
     if (not matchDB) and ('matchDB' in bottle.request.session):
         matchDB = bottle.request.session['matchDB']
+    print user, workDB, matchDB
     if workDB:
         #KOLLA possibly store mongoClient in session? Param to init?
         common.config = common.init(workDB, matchDBName = matchDB)
@@ -79,6 +80,7 @@ def setupCommon():
             common.config['originalData'].insert_one(rec)
     bottle.response.set_header("Cache-Control", "no-cache")
     #print user, bottle.request.remote_addr, str(datetime.now()), bottle.request.url
+    print common.config['persons']
     logging.info('%s %s %s', user, bottle.request.remote_addr, bottle.request.url)
 
 @bottle.route('/')
@@ -578,9 +580,10 @@ def listSkillnad(typ):
 @bottle.route('/relationsEditor/<typ>')
 @authorize()
 def relationEditor(typ):
-    (tit, childErrs, famErrs, relErrs) = editList(common.config, typ)
+    (tit, childErrs, famErrs, relErrs, dubbls) = editList(common.config, typ)
     return bottle.template('listEdit', title = tit, childErrs=childErrs,
-                           famErrs=famErrs, relErrs=relErrs)
+                           famErrs=famErrs, relErrs=relErrs, dubbletter=dubbls)
+
 def viewRelErr(person, family, typ):
     if typ == 'child':
         (res, graph) = viewChildErr(person, family.split(':'), common.config)
@@ -588,6 +591,10 @@ def viewRelErr(person, family, typ):
         (res, graph) = viewPartnerErr(person.split(':'), family, common.config)
     elif typ == 'noRel':
         (res, graph) = viewNoRelErr(person, None, common.config)
+    elif typ == 'dubblett':
+        (res, graph) = viewDubbl(person, family, common.config)
+    elif typ == 'dubblettFind':
+        (res, graph) = viewDubbl(person, family, common.config, find=True)
     else:
         res = [[u'Okänd feltyp', typ, '', '', '']]
         graph = ''

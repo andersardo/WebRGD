@@ -320,9 +320,9 @@ print 'Indexing'
 (user,db) = mDBname.split('_', 1)
 directory = "./files/"+user+'/'+db+'/LuceneIndex'
 if os.path.isdir(directory): shutil.rmtree(directory)
-from luceneUtils import setupDir, index
-setupDir(mDBname)
-index(config['match_persons'], config['match_families'], config['match_relations'])
+from luceneDB import luceneDB
+searchDB = luceneDB(dbName)
+searchDB.index(config['persons'],config['families'],config['relations'])
 print 'Indexed', mDBname, 'in Lucene'
 print 'Time:',time.time() - t0
 

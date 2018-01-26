@@ -33,7 +33,9 @@ from matchUtils import *
 from dbUtils import getFamilyFromId
 from utils import matchFam, setFamOK, setEjOKfamily, setOKperson
 from matchtext import matchtext
-from luceneUtils import setupDir, search
+#from luceneUtils import setupDir, search
+from luceneDB import luceneDB
+searchDB = luceneDB(dbName)
 
 mt_tmp = matchtext()
 
@@ -71,7 +73,7 @@ for p in person_list.find({}, no_cursor_timeout=True):
     if not matchtxt:
         logging.error('No matchtextdata for %s, %s',p['_id'],p['refId'])
         continue       ##########FIX!!!!!!!!!!
-    candidates = search(matchtxt, p['sex'], 2) #Lucene search
+    candidates = searchDB.search(matchtxt, p['sex'], 2) #Lucene search
     #Om inga kandidat-matcher? Inget problem dom är inte Match
     sc = 0
     for (kid,score) in candidates:

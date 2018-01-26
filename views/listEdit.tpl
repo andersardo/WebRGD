@@ -56,6 +56,10 @@ function doAction(args) {
 <h3>  <a href="/relationsEditor/child">Barn i mer än 2 familjer</a>
   ||  <a href="/relationsEditor/family">Familjer med mer än 1 HUSB/WIFE</a>
   ||  <a href="/relationsEditor/relation">Personer/Familjer utan relationer</a>
+  <br>
+  ||  <a href="/relationsEditor/dubblett">Dubbletter</a>
+  ||  <a href="/relationsEditor/dubblettFind">Generera dubbletter</a>
+  <br>
   ||  <a href="/">Tillbaks till startsida</a>
 </h3>
 
@@ -87,10 +91,10 @@ function doAction(args) {
 </table> 
 %end
 
-%if len(relErrs)>1:
-<H3>Personer utan relationer</H3>
+%if len(dubbletter)>1:
+<H3>Dubbletter</H3>
 <table border=1 id="relerr">
-%for r in relErrs:
+%for r in dubbletter:
   <tr>
     %for cell in r:
       <td>{{!cell}}</td>
@@ -99,6 +103,7 @@ function doAction(args) {
 %end
 </table> 
 %end
+
 
 <div id="verif"></div>
 <div id="res"></div>

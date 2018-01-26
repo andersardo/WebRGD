@@ -187,9 +187,10 @@ for s in d.values():
                                               {'marriage': mergeEvent(marrEvents)}})
 logging.info('Time %s',time.time() - t0)
 logging.info('Indexing %s in Lucene', dbName)
-from luceneUtils import setupDir, index
-setupDir(dbName)
-index(config['persons'],config['families'],config['relations'])
+from luceneDB import luceneDB
+searchDB = luceneDB(dbName)
+#setupDir(dbName)
+searchDB.index(config['persons'],config['families'],config['relations'])
 logging.info('Time %s',time.time() - t0)
 #stats
 antPers = config['persons'].find().count()
