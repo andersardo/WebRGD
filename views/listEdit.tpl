@@ -91,8 +91,21 @@ function doAction(args) {
 </table> 
 %end
 
+%if len(relErrs)>1:
+<H3>Personer utan relationer</H3>
+<table border=1 id="famerr">
+%for r in relErrs:
+  <tr>
+    %for cell in r:
+      <td>{{!cell}}</td>
+    %end
+  </tr>
+%end
+</table> 
+%end
+
 %if len(dubbletter)>1:
-<H3>Dubbletter</H3>
+<H3>Möjliga dubbletter</H3>
 <table border=1 id="relerr">
 %for r in dubbletter:
   <tr>

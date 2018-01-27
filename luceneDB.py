@@ -19,7 +19,7 @@ from org.apache.lucene.search import IndexSearcher
 from org.apache.lucene.util import Version
 
 from matchtext import matchtext
-luceneVM = lucene.initVM() #default 2048? #vmargs=['-Djava.awt.headless=true']
+luceneVM = lucene.initVM() #default 2048?
 luceneVM.attachCurrentThread('LuceneDB', True)
 
 class luceneDB:
@@ -45,11 +45,12 @@ class luceneDB:
             os.mkdir(directory)
         elif dropDB:
             shutil.rmtree(directory)
+            os.mkdir(directory)
         self.indexDir = SimpleFSDirectory(Paths.get(directory))
         try:
             self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
-        except Exception, e:
-            print 'Exception IndexSearcher'
+        except Exception, e: #if directory empty
+            pass
 
     def index(self, personDB, familyDB, relationDB):
         config = IndexWriterConfig(self.analyzer)
@@ -80,9 +81,22 @@ class luceneDB:
         writer.close()
         return
 
+    def deleteRec(pid):
+        return
+        #Not Ready!
+        config = IndexWriterConfig(self.analyzer)
+        #config.setOpenMode(IndexWriterConfig.OpenMode.???)
+        writer = IndexWriter(self.indexDir, config)
+        #writer.deleteDocuments(Term('docid', str(1)))??????????????
+        writer.commit()
+        writer.close()
+        return
+
     def search(self, q, sex, ant=5, config = None):
         query = QueryParser("text", self.analyzer).parse(q.replace('/', '\/'))
         #Hur lägga till sex?
+        if not self.searcher:
+            self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
         scoreDocs = self.searcher.search(query, ant).scoreDocs
         hits = []
         for scoreDoc in scoreDocs:

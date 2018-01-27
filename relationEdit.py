@@ -11,11 +11,12 @@ dubblList = []
 
 def editList(config, typ):
     global dubblList
-    tit = 'Relation editor'
+    tit = 'Relation editor databas: ' + config['workDB']
     doTyp = []
     if typ in ('child', 'family', 'relation', 'dubblett', 'dubblettFind'):
         doTyp.append(typ)
     else:
+        dubblList = []
         doTyp.append('child')
         doTyp.append('family')
     childErrs = [['Typ', 'Person', 'Familjer', 'action']]
@@ -52,7 +53,7 @@ def editList(config, typ):
         visa = '<button onclick="doAction('+str(args)+')">Visa</button>'
         relErrs.append(['Inga relationer', person, '', visa])
     if typ in ('dubblett', 'dubblettFind'):
-        tit = 'Dubblett editor'
+        tit = 'Dubblett editor databas: ' + config['workDB']
         if len(dubblList) == 0 or typ=='dubblettFind':
             #from luceneUtils import setupDir, search
             #setupDir(config['workDB'])  ##FIX RuntimeError: attachCurrentThread()
@@ -60,7 +61,7 @@ def editList(config, typ):
             from matchtext import matchtext
             mt_tmp = matchtext()
             tab = []
-            tab.append(['Score',u'Namn/Id', 'Kandidate Id'])
+            tab.append(['Score',u'Namn/Id', 'Kandidat Id'])
             for person in config['persons'].find():
                 matchtxt = mt_tmp.matchtextPerson(person, config['persons'],
                                                   config['families'], config['relations'])
@@ -73,7 +74,11 @@ def editList(config, typ):
                 pstr = "%s %s" % (person['_id'], person['name'])
                 for (kid,score) in candidates:
                     if kid == person['_id']: continue
-                    if not config['persons'].find_one({'_id': kid}): continue
+                    cand = config['persons'].find_one({'_id': kid})
+                    if not cand: continue
+                    try:
+                        if abs(int(person['birth']['date'][0:4]) - int(cand['birth']['date'][0:4])) > 10: continue
+                    except:pass
                     args = {'where': 'visa', 'what': '/view/relErr', 'typ': 'dubblett',
                             'person': str(person['_id']), 'family': str(kid)}
                     visa = '<button onclick="doAction('+str(args)+')">Visa</button>'
@@ -218,7 +223,7 @@ def viewNoRelErr(personIds, familyIds, config):
 def viewDubbl(personId, kandidateId, config, find=False):
     tab = []
     tab.append(['',u'Namn/refId', u'Född', u'Död', '', u'Namn/refId', u'Född', u'Död'])
-    t = []
+    t = ['']
     t.extend(persTab(personId, config['persons']))
     args =  {'where': 'visa', 'what': '/actions/mergePers',
              'id1': str(personId), 'id2': str(kandidateId)}

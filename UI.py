@@ -65,7 +65,6 @@ def setupCommon():
     matchDB = bottle.request.query.matchDB
     if (not matchDB) and ('matchDB' in bottle.request.session):
         matchDB = bottle.request.session['matchDB']
-    print user, workDB, matchDB
     if workDB:
         #KOLLA possibly store mongoClient in session? Param to init?
         common.config = common.init(workDB, matchDBName = matchDB)
@@ -80,7 +79,6 @@ def setupCommon():
             common.config['originalData'].insert_one(rec)
     bottle.response.set_header("Cache-Control", "no-cache")
     #print user, bottle.request.remote_addr, str(datetime.now()), bottle.request.url
-    print common.config['persons']
     logging.info('%s %s %s', user, bottle.request.remote_addr, bottle.request.url)
 
 @bottle.route('/')
