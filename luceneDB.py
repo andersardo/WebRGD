@@ -12,7 +12,7 @@ from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.analysis.miscellaneous import LimitTokenCountAnalyzer
 from org.apache.lucene.document import Document, Field, TextField, StringField
 from org.apache.lucene.index import \
-  FieldInfo, IndexWriter, IndexWriterConfig, DirectoryReader
+  FieldInfo, IndexWriter, IndexWriterConfig, DirectoryReader, Term
 from org.apache.lucene.store import SimpleFSDirectory
 from org.apache.lucene.queryparser.classic import QueryParser
 from org.apache.lucene.search import IndexSearcher
@@ -81,15 +81,14 @@ class luceneDB:
         writer.close()
         return
 
-    def deleteRec(pid):
-        return
-        #Not Ready!
+    def deleteRec(self, pid):
         config = IndexWriterConfig(self.analyzer)
-        #config.setOpenMode(IndexWriterConfig.OpenMode.???)
+        #config.setOpenMode(IndexWriterConfig.OpenMode.APPEND)
         writer = IndexWriter(self.indexDir, config)
-        #writer.deleteDocuments(Term('docid', str(1)))??????????????
-        writer.commit()
+        res = writer.deleteDocuments(Term('uid', pid))
+        res = writer.commit()
         writer.close()
+        self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
         return
 
     def search(self, q, sex, ant=5, config = None):
@@ -104,3 +103,35 @@ class luceneDB:
             if sex == doc.get("sex"):
                 hits.append([doc.get("uid"), scoreDoc.score])
         return hits
+
+if __name__=="__main__":
+    searchDB = luceneDB('anders_testLucene', dropDB=True)
+
+    #index some documents
+    docs = [
+        ['P36', 'M', 'hans anders b1936 d1966'],
+        ['P37', 'F', 'maria beata b1937 d1967'],
+        ['P38', 'U', 'oscar marina b1939 d1968'],
+        ['P39', 'M', 'jonas peter b1939 d1969'],
+        ['P40', 'F', 'katarina margareta b1940 d1970'],
+        ['P41', 'M', 'jonas erik b1939 d1971']
+    ]
+    config = IndexWriterConfig(searchDB.analyzer)
+    config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
+    writer = IndexWriter(searchDB.indexDir, config)
+    for d in docs:
+        doc = Document()
+        doc.add(Field('uid', d[0], StringField.TYPE_STORED))
+        doc.add(Field('sex', d[1], StringField.TYPE_STORED))
+        doc.add(Field("text", d[2], TextField.TYPE_NOT_STORED))
+        writer.addDocument(doc)
+    writer.commit()
+    writer.close()
+
+    #test deletion
+    h = searchDB.search('b1939 jonas', 'M')
+    print h
+    print 'Deleting P39'
+    searchDB.deleteRec('P39')
+    h = searchDB.search('b1939 jonas', 'M')
+    print h

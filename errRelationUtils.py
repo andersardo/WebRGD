@@ -7,6 +7,7 @@ from dbUtils import getFamilyFromId
 from matchUtils import nodeSim
 from mergeUtils import mergeEvent
 from graphUtils import eventDisp, printNode, mapPersId
+from luceneDB import luceneDB
 """
 #Family SVM default
 from svmutil import svm_load_model, svm_predict
@@ -83,6 +84,9 @@ def mergeFam(fId1, fId2, personDB, familyDB, relationDB, origDB):
         familyDB.update_one({'_id': fId1}, {'$set':
                                     {'marriage': mergeEvent(marrEvents)}})
     familyDB.delete_one({'_id': fId2}) #delete family fId2
+    # FIX Need name of DB:
+    searchDB = luceneDB(personDB.full_name.split('.')[0])
+    searchDB.deleteRec(fId2)
     return
 
 def mergePers(pId1, pId2, personDB, familyDB, relationDB, origDB):
@@ -104,6 +108,9 @@ def mergePers(pId1, pId2, personDB, familyDB, relationDB, origDB):
             personDB.update_one({'_id': pId1}, {'$set':
                                          {ev: mergeEvent(Events)}})
     personDB.delete_one({'_id': pId2}) #delete person pId2
+    # FIX Need name of DB:
+    searchDB = luceneDB(personDB.full_name.split('.')[0])
+    searchDB.deleteRec(pId2)
     #Evt check if pId1 barn i två familjer och inga problem => delete den familjen
     return
 
