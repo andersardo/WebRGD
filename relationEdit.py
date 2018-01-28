@@ -61,6 +61,7 @@ def editList(config, typ):
             from matchtext import matchtext
             mt_tmp = matchtext()
             tab = []
+            done = []
             tab.append(['Score',u'Namn/Id', 'Kandidat Id'])
             for person in config['persons'].find():
                 matchtxt = mt_tmp.matchtextPerson(person, config['persons'],
@@ -74,16 +75,19 @@ def editList(config, typ):
                 pstr = "%s %s" % (person['_id'], person['name'])
                 for (kid,score) in candidates:
                     if kid == person['_id']: continue
+                    if ';'.join([person['_id'],kid]) in done: continue
                     cand = config['persons'].find_one({'_id': kid})
                     if not cand: continue
                     try:
-                        if abs(int(person['birth']['date'][0:4]) - int(cand['birth']['date'][0:4])) > 10: continue
+                        if abs(int(person['birth']['date'][0:4]) - int(cand['birth']['date'][0:4])) > 10:
+                            continue
                     except:pass
                     args = {'where': 'visa', 'what': '/view/relErr', 'typ': 'dubblett',
                             'person': str(person['_id']), 'family': str(kid)}
                     visa = '<button onclick="doAction('+str(args)+')">Visa</button>'
-                    tab.append([score, pstr, kid, visa])
-            dubblList = sorted(tab, key=itemgetter(0), reverse=True)[0:20]
+                    tab.append(["%3.0f" % (score), pstr, kid, visa])
+                    done.append(';'.join([kid,person['_id']]))
+            dubblList = sorted(tab, key=itemgetter(0), reverse=True)[0:25]
         dubbls = dubblList
     return (tit, childErrs, famErrs, relErrs, dubbls)
 
@@ -206,11 +210,17 @@ def viewNoRelErr(personIds, familyIds, config):
                                       config['families'], config['relations'])
     candidates = searchDB.search(matchtxt, person['sex'], 5) #Lucene search
     tab = []
-    tab.append(['',u'Namn/refId', u'Född', u'Död', '', u'Namn/refId', u'Född', u'Död'])
+    tab.append(['Score',u'Namn/refId', u'Född', u'Död', '', u'Namn/refId', u'Född', u'Död'])
     for (kid,score) in candidates:
         if kid == personIds: continue
-        if not config['persons'].find_one({'_id': kid}, {'_id': 1}): continue
-        t = ['']
+        cand = config['persons'].find_one({'_id': kid})
+        if not cand: continue
+        try:
+            if abs(int(person['birth']['date'][0:4]) - int(cand['birth']['date'][0:4])) > 10:
+                continue
+        except:pass
+        t = []
+        t.append("%3.0f" % (score))
         t.extend(persTab(personIds, config['persons']))
         args =  {'where': 'visa', 'what': '/actions/mergePers',
                  'id1': str(personIds), 'id2': str(kid)}
