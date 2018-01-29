@@ -11,7 +11,7 @@ dubblList = []
 
 def editList(config, typ):
     global dubblList
-    tit = 'Relation editor databas: ' + config['workDB']
+    tit = 'Verktyg databas: ' + config['workDB']
     doTyp = []
     if typ in ('child', 'family', 'relation', 'dubblett', 'dubblettFind'):
         doTyp.append(typ)
@@ -243,6 +243,21 @@ def viewDubbl(personId, kandidateId, config, find=False):
     tab.append(t)
     graph = genGraphPers(personId, kandidateId, None, config['persons'],
                         config['families'], config['relations'])
+    return (tab,graph)
+
+def viewQueryHits(Id, config):
+    tab = []
+    tab.append(['',u'Namn/refId', u'Född', u'Död', ''])
+    t = ['']
+    if Id.startswith('P_'):
+        t.extend(persTab(Id, config['persons']))
+        graph = genGraphPers(Id, None, None, config['persons'],
+                        config['families'], config['relations'])
+    elif Id.startswith('F_'):
+        t.extend([Id, '', ''])
+        graph = ''
+    t.append('')
+    tab.append(t)
     return (tab,graph)
 
 def doGenGraphFam(persId, famId1, famId2, config):

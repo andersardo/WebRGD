@@ -370,8 +370,8 @@ onmouseout="this.width='397'; this.style='position: reslative;right: 0px;'" />
 </table>
 
 <table style="width: 100%"><tr><td style="vertical-align: top;">
-<h2>7A. Relations-/Dubblett-editor - <a href="#Edit">Läs mera</a></h2>
-<p><br><br>
+<h2>7A. Verktyg  - <a href="#Verktyg">Läs mera</a></h2>
+<p>
 <form action="/relationsEditor/alla" method="GET">
 Databas
 <select name="workDB">
@@ -382,7 +382,7 @@ Databas
 %end
 
 </select>
-<p><input type="submit" value="Editera" />
+<p><input type="submit" value="Gå till verktygs-sidan" />
 </form>
 </td></tr>
 </table>

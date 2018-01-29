@@ -9,8 +9,9 @@ from utils import setOKfamily, setEjOKfamily, setOKperson, setEjOKperson, split#
 from uiUtils import dbfind,familyViewAll
 from workFlow import workFlowUI, doUpload, cleanUp, getDBselect, listOldLogs
 from graphUtils import genGraph
-from relationEdit import editList, viewChildErr, viewPartnerErr, viewNoRelErr, viewDubbl
+from relationEdit import editList, viewChildErr, viewPartnerErr, viewNoRelErr, viewDubbl, viewQueryHits
 from errRelationUtils import mergeFam, mergePers
+from queryUtils import doQuery
 import conf.config, common
 #print conf.config
 
@@ -593,10 +594,19 @@ def viewRelErr(person, family, typ):
         (res, graph) = viewDubbl(person, family, common.config)
     elif typ == 'dubblettFind':
         (res, graph) = viewDubbl(person, family, common.config, find=True)
+    elif typ == 'queryhits':
+        (res, graph) = viewQueryHits(person, common.config)
     else:
         res = [[u'Okänd feltyp', typ, '', '', '']]
         graph = ''
     return bottle.template('viewEdit', rows=res, graph=graph, buttons=None)
+
+@bottle.route('/queryDB')
+@authorize()
+def queryDB():
+    (tit, res) = doQuery(bottle.request.query.q, common.config)
+    return bottle.template('listEdit', title = tit, childErrs=[],
+                           famErrs=[], relErrs=[], dubbletter=res) #TMP
 
 #Likheter
 @bottle.route('/downloadFamMatches')

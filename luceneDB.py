@@ -36,23 +36,44 @@ class luceneDB:
         """
         #self.initObject.attachCurrentThread('LuceneDB', True)
         luceneVM.attachCurrentThread('LuceneDB')
-        self.analyzer = StandardAnalyzer()
+        self.analyzer = StandardAnalyzer() #split on whitespace, no trunkation or stemming
         self.indexDir = None
         self.searcher = None
         (user,db) = dbName.split('_', 1)
         directory = "./files/"+user+'/'+db+'/LuceneIndex'
+        if dropDB: shutil.rmtree(directory)
+        self.indexDir = SimpleFSDirectory(Paths.get(directory)) #creates directory if not exists
+        """
         if not os.path.exists(directory):
             os.mkdir(directory)
         elif dropDB:
             shutil.rmtree(directory)
             os.mkdir(directory)
-        self.indexDir = SimpleFSDirectory(Paths.get(directory))
         try:
             self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
         except Exception, e: #if directory empty
             pass
+        """
+
+    def personText(self, person):
+        txt = []
+        txt.append(person['name'])
+        for field, value in person.iteritems():
+            if field in ('birth', 'death'):
+                for key, val in value.iteritems():
+                    if key == 'place': txt.append(val)
+                    elif key == 'date':
+                        txt.append(val)
+                        if len(val) > 4: txt.append(val[0:4])
+            elif field in ('_id', 'refId'): txt.append(value)
+        return ' '.join(txt)
 
     def index(self, personDB, familyDB, relationDB):
+        """
+        indexes a database
+        Field match includes information about parents and is used to find matches
+        Field text has Ids, names, places, and dates and is used to find a person/family
+        """
         config = IndexWriterConfig(self.analyzer)
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
         writer = IndexWriter(self.indexDir, config)
@@ -65,16 +86,20 @@ class luceneDB:
             doc = Document()
             doc.add(Field('uid',str(p['_id']), StringField.TYPE_STORED))
             doc.add(Field('sex',str(p['sex']), StringField.TYPE_STORED))
-            doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
+            doc.add(Field("match", matchtxt, TextField.TYPE_NOT_STORED))
+            doc.add(Field("text", mt.luceneFix(self.personText(p)), TextField.TYPE_NOT_STORED))
             writer.addDocument(doc)
 
         #Family matchtext
         for f in familyDB.find():
-            matchtxt = mt.matchtextFamily(f, familyDB, personDB, relationDB)
+            #matchtxt = mt.matchtextFamily(f, familyDB, personDB, relationDB)
             doc = Document()
             doc.add(Field('uid',str(f['_id']), StringField.TYPE_STORED))
-            doc.add(Field('sex','FAM', StringField.TYPE_STORED))
-            doc.add(Field("text", matchtxt, TextField.TYPE_NOT_STORED))
+            #doc.add(Field('sex','FAM', StringField.TYPE_STORED))
+            #doc.add(Field("match", matchtxt, TextField.TYPE_NOT_STORED))
+            txt = f['_id']
+            if 'refId' in f: txt += ' ' + f['refId']
+            doc.add(Field("text", txt, TextField.TYPE_NOT_STORED))
             writer.addDocument(doc)
 
         writer.commit()
@@ -91,8 +116,21 @@ class luceneDB:
         self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
         return
 
+    def query(self, txt, ant=10):
+        """Searches for a person or family by id, name, place, or date"""
+        q = QueryParser("text", self.analyzer).parse(txt.replace('/', '\/'))
+        if not self.searcher:
+            self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
+        scoreDocs = self.searcher.search(q, ant).scoreDocs
+        hits = []
+        for scoreDoc in scoreDocs:
+            doc = self.searcher.doc(scoreDoc.doc)
+            hits.append([doc.get("uid"), scoreDoc.score])
+        return hits
+
     def search(self, q, sex, ant=5, config = None):
-        query = QueryParser("text", self.analyzer).parse(q.replace('/', '\/'))
+        """Searches for a match"""
+        query = QueryParser("match", self.analyzer).parse(q.replace('/', '\/'))
         #Hur lägga till sex?
         if not self.searcher:
             self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))

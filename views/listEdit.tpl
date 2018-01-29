@@ -52,15 +52,22 @@ function doAction(args) {
 </head>
 
 <body>
-<h1>RGD {{title}}</h1>
-<h3>  <a href="/relationsEditor/child">Barn i mer än 2 familjer</a>
+  <h1>RGD {{title}}</h1>
+<h3>  Relationsproblem: <a href="/relationsEditor/child">Barn i mer än 2 familjer</a>
   ||  <a href="/relationsEditor/family">Familjer med mer än 1 HUSB/WIFE</a>
-  ||  <a href="/relationsEditor/relation">Personer/Familjer utan relationer</a>
-  <br>
-  ||  <a href="/relationsEditor/dubblett">Dubbletter</a>
-  ||  <a href="/relationsEditor/dubblettFind">Generera dubbletter</a>
-  <br>
-  ||  <a href="/">Tillbaks till startsida</a>
+  ||  <a href="/relationsEditor/relation">Personer/Familjer utan relationer(*)</a>
+</h3>
+<h3>Hitta möjliga dubbletter:
+    <a href="/relationsEditor/dubblett">Dubbletter(**)</a>
+  ||  <a href="/relationsEditor/dubblettFind">Generera dubbletter(*)</a>
+</h3>
+(*)=kan ta lång tid; (**)=kan ta lång tid första gången, uppdateras inte automatiskt
+<h3>
+<form action="/queryDB" method = "get">
+<input type="text" name="q">
+<button type="submit" >Fritext Sök i databasen</button>
+|| <a href="/">Tillbaks till startsida</a>
+</form>
 </h3>
 
 <div id="visa"></div>
