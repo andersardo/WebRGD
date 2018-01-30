@@ -272,8 +272,8 @@ def matchPers(p1, rgdP, conf, score = None):
     matchtxt = mt_tmp.matchtextPerson(p1, conf['persons'], conf['families'], conf['relations'])
     cosScore = cos(matchtxt, cand_matchtxt)
     if score is None and 'featureSet' in conf:  #score not used by deault
-        try:  #Lucene
-            from luceneUtils import search
+        try:  #Lucene FIX
+            #from luceneUtils import search
             import traceback
             candidates = search(matchtxt, p1['sex'], ant=100, config=conf) #Lucene search
             score = 0.0

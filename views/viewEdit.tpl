@@ -31,5 +31,5 @@
 </div>
 %end
 <hr>
-
+{{!graph}}
 %end

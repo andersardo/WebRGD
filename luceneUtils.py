@@ -46,7 +46,7 @@ def index(personDB, familyDB, relationDB):
     config = IndexWriterConfig(analyzer)
     config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
     writer = IndexWriter(indexDir, config)
-#?#indexWriter.setRAMBufferSizeMB(50);  KOLLA
+#?#indexWriter.setRAMBufferSizeMB(50);  KOLLA 256
 
     mt = matchtext()
 

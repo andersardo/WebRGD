@@ -42,6 +42,7 @@ Files for guests are not saved.
 <br style="clear: left;" />
 <h4>Nyheter/Händelser/Meddelanden</h4>
 <ul>
+  <li> 2018-01-29: Nya verktyg: relations-editor inklusive enkel hantering av dubbletter; generell sökning med grafisk visning.
   <li> 2018-01-05: Ny databas-design, förbättrad matchning och sammanslagning,
     bättre tolerans för relationsfel
   <li> 2018-01-05: <b>Version 2.0</b><br>

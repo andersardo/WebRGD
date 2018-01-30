@@ -61,7 +61,7 @@ Ger som resultat valideringslistor (textfiler <!-- - per mail om så önskas-->)
 <li> Skapa temporär databas för matchning
 </ol>
 <form enctype="multipart/form-data" action="/workflow/combined" method="POST">
-Ange var GEDCOM filen finns genom att anväda bläddra-funktionen:
+Ange var GEDCOM filen finns genom att använda bläddra-funktionen:
 <input name="gedcomfile" type="file" />
 
 <!--
@@ -370,9 +370,9 @@ onmouseout="this.width='397'; this.style='position: reslative;right: 0px;'" />
 </table>
 
 <table style="width: 100%"><tr><td style="vertical-align: top;">
-<h2>7A. Relationseditor - <a href="#Edit">Läs mera</a></h2>
-<p><br><br>
-<form action="/relationsEditor" method="GET">
+<h2>7A. Verktyg  - <a href="#Verktyg">Läs mera</a></h2>
+<p>
+<form action="/relationsEditor/alla" method="GET">
 Databas
 <select name="workDB">
 <option value="">Välj databas</option>
@@ -382,7 +382,7 @@ Databas
 %end
 
 </select>
-<p><input type="submit" value="Editera" />
+<p><input type="submit" value="Gå till verktygs-sidan" />
 </form>
 </td></tr>
 </table>

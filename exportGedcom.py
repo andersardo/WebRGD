@@ -5,7 +5,7 @@
 export a database as Gedcom
 """
 
-import argparse, sys, os, datetime
+import argparse, sys, os, datetime, re
 from collections import defaultdict
 import pickle
 parser = argparse.ArgumentParser()
@@ -13,54 +13,70 @@ parser.add_argument("workDB", help="Working database name" )
 args = parser.parse_args()
 workDB = args.workDB
 dbName  = os.path.basename(workDB).split('.')[0]  #No '.' or '/' in databasenames
-#print 'using db', dbName
 import common
 config = common.init(dbName, indexes=True)
-
+from common import RGDadm 
 import codecs, locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8') #sorting??
 sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 
-#####################
-#map cId to file
-#Read mappings per file
 import json
 from workFlow import workFlowUI
 from dbUtils import getFamilyFromId
-from pymongo import MongoClient
-#namMap = {}
-#placMap = {}
-#dateMap = {}
-sourMap = {}
 user = workDB.split('_')[0]
 (files, dbs, workingDir, activeUser) = workFlowUI(user, None)
-#print user, activeUser
-#print 'F',files
-#print 'DB', dbs
+
+sourMap = {}
 cIdMap = {}
-client = MongoClient()
-for db in dbs:
-    datab = client[db]
-    #print datab
-    for rec in datab.originalData.find({'type': 'admin'}):
-            #print ' R', rec
-            if 'cId' in rec:
-                cIdMap[rec['cId']] = rec['file'].split('/')[-1].split('.')[0]
-                (fndir,tmp) = os.path.split(rec['file'])
-                #print db, fndir, rec['cId']
-                try:
-                    #placMap.update(json.load(open(fndir + '/plac.dat')))
-                    #dateMap.update(json.load(open(fndir + '/date.dat')))
-                    #sourMap[rec['cId']] = json.load(open(fndir + '/sour.dat'))
-                    sourMap.update(json.load(open(fndir + '/sour.dat')))
-                    #print 'loaded', type(namMap[rec['cId']]), type(placMap[rec['cId']]), type(dateMap[rec['cId']]), type(sourMap[rec['cId']])
-                except:
-                    pass
-#def cId2file(id):
-#        return cIdMap.get(id)
-#print 'A_923', cId2file('A_923')
-#print 'ejdb', cId2file('ejdb')
-#####################
+for rec in config['originalData'].find({'type': 'admin'}):
+    if 'cId' in rec:
+        cIdMap[rec['cId']] = rec['file'].split('/')[-1].split('.')[0]
+for rec in RGDadm.sourMap.find():
+    sourMap[rec['_id']] = rec['val']
+
+monInt = {
+    "JAN": '01',
+    "FEB": '02',
+    "MAR": '03',
+    "APR": '04',
+    "MAY": '05',
+    "JUN": '06',
+    "JUL": '07',
+    "AUG": '08',
+    "SEP": '09',
+    "OCT": '10',
+    "NOV": '11',
+    "DEC": '12'
+}
+
+def firstDate(date, endIntervall = False):
+    datPat = re.compile(r"([\d\?]*)\s*([^\s]*)\s*([\d\?]{4})")
+    m = re.match(r"(FROM|BET) (.+) (TO|AND) (.+)", date)
+    if m:
+        dat1 = m.group(2)
+        return firstDate(dat1)
+    m = re.match(r"(ABT|EST|CAL|INT|FROM|TO|AFT|BEF)\s+(.+)", date)
+    if m:
+        dat1 = m.group(2)
+        return firstDate(dat1)
+    m = re.match(datPat, date)
+    if m:
+        day = m.group(1)
+        mon = m.group(2)
+        year = m.group(3)
+        if year:
+            year = year.replace('?','0')
+        if not mon: mon='JAN'
+        if day:
+            if len(day)==1: day = '0'+day
+            elif day == '??': day = '01'
+        else:
+            day = '01'
+        try:
+            return int(year+monInt[mon]+day)
+        except:
+            return 0
+    return 0
 
 from gedcom.gedcom import *
 
@@ -73,22 +89,22 @@ def parseGedcom(ged,frag):
         for e in ged.line_list():
             e._init()
 
-def gedcomNoRGD(self):
+def gedcomNoRGD(gtag):
     """ Return GEDCOM code for this line and all of its sub-lines """
-    result = unicode(self)
-    #print 'gedcomNoRGD', result
+    result = unicode(gtag)
     plac = ''
-    for e in self.children_lines():
+    for e in gtag.children_lines():
         if e.tag() in ('PLAC'): plac = e.value()
-    for e in self.children_lines():
-        result += '\n' + e.gedcom()
-        if e.tag() in ('SOUR'):
-                #use mapped or not?
-                try:
-                        t = sourMap[plac+'-'+e.value()]
-                        result += u'\n2 NOTE RGD källa: ' + t
-                except:
-                        pass
+    for e in gtag.children_lines():
+        if (gtag.tag() in ('BIRT', 'CHR', 'DEAT', 'BURI', 'MARR')) and e.tag() in ('SOUR'):
+            if plac+'-'+e.value() in sourMap:
+                result += u'\n2 SOUR ' + sourMap[plac+'-'+e.value()]
+            elif e.value() in sourMap:
+                result += u'\n2 SOUR ' + sourMap[e.value()]
+            else:
+                result += '\n' + e.gedcom()
+        else:
+            result += '\n' + e.gedcom()
     return result
 
 mapGedcom = {'birth': 'BIRT', 'death': 'DEAT', 'marriage': 'MARR',
@@ -134,17 +150,11 @@ def compTagEQ(tag):
 
 import datePrecision
 def gedPrintMergeEvent(events):
-    #print 'gedPrintMergeEvent', events
-    #for evtag in events.keys():  #Evt sort order?
-    for evtag in ('BIRT', 'CHR', 'DEAT', 'BURI', 'MARR'):
-        #print 'Doing', evtag
-        if not evtag in events: continue
-        #print 'gedPrintMerge', evtag, len(events[evtag])
-        if len(events[evtag]) == 1: print gedcomNoRGD(events[evtag][0])
+        if len(events) == 1: print gedcomNoRGD(events[0])
         else:
             #make dict with quality as key and list of events as value
             Qevent = defaultdict(list)
-            for gedev in events[evtag]:
+            for gedev in events:
                 qual = 10  #unmarked default quality
                 plac = ''
                 for cline in gedev.children_lines():
@@ -171,7 +181,7 @@ def gedPrintMergeEvent(events):
                     Qdate = cline.value()
                     (dummy, spanQdate) = datePrecision.date2span(cline.value())
                     break
-            for gedev in events[evtag]:
+            for gedev in events:
                 for cline in gedev.children_lines():
                     if cline.tag() == 'DATE':
                         (dummy, span) = datePrecision.date2span(cline.value())
@@ -182,9 +192,8 @@ def gedPrintMergeEvent(events):
             for cline in useEvent.children_lines():
                 if cline.tag() == 'DATE': cline._value = Qdate  #HACK
             print gedcomNoRGD(useEvent)
-
+"""
 def gedPrintUniqueEvent(events):
-    #print 'gedPrintUniqueEvent'
     for ev in events.keys():
         if len(events[ev]) == 1: print gedcomNoRGD(events[ev][0])
         else:
@@ -204,24 +213,13 @@ def gedPrintUniqueEvent(events):
                 else:
                     textrepr.append(evtext)
                     print gedcomNoRGD(gedev)
-
-def gedPrintUniqueTag(tags, tagsToPrint = []):
-    #print 'gedPrintUniqueTag', tags
+"""
+def gedPrintUniqueTag(tags):
     for tag in tags.keys():
-        if tag not in tagsToPrint: continue
         txt = set()
         for gedTag in tags[tag]:
             txt.add(gedTag.gedcom())
         for line in txt: print line
-    #print
-
-#print "Expires: 0"
-#print "Cache-Control: must-revalidate, post-check=0, pre-check=0" 
-#print "Content-Type: application/force-download"
-#print "Content-Type: application/octet-stream"
-#print "Content-Type: application/download"
-#print 'Content-Disposition: attachment; filename="RGD.GED"'
-#print
 
 print "0 HEAD"
 print "1 SOUR openRGD - exportGedcom.py"
@@ -232,6 +230,7 @@ print "1 GEDC"
 print "2 VERS 5.5"
 print "2 FORM LINEAGE-LINKED"
 print "1 CHAR UTF-8"
+print "1 FILE RGD_"+dbName+".GED"
 
 mapFamc = {}
 mapPersId = {}
@@ -247,13 +246,11 @@ reverseImap = defaultdict(set)
 reverseFmap = defaultdict(set)
 map = config['originalData'].find_one({'type': 'Fmap'})
 if map:
-    #Fmap['_id'] = map['_id']  #KOLLA ??
     for (k,v) in pickle.loads(map['data']).iteritems(): Fmap[k] = v
 else:  #initialize with identity map
     for F in config['families'].find({}, {'_id': 1}): Fmap[F['_id']].add(F['_id'])
 map = config['originalData'].find_one({'type': 'Imap'})
 if map:
-    #Imap['_id'] = map['_id'] #KOLLA Imap is dict of set
     for (k,v) in pickle.loads(map['data']).iteritems(): Imap[k] = v
 else:  #initialize with identity map
     for P in config['persons'].find({}, {'_id': 1}): Imap[P['_id']].add(P['_id'])
@@ -267,76 +264,105 @@ for fam  in Fmap.keys():
 
 for ind in config['persons'].find({}):
     mapPersId[ind['_id']] = ind['_id']
-    #basedata
+    #Id, Name, Sex
     print "0 @"+str(ind['_id'])+"@ INDI"  #USE refId or _id???? FIX
     try: print "1 SEX "+ind['sex']
     except: print "1 SEX U"
     printTag("1 NAME",ind['name'])
     try: birth[ind['_id']] = ind['birth']['date']
     except:  birth[ind['_id']] = 0
-    for ev in ('birth', 'death'):
-        if ev in ind and ind[ev]['tag'] in ('BIRT', 'DEAT'):
-            if 'date' in ind[ev] or 'place' in ind[ev] or 'source' in ind[ev]:
-                print "1", mapGedcom[ev]
-                for item in ('date', 'place', 'source'):
-                    if item in ind[ev]: printTag("2 "+mapGedcom[item],ind[ev][item])
-    if ind['_id'] in  mapFamc: printTagF("1 FAMC", mapFamc[ind['_id']])
-    for rel in config['relations'].find({'persId': ind['_id']}):
-        if rel['relTyp'] == 'child': continue
-        printTagF("1 FAMS",rel['famId'])
-    #Other tags
+    #loop over all mapped ID's - see mergeUtils mergeOrgDataPers
     chanTag = None
     parsedGed = []
-    #loop over all mapped ID's - see mergeUtils mergeOrgDataPers !!!!!!!!!!!!!!!
+    #debug=False
     for uid in reverseImap[ind['_id']]:
         orgRec = config['originalData'].find_one({'recordId': uid}) # evt 'type': 'person'?
         for rec in orgRec['data']:
             printTag('1 NOTE', 'Original id ' + cIdMap.get(rec['contributionId']) + ' ' + rec['record']['refId'])
+            #if rec['record']['refId'] == 'I13856': debug=True
             try:
                 ged = Gedcom('/dev/null')
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
-            parseGedcom(ged, rec['gedcom'])
-            parsedGed.append(ged.individual_list()[0])
-    gedMergeEvent = {}
-    gedUniqueEvent = {}
-    gedUniqueTag = {}
+            #parseGedcom(ged, rec['gedcom'])
+            #parsedGed.append(ged.individual_list()[0])
+#New
+            testGed = []
+            try:
+                parseGedcom(ged, rec['gedcom'])
+                parsedGed.append(ged.individual_list()[0])
+            except:
+                #try to remove strange utf8 characters
+                import unicodedata
+                for l in rec['gedcom'].split('\n'):
+                    line = ''
+                    for x in l:
+                        try:
+                            y = unicodedata.name(x)
+                            line+=x
+                        except:
+                            pass
+                    testGed.append(line)
+                ged = Gedcom('/dev/null')
+                parseGedcom(ged, '\n'.join(testGed))
+                parsedGed.append(ged.individual_list()[0])
+#
+    #Events
+    gedEvents = defaultdict(list)
+    gedTags = defaultdict(list)
     for gedTag in parsedGed:
         for tag in gedTag.children_lines():
             if tag.level() == 1:
-                if tag.tag() in ('SEX', 'FAMC', 'FAMS'):
+                if tag.tag() in ('SEX', 'FAMC', 'FAMS', 'NAME', 'BIRT', 'DEAT'):
                     continue
                 elif tag.tag() in ('CHAN'):
                     chanTag = tag
                     continue
-                elif tag.tag() in ('NAME', 'BIRT', 'DEAT'):
-#                    if not compTagEQ(tag): print gedcomNoRGD(tag)
-#                    else: print 'Skipped', tag.tag(), tag.value(), tag.gedcom(), '!!'
-                    continue
                 elif tag.tag() in ('CHR', 'BURI'):
-                    print '1 NOTE openRGD Merge ', tag.tag()
-                    if tag.tag() in gedMergeEvent:
-                        gedMergeEvent[tag.tag()].append(tag)
-                    else:
-                        gedMergeEvent[tag.tag()] = [tag]
-                elif tag.tag() in ('IMMI', 'EMIG', 'RESI', 'DIV', 'EVEN'):
-                    #print 'Unique events ', tag.tag()
-                    if tag.tag() in gedUniqueEvent:
-                        gedUniqueEvent[tag.tag()].append(tag)
-                    else:
-                        gedUniqueEvent[tag.tag()] = [tag]
+                    gedEvents[tag.tag()].append(tag)
+                elif tag.tag() in ('IMMI', 'EMIG', 'RESI', 'DIV', 'EVEN', 'ADOP'):
+                    #if debug: print 'Found::', tag.tag()
+                    gedEvents['events'].append(tag)
                 elif tag.tag() in ('OCCU', 'NOTE'):
-                    #print 'Unique tags ', tag.tag()
-                    if tag.tag() in gedUniqueTag:
-                        gedUniqueTag[tag.tag()].append(tag)
-                    else:
-                        gedUniqueTag[tag.tag()] = [tag]
-                else: print gedcomNoRGD(tag)
-    if gedMergeEvent: gedPrintMergeEvent(gedMergeEvent)
-    if gedUniqueTag: gedPrintUniqueTag(gedUniqueTag, ['OCCU'])
-    if gedUniqueEvent: gedPrintUniqueEvent(gedUniqueEvent)
-    if gedUniqueTag: gedPrintUniqueTag(gedUniqueTag, ['NOTE'])
+                    gedTags[tag.tag()].append(tag)
+                else: print gedcomNoRGD(tag) #??
+    #Print in chronological order BIRT, CHR, DEAT, BURI, Relations, FAMS, FAMC
+    if 'birth' in ind and ind['birth']['tag'] == 'BIRT':
+        if 'date' in ind['birth'] or 'place' in ind['birth'] or 'source' in ind['birth']:
+            print "1", mapGedcom['birth']
+            for item in ('date', 'place', 'source'):
+                if item in ind['birth']: printTag("2 "+mapGedcom[item],ind['birth'][item])
+    if 'CHR' in gedEvents: gedPrintMergeEvent(gedEvents['CHR'])
+    if 'events' in gedEvents:
+        #ADOP (FAMC) fixa familjeID
+        #sort chronological
+        evs = defaultdict(list)
+        dateNo = 0
+        for ev in gedEvents['events']:
+            #get date
+            dateNo += 1
+            for e in ev.children_lines():
+                if e.tag()=='DATE': date = firstDate(e.value())
+            if date==0: date = dateNo
+            #if debug: print 'Using::', ev.tag(), date
+            evs[date].append(ev)
+        for key in sorted(evs.iterkeys()):
+            for ev in evs[key]:
+                #if debug: print 'Printing::', ev.tag(), key
+                print gedcomNoRGD(ev)
+    if 'death' in ind and ind['death']['tag'] == 'DEAT':
+        if 'date' in ind['death'] or 'place' in ind['death'] or 'source' in ind['death']:
+            print "1", mapGedcom['death']
+            for item in ('date', 'place', 'source'):
+                if item in ind['death']: printTag("2 "+mapGedcom[item],ind['death'][item])
+    if 'BURI' in gedEvents: gedPrintMergeEvent(gedEvents['BURI'])
+    if gedTags: gedPrintUniqueTag(gedTags)
+    if ind['_id'] in  mapFamc: printTagF("1 FAMC", mapFamc[ind['_id']])
+    for rel in config['relations'].find({'persId': ind['_id']}):
+        #Sort chronological?
+        if rel['relTyp'] == 'child': continue
+        printTagF("1 FAMS",rel['famId'])
     #CHAN-tag
     if len(parsedGed) == 1 and chanTag:
         print gedcomNoRGD(chanTag)

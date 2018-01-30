@@ -9,6 +9,9 @@ from utils import setOKfamily, setEjOKfamily, setOKperson, setEjOKperson, split#
 from uiUtils import dbfind,familyViewAll
 from workFlow import workFlowUI, doUpload, cleanUp, getDBselect, listOldLogs
 from graphUtils import genGraph
+from relationEdit import editList, viewChildErr, viewPartnerErr, viewNoRelErr, viewDubbl, viewQueryHits
+from errRelationUtils import mergeFam, mergePers
+from queryUtils import doQuery
 import conf.config, common
 #print conf.config
 
@@ -216,6 +219,16 @@ def getfile():
         response.add_header('Content-Type', "application/download")
         response.add_header('Content-Disposition', 'attachment; filename=RGDK.CSV')
         response.add_header('Content-Transfer-Encoding', 'binary')
+        f = codecs.open(fn, "r")
+        mess = f.read()
+        f.close()
+    elif os.path.basename(fn) == 'DgDub.txt':
+        response.add_header('Expires', '0')
+        response.add_header('Cache-Control', "must-revalidate, post-check=0, pre-check=0")
+        response.set_header('Content-Type', "application/force-download")
+        response.add_header('Content-Type', "application/download")
+        response.add_header('Content-Type', "text/plain")
+        response.add_header('Content-Disposition', 'attachment; filename=DgDub.txt')
         f = codecs.open(fn, "r")
         mess = f.read()
         f.close()
@@ -563,60 +576,37 @@ def listSkillnad(typ):
                            tot = tot, prow=rows, buttons=buttons, difftyp=difftyp)
 
 #Relation editor
-@bottle.route('/relationsEditor')
+@bottle.route('/relationsEditor/<typ>')
 @authorize()
-def relationEditor():
-    tit = 'Relations editor'
-    #SANITY CHECKS
-    #can only be child in 1 family
-    childErr = []
-    aggrPipe = [
-        {'$match': {'relTyp': 'child'}},
-        {'$project': {'persId': '$persId', 'famId': '$famId', 'count': {'$concat': ['1']}}},
-        {'$group': {'_id': '$persId', 'count': {'$sum': 1}, 'fams': {'$addToSet': '$famId'}}},
-        {'$match': {'count': {'$gt': 1}}}
-    ]
-    for multiChild in common.config['relations'].aggregate(aggrPipe):
-        #print multiChild
-        #print 'Relation ERROR Child', multiChild['_id'], 'in', multiChild['count'], 'families'
-        persRec = common.config['persons'].find_one({'_id': multiChild['_id']})
-        child = "%s %s" % (persRec['_id'], persRec['name'])
-        #Get alla child relations;
-        for famId in multiChild['fams']:
-            errRow = [child, famId]
-            #print 'famId', famId
-            husbRel = common.config['relations'].find_one({'famId': famId, 'relTyp': 'husb'})
-            #print 'Far', husbRel
-            text = ''
-            if husbRel:
-                persRec = common.config['persons'].find_one({'_id': husbRel['persId']})
-                text = "%s %s" % (persRec['_id'], persRec['name'])
-            errRow.append(text)
-            wifeRel = common.config['relations'].find_one({'famId': famId, 'relTyp': 'wife'})
-            #print 'Mor', wifeRel
-            text = ''
-            if wifeRel:
-                persRec = common.config['persons'].find_one({'_id': wifeRel['persId']})
-                text = "%s %s" % (persRec['_id'], persRec['name'])
-            errRow.append(text)
-            errRow.append('OK button')
-            childErr.append(errRow) 
-            #what if multiple parents in family??
-        childErr.append(['-']) #empty line
-    """
-    #NEW Same parents in several families
+def relationEditor(typ):
+    (tit, childErrs, famErrs, relErrs, dubbls) = editList(common.config, typ)
+    return bottle.template('listEdit', title = tit, childErrs=childErrs,
+                           famErrs=famErrs, relErrs=relErrs, dubbletter=dubbls)
 
-    #1 husb/wife per family
-    for partner in ('husb', 'wife'):
-        aggrPipe = [
-            {'$match': {'relTyp': partner}},
-            {'$project': {'famId': '$famId', 'count': {'$concat': ['1']}}},
-            {'$group': {'_id': '$famId', 'count': {'$sum': 1}}},
-            {'$match': {'count': {'$gt': 1}}}]
-        for multiPartner in common.config['relations'].aggregate(aggrPipe):
-            #print 'Relation ERROR Family', multiPartner['_id'], 'have', multiPartner['count'], partner
-    """
-    return bottle.template('listEdit', title = tit, childErr=childErr, famErr = [])
+def viewRelErr(person, family, typ):
+    if typ == 'child':
+        (res, graph) = viewChildErr(person, family.split(':'), common.config)
+    elif typ == 'partner':
+        (res, graph) = viewPartnerErr(person.split(':'), family, common.config)
+    elif typ == 'noRel':
+        (res, graph) = viewNoRelErr(person, None, common.config)
+    elif typ == 'dubblett':
+        (res, graph) = viewDubbl(person, family, common.config)
+    elif typ == 'dubblettFind':
+        (res, graph) = viewDubbl(person, family, common.config, find=True)
+    elif typ == 'queryhits':
+        (res, graph) = viewQueryHits(person, common.config)
+    else:
+        res = [[u'Okänd feltyp', typ, '', '', '']]
+        graph = ''
+    return bottle.template('viewEdit', rows=res, graph=graph, buttons=None)
+
+@bottle.route('/queryDB')
+@authorize()
+def queryDB():
+    (tit, res) = doQuery(bottle.request.query.q, common.config)
+    return bottle.template('listEdit', title = tit, childErrs=[],
+                           famErrs=[], relErrs=[], dubbletter=res) #TMP
 
 #Likheter
 @bottle.route('/downloadFamMatches')
@@ -678,9 +668,16 @@ def downloadFamMatches():
                 k2 = ''
             key = k1+';'+k2
             done.add(key)
+            if 'Ignorerad' in r[0]: ignRelI = True
+            else: ignRelI = False
+            if 'Ignorerad' in r[8]: ignRelII = True
+            else: ignRelII = False
+            ignFam = False
             #remove html-code for buttons
             try:
+                if 'Ignorerad' in r[4]: ignFam = True
                 r[4] = r[4].split('<')[0]
+                if ign: r[4] += ' Ignorerad'
             except:
                 pass
             if r == ['', '', '', '', '', '', '', '', '']:
@@ -692,9 +689,12 @@ def downloadFamMatches():
                 green = False
                 yellow = False
                 red = False
-                if r[4].endswith(('EjMatch', 'EjOK', 'rEjOK')): red = True
-                elif r[4].endswith(('Manuell', 'rManuell')): yellow = True
-                elif r[4].endswith(('Match', 'OK', 'rOK')): green = True
+                #if r[4].endswith(('EjMatch', 'EjOK', 'rEjOK')): red = True
+                #elif r[4].endswith(('Manuell', 'rManuell')): yellow = True
+                #elif r[4].endswith(('Match', 'OK', 'rOK')): green = True
+                if ('EjMatch' in r[4]) or ('EjOK' in r[4]): red = True
+                elif ('Match' in r[4]) or ('OK' in r[4]): green = True
+                elif 'Manuell' in r[4]: yellow = True
                 for val in r[1:8]:
                     i+=1
                     if i == 4: #separator between workDB and matchDB
@@ -714,7 +714,10 @@ def downloadFamMatches():
                             cell.border = Border(top=thick, left=thick, right=thick, bottom=thin)
                         else:
                             cell.border = Border(top=thick, left=thin, right=thin, bottom=thin)
-                    if green: cell.fill = greenFill
+                    if (i == 4) and ignFam: cell.fill = redFill
+                    elif (i==1) and ignRelI: cell.fill = redFill
+                    elif (i==8) and ignRelII: cell.fill = redFill
+                    elif green: cell.fill = greenFill
                     elif yellow:  cell.fill = yellowFill
                     elif red:  cell.fill = redFill
                     rowVals.append(cell)
@@ -819,6 +822,9 @@ def views(typ):
         resL = personView(bottle.request.query.wid, bottle.request.query.mid)
     elif typ == 'families':
         resL = familyView(bottle.request.query.wid, bottle.request.query.mid)  #How do a list? KOLLA
+    elif typ == 'relErr':
+        return viewRelErr(bottle.request.query.person, bottle.request.query.family,
+                          bottle.request.query.typ)
     elif typ == 'flags':
         flags = getFlags(bottle.request.query.wid, bottle.request.query.fid,
                          role = bottle.request.query.role)
@@ -892,12 +898,36 @@ def act5():
                           bottle.request.query.role,
                           bottle.request.query.workFam, bottle.request.query.matchFam)
 
+@bottle.route('/actions/mergeFam')
+@authorize()
+def act5():
+    print 'mergeFam', bottle.request.query.id1, bottle.request.query.id2
+    return mergeFam(bottle.request.query.id1, bottle.request.query.id2,
+                    common.config['persons'], common.config['families'],
+                    common.config['relations'], common.config['originalData'])
+
+@bottle.route('/actions/mergePers')
+@authorize()
+def act5():
+    print 'mergePers', bottle.request.query.id1, bottle.request.query.id2
+    return mergePers(bottle.request.query.id1, bottle.request.query.id2,
+                    common.config['persons'], common.config['families'],
+                    common.config['relations'], common.config['originalData'])
+
+@bottle.route('/actions/delRelation')
+@authorize()
+def act5():
+    print 'delRelation', bottle.request.query.id1, bottle.request.query.id2
+    common.config['relations'].delete_one({'persId': bottle.request.query.id1,
+                                    'famId': bottle.request.query.id2})
+    return
+
 #################ADMIN################
 @bottle.route('/oldLogs')
 @authorize()
 def oldlogs():
     mess = listOldLogs(bottle.request.session['activeUser'], bottle.request.query.workDB)
-    (tmpf, dbs, tmpwd, tmpu) = workFlowUI(aaa.current_user.username, bottle.request.session['directory'])    
+    (tmpf, dbs, tmpwd, tmpu) = workFlowUI(aaa.current_user.username, bottle.request.session['directory'])
     return bottle.template('dbadmin', dbs=dbs, message = mess,
                            user=bottle.request.session['activeUser'],
                            role=aaa.current_user.role)

@@ -90,22 +90,15 @@ for fam in people.family_list():
     if (fam.husband()): familyMembers[str(fam)] += 1
     if (fam.wife()): familyMembers[str(fam)] += 1
 
-#UPDATE Fmap, Imap with identity maps??
 logging.info('Persons')
 for person in people.individual_list():
     pp = pers_dict(person)
-    orgData = { 'type': 'person', 'data': [] }
     fixGedcom(person)
-    #DISserver
-    orgData['data'].append({'contributionId': contributionId, 'record': pp,
-                             'gedcom': person.gedcom()})
-    #New - how about merge?
-    #orgData['contributionId'] = contributionId
-    #orgData['record'] = pp
-    #orgData['gedcom'] = person.gedcom()
     pp['_id'] = common.get_id('P')
     person.pid = persons.insert( pp )
-    orgData['recordId'] = person.pid
+    orgData = { 'type': 'person', 'recordId': person.pid, 'data': [] }
+    orgData['data'].append({'contributionId': contributionId, 'record': pp,
+                             'gedcom': person.gedcom()})
     config['originalData'].insert(orgData)
     fam =  person.get_parent_families()  #Children
     if fam:
@@ -116,28 +109,21 @@ logging.info('Time %s',time.time() - t0)
 #############################################################
 #print 'Only keep families with more than 1 member'
 for fam in people.family_list():
-#Redmine 543
+#Keep all families - see Redmine 543
 #    if familyMembers[str(fam)] > 1:
         (ff, relations) = fam_dict(fam)
-        orgData = { 'type': 'family', 'data': [] }
         fixGedcom(fam)
-        #DISserver
-        orgData['data'].append({'contributionId': contributionId, 'record': ff,
-                                'gedcom': fam.gedcom()})
-        #New - how about merge?
-        #orgData['contributionId'] = contributionId
-        #orgData['record'] = ff
-        #orgData['gedcom'] = fam.gedcom()
         ff['_id'] = common.get_id('F')
         fam.pid = families.insert( ff )
         for rel in relations:
             rel['famId'] = ff['_id']
-        orgData['relation'] = relations
         try:
             config['relations'].insert_many(relations)
         except:
             pass
-        orgData['recordId'] = fam.pid
+        orgData = { 'type': 'family', 'recordId': fam.pid, 'relation': relations, 'data': [] }
+        orgData['data'].append({'contributionId': contributionId, 'record': ff,
+                                'gedcom': fam.gedcom()})
         config['originalData'].insert(orgData)
 #    else: print 'SkipFam', str(fam), 'with', familyMembers[str(fam)], 'member'
 logging.info('Time %s',time.time() - t0)
@@ -151,17 +137,12 @@ logging.info('Merge families where husb and wife are same persons')
 from collections import defaultdict
 from mergeUtils import mergeEvent
 d = defaultdict(set)
-#generate Fmap
-Fmap = defaultdict(set)
-FmapChange = False
-for F in families.find({}, {'_id': 1} ): Fmap[F['_id']].add(F['_id'])
 for husb in config['relations'].find({'relTyp': 'husb'}):
     for wife in config['relations'].find({'$and':
                         [{'famId': husb['famId']}, {'relTyp': 'wife'}]}):
         d[husb['persId'], wife['persId']].add(husb['famId'])
 for s in d.values():
     if len(s)>=2:
-      FmapChange = True
       fdubl = list(s)
       #merge all into fdubl[0]
       #F = config['families'].find_one({'_id': fdubl[0]}, {'_id': 1})
@@ -179,9 +160,9 @@ for s in d.values():
           fam2beMerged = config['families'].find_one({'_id': fd})
           if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
           print 'Merging family %s into %s' % (fam2beMerged['_id'], FId)
-
+          config['originalData'].update_one({'recordId': F['_id'], 'type': 'family'},
+                                            {'$push': {'map': fam2beMerged['_id']}})
           config['families'].delete_one({'_id': fam2beMerged['_id']})
-          Fmap[fam2beMerged['_id']] = F['_id'] #KOLLA?
           config['relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
                                                {'$or': [{'relTyp': 'husb'},
                                                         {'relTyp': 'wife'}]}
@@ -204,64 +185,12 @@ for s in d.values():
       if marrEvents:
           config['families'].update_one({'_id': F['_id']}, {'$set':
                                               {'marriage': mergeEvent(marrEvents)}})
-#SAVE Fmap
-if FmapChange: config['originalData'].insert_one({'type': 'Fmap', 'data': pickle.dumps(Fmap)})
-"""
-OLD
-##AAFIX
-#for f in config['relations'].find({'husb': {'$ne': None}, 'wife': {'$ne': None}},
-#                       {'_id': 1, 'husb': 1, 'wife': 1}):
-#   d[f['husb'], f['wife']].add(f['_id'])
-for husb in config['relations'].find({'husb': {'$exists': True}}):
-    for wife in config['relations'].find({'$and':
-                        [{'_id': husb['_id']}, {'wife': {'$exists': True}}]}):
-        d[husb['husb'], wife['wife']].add(husb['_id'])
-for s in d.values():
-    if len(s)>=2:
-      fdubl = list(s)
-      #generate Fmap
-      Fmap = defaultdict(list)
-      for F in families.find({}, {'_id': 1} ): Fmap[F['_id']].append(F['_id'])
-      #merge all into fdubl[0]
-      marrEvents = []
-      F = families.find_one({'_id': fdubl[0]}, {'refId': 1, '_id': 1})
-      FrefId = F['refId']
-      #USE for fd in fdubl[1:]:
-      for fd in fdubl:
-          if fd == fdubl[0]: continue
-          #FIX check marriage dates - see pattern notes
-          #Enl Rolf: Marr  datum kan vara olika eller blanka
-          fam2beMerged = families.find_one({'_id': fd})
-          if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
-          logging.info('Merging family %s into %s', fam2beMerged['refId'], FrefId)
-          #push orgData to new family
-          #config['originalData'].update_one({'recordId': F['_id']},
-          #                              {'$push': {'data':
-          #                                         {'contributionId': contributionId,
-          #                                          'record': fam2beMerged }}})
-          #remove family KOLLA FIXA
-          families.delete_one({'_id': fam2beMerged['_id']})
-          Fmap[fam2beMerged['_id']] = [F['_id']]
-          #config['originalData'].delete_one({'recordId': fam2beMerged['_id']})
-          config['relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
-                                               {'$or': [{'husb': {'$exists': True}},
-                                                        {'wife': {'$exists': True}}]}
-                                           ]})
-          #only children in fam2beMerged left - move to new family
-          config['relations'].update_many({'famId': fam2beMerged['_id']},
-                                          {'$set': {'famId': F['_id']}})
-      #merge all marriage events
-      #orgRecord = config['originalData'].find_one({'recordId': F['_id']})
-      families.update_one({'_id': F['_id']}, {'$set':
-                                              {'marriage': mergeEvent(marrEvents)}})
-      #SAVE Fmap
-      config['originalData'].insert_one({'type': 'Fmap', 'data': pickle.dumps(Fmap)})
-"""
 logging.info('Time %s',time.time() - t0)
 logging.info('Indexing %s in Lucene', dbName)
-from luceneUtils import setupDir, index
-setupDir(dbName)
-index(config['persons'],config['families'],config['relations'])
+from luceneDB import luceneDB
+searchDB = luceneDB(dbName)
+#setupDir(dbName)
+searchDB.index(config['persons'],config['families'],config['relations'])
 logging.info('Time %s',time.time() - t0)
 #stats
 antPers = config['persons'].find().count()

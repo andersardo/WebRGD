@@ -1,9 +1,6 @@
 import sys, os
 from dbUtils import getFamilyFromId
-
-import codecs, locale
-locale.setlocale(locale.LC_ALL, 'en_US.UTF-8') #sorting??
-sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+import codecs
 
 mapPersId = {}
 dummyFam = {

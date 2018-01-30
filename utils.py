@@ -42,8 +42,10 @@ def matchFam(tFamId, rFamId, conf):
     tFam = getFamilyFromId( tFamId, conf['families'], conf['relations'])
     #rFam =conf['match_families'].find_one({'_id': rFamId})
     rFam = getFamilyFromId( rFamId, conf['match_families'], conf['match_relations'])
-    famMatchData['workRefId'] = tFam['refId']
-    famMatchData['matchRefId'] = rFam['refId']
+    try: famMatchData['workRefId'] = tFam['refId']
+    except: famMatchData['workRefId'] = tFamId
+    try: famMatchData['matchRefId'] = rFam['refId']
+    except: famMatchData['matchRefId'] = rFamId
     famMatchData['marriage'] = {}
     if 'marriage' in tFam: famMatchData['marriage']['work'] = tFam['marriage']
     if 'marriage' in rFam: famMatchData['marriage']['match'] = rFam['marriage']
@@ -55,7 +57,7 @@ def matchFam(tFamId, rFamId, conf):
             antPartner += 1
             st = getMatchPers(tFam[partner],rFam[partner], conf)
             if not st:
-                logging.debug('do matchPers %s %s %s', partner, tFam, rFam)
+                #logging.debug('do matchPers %s %s %s', partner, tFam, rFam)
                 st = matchPers( conf['persons'].find_one({'_id': tFam[partner]}),
                             conf['match_persons'].find_one({'_id': rFam[partner]}), conf )
                 #logging.debug('Insert new unmatched parent %s %s %s',
@@ -118,8 +120,8 @@ def matchFam(tFamId, rFamId, conf):
             mt = matchPers( conf['persons'].find_one({'_id': iuid}),
                             conf['match_persons'].find_one({'_id': rgdiuid}), conf )
             if mt['status'] in common.statOK.union(common.statManuell):
-                logging.debug('Inserting new unmatched child %s %s %s',
-                              mt['status'], mt['pwork']['refId'], mt['pmatch']['refId'])
+            #    logging.debug('Inserting new unmatched child %s %s %s',
+            #                  mt['status'], mt['pwork']['refId'], mt['pmatch']['refId'])
 ##WHY THIS??
                 conf['matches'].insert(mt) #FIX Problem when doing dublMatch
                 if mt['status'] in common.statOK: stat.add('Match')
@@ -154,8 +156,8 @@ def matchFam(tFamId, rFamId, conf):
                 famMatchSummary['children'].add('rManuell')
                 #Insert into matches also? Can't do setOKperson if pair not in person matches
                 mt['status'] = 'rManuell'
-                logging.debug('Inserting new name/date matched child %s %s %s',
-                              mt['status'], mt['pwork']['refId'], mt['pmatch']['refId'])
+                #logging.debug('Inserting new name/date matched child %s %s %s',
+                #              mt['status'], mt['pwork']['refId'], mt['pmatch']['refId'])
                 conf['matches'].insert(mt) #FIX Problem when doing dublMatch
                 break
     #All the rest
@@ -202,8 +204,8 @@ def updateFamMatch(flist, conf):
             if match['status'] == 'FamEjOK': continue
 ##EVT
             famMatchData = matchFam(match['workid'], match['matchid'], conf)
-            logging.debug('Uppdating Fam-match %s %s Old=%s New=%s', match['workRefId'],
-                          match['matchRefId'], match['status'], famMatchData['status'])
+            #logging.debug('Uppdating Fam-match %s %s Old=%s New=%s', match['workRefId'],
+            #              match['matchRefId'], match['status'], famMatchData['status'])
             conf['fam_matches'].delete_one({'_id': match['_id']})
             conf['fam_matches'].insert_one(famMatchData)
     return ''
@@ -218,7 +220,7 @@ def setFamOK(wid, mid, conf, famlist = None, button = False):
     else:
         kod = 'rOK'
         negKod = 'rEjOK'
-    logging.debug('work=%s match=%s button=%s kod=%s', wid, mid, button, kod)
+    #logging.debug('work=%s match=%s button=%s kod=%s', wid, mid, button, kod)
     if not famlist:
         #make famList from wid, mid (familyIDs)
         #Sanity check
@@ -273,7 +275,7 @@ def setOKfamily(wid, mid):
 def setEjOKfamily(wid, mid, code='EjOK'):
 #Villkor: inget matchat barn eller båda föräldrarna matchade.
 #Ska testas + evt felmeddelande
-    logging.debug('setEjOKfamily %s %s %s', wid, mid, code)    #res =
+    #logging.debug('setEjOKfamily %s %s %s', wid, mid, code)    #res =
     match = common.config['fam_matches'].find_one({'workid': wid, 'matchid': mid})
     if not match: return ''
     if (('husb' in match) and (match['husb']['status'] in common.statOK) and
@@ -303,8 +305,8 @@ def setOKperson(wid, mid, button = True):
         #logging.debug('In setOKperson found match %s', mt['_id'])
         if mt['workid']==wid and  mt['matchid']==mid:
             if common.checkStatusUpdate(mt['status'], kod):
-                logging.debug('wid=%s mid=%s status old=%s new=%s',
-                              wid, mid, mt['status'], kod)
+                #logging.debug('wid=%s mid=%s status old=%s new=%s',
+                #              wid, mid, mt['status'], kod)
                 common.config['matches'].update_one({'_id': mt['_id']}, {'$set': {'status': kod}})
                 if mt['status'] in common.statOK: continue  #No other updates needed
                 indlist.append(mt['workid'])
@@ -324,8 +326,8 @@ def setOKperson(wid, mid, button = True):
                            #Check multifam-resolution From match.py
                 ##TEST
         elif common.checkStatusUpdate(mt['status'], negKod):
-            logging.debug('wid=%s mid=%s status old=%s new=%s',
-                          mt['workid'], mt['matchid'], mt['status'], negKod)
+            #logging.debug('wid=%s mid=%s status old=%s new=%s',
+            #              mt['workid'], mt['matchid'], mt['status'], negKod)
             common.config['matches'].update_one({'_id': mt['_id']}, {'$set': {'status': negKod}})
             if mt['status'] in common.statEjOK: continue  #No other updates needed
             indlist.append(mt['workid'])
@@ -343,7 +345,7 @@ def setOKperson(wid, mid, button = True):
 def setEjOKperson(wid, mid, code='EjOK'):
     mt = common.config['matches'].find_one({'workid': wid, 'matchid': mid})
     if not common.checkStatusUpdate(mt['status'], code): return 'setEjOKperson Update not done'
-    logging.debug('setEjOKperson work=%s match=%s code=%s', wid, mid, code)
+    #logging.debug('setEjOKperson work=%s match=%s code=%s', wid, mid, code)
     common.config['matches'].update_one({'_id': mt['_id']}, {'$set': {'status': code}})
     indlist = [wid]
     flist = set()
@@ -412,5 +414,5 @@ def split(wid, mid):
             if 'matchid' in ch and ch['matchid'] == mid:
                 famList.add(doc['workid'])
                 break
-    logging.debug('split %s %s %s', wid,mid, famList)
+    #logging.debug('split %s %s %s', wid,mid, famList)
     return updateFamMatch(famList, common.config)
