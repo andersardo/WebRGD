@@ -20,7 +20,7 @@ from org.apache.lucene.util import Version
 
 from matchtext import matchtext
 luceneVM = lucene.initVM() #default 2048?
-luceneVM.attachCurrentThread('LuceneDB', True)
+#luceneVM.attachCurrentThread('LuceneDB', True)
 
 class luceneDB:
     """
@@ -43,17 +43,6 @@ class luceneDB:
         directory = "./files/"+user+'/'+db+'/LuceneIndex'
         if dropDB: shutil.rmtree(directory)
         self.indexDir = SimpleFSDirectory(Paths.get(directory)) #creates directory if not exists
-        """
-        if not os.path.exists(directory):
-            os.mkdir(directory)
-        elif dropDB:
-            shutil.rmtree(directory)
-            os.mkdir(directory)
-        try:
-            self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
-        except Exception, e: #if directory empty
-            pass
-        """
 
     def personText(self, person):
         txt = []
@@ -66,7 +55,7 @@ class luceneDB:
                         txt.append(val)
                         if len(val) > 4: txt.append(val[0:4])
             elif field in ('_id', 'refId'): txt.append(value)
-        return ' '.join(txt)
+        return ' '.join(txt).lower()
 
     def index(self, personDB, familyDB, relationDB):
         """
@@ -108,7 +97,7 @@ class luceneDB:
 
     def deleteRec(self, pid):
         config = IndexWriterConfig(self.analyzer)
-        #config.setOpenMode(IndexWriterConfig.OpenMode.APPEND)
+        config.setOpenMode(IndexWriterConfig.OpenMode.APPEND)
         writer = IndexWriter(self.indexDir, config)
         res = writer.deleteDocuments(Term('uid', pid))
         res = writer.commit()
@@ -118,7 +107,7 @@ class luceneDB:
 
     def query(self, txt, ant=10):
         """Searches for a person or family by id, name, place, or date"""
-        q = QueryParser("text", self.analyzer).parse(txt.replace('/', '\/'))
+        q = QueryParser("text", self.analyzer).parse(txt.replace('/', '\/').lower())
         if not self.searcher:
             self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
         scoreDocs = self.searcher.search(q, ant).scoreDocs
@@ -144,7 +133,6 @@ class luceneDB:
 
 if __name__=="__main__":
     searchDB = luceneDB('anders_testLucene', dropDB=True)
-
     #index some documents
     docs = [
         ['P36', 'M', 'hans anders b1936 d1966'],
@@ -152,8 +140,10 @@ if __name__=="__main__":
         ['P38', 'U', 'oscar marina b1939 d1968'],
         ['P39', 'M', 'jonas peter b1939 d1969'],
         ['P40', 'F', 'katarina margareta b1940 d1970'],
-        ['P41', 'M', 'jonas erik b1939 d1971']
+        ['P41', 'M', 'Jonas erik b1939 d1971']
     ]
+    #print searchDB.analyzer
+    #print searchDB.indexDir
     config = IndexWriterConfig(searchDB.analyzer)
     config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
     writer = IndexWriter(searchDB.indexDir, config)
@@ -161,9 +151,11 @@ if __name__=="__main__":
         doc = Document()
         doc.add(Field('uid', d[0], StringField.TYPE_STORED))
         doc.add(Field('sex', d[1], StringField.TYPE_STORED))
-        doc.add(Field("text", d[2], TextField.TYPE_NOT_STORED))
-        writer.addDocument(doc)
-    writer.commit()
+        doc.add(Field("match", d[2], TextField.TYPE_NOT_STORED))
+        res = writer.addDocument(doc)
+        #print res
+    res = writer.commit()
+    #print res
     writer.close()
 
     #test deletion
@@ -171,5 +163,5 @@ if __name__=="__main__":
     print h
     print 'Deleting P39'
     searchDB.deleteRec('P39')
-    h = searchDB.search('b1939 jonas', 'M')
+    h = searchDB.search('jonas', 'M')
     print h

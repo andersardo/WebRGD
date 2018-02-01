@@ -87,7 +87,7 @@ def createMapSimple(config):
     return False
 
 def mergePers(pId1, pId2, personDB, familyDB, relationDB, origDB):
-    print '  Merging persons', pId2, 'into', pId1
+    #print '  Merging persons', pId2, 'into', pId1
     origDB.update_one({'recordId': pId1, 'type': 'person'},
                       {'$push': {'map': pId2}})
     for r in relationDB.find({'persId': pId2}):
@@ -112,7 +112,7 @@ def mergePers(pId1, pId2, personDB, familyDB, relationDB, origDB):
     return
 
 def mergeFam(fId1, fId2, personDB, familyDB, relationDB, origDB, updateLucene=False):
-    print '  Merging families', fId2, 'into', fId1
+    #print '  Merging families', fId2, 'into', fId1
     origDB.update_one({'recordId': fId1, 'type': 'family'},
                       {'$push': {'map': fId2}})
     #Test fId1:husb/wife == fId2:husb/wife -- evt merge persons?
@@ -148,7 +148,6 @@ def mergeFam(fId1, fId2, personDB, familyDB, relationDB, origDB, updateLucene=Fa
     return
 
 def findAndMergeDuplFams(personDB, familyDB, relationDB, origDB):
-    print 'Check and merge duplicate families'
     #Check for duplicate families
     #Find and merge families where husb and wife are same
     #  and marriages do not conflict(?)
