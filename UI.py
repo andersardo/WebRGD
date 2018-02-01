@@ -10,7 +10,7 @@ from uiUtils import dbfind,familyViewAll
 from workFlow import workFlowUI, doUpload, cleanUp, getDBselect, listOldLogs
 from graphUtils import genGraph
 from relationEdit import editList, viewChildErr, viewPartnerErr, viewNoRelErr, viewDubbl, viewQueryHits
-from errRelationUtils import mergeFam, mergePers
+from mergeUtils import mergePers, mergeFam
 from queryUtils import doQuery
 import conf.config, common
 #print conf.config
@@ -904,7 +904,8 @@ def act5():
     print 'mergeFam', bottle.request.query.id1, bottle.request.query.id2
     return mergeFam(bottle.request.query.id1, bottle.request.query.id2,
                     common.config['persons'], common.config['families'],
-                    common.config['relations'], common.config['originalData'])
+                    common.config['relations'], common.config['originalData'],
+                    updateLucene=True)
 
 @bottle.route('/actions/mergePers')
 @authorize()

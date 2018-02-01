@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # This Python file uses the following encoding: utf-8
 from collections import defaultdict
-from errRelationUtils import sanity, mergeFam, mergePers, genGraphFam, genGraphPers, repairChild, repairFam
+from errRelationUtils import sanity, genGraphFam, genGraphPers, repairChild, repairFam, repairRel
+from mergeUtils import mergePers, mergeFam, findAndMergeDuplFams
 from dbUtils import getFamilyFromId
 from uiUtils import eventDisp, persDisp
 from operator import itemgetter
@@ -46,7 +47,10 @@ def editList(config, typ):
                 'person': str(':'.join(pids)), 'family': str(famId)}
         visa = '<button onclick="doAction('+str(args)+')">Visa</button>'
         famErrs.append(['Partner', '<br>'.join(person), famId, visa])
-    for pers in rErr:
+    rErr = repairRel(rErr, config['persons'], config['families'],
+                       config['relations'], config['originalData'])
+    for pid in rErr:
+        pers = config['persons'].find_one({'_id': pid})
         person = "%s %s" % (pers['_id'], pers['name'])
         args = {'where': 'visa', 'what': '/view/relErr', 'typ': 'noRel',
                 'person': str(pers['_id']), 'family': ''}
@@ -88,6 +92,9 @@ def editList(config, typ):
                     tab.append(["%3.0f" % (score), pstr, kid, visa])
                     done.append(';'.join([kid,person['_id']]))
             dubblList = sorted(tab, key=itemgetter(0), reverse=True)[0:25]
+            findAndMergeDuplFams(config['persons'], config['families'],
+                                 config['relations'], config['originalData'])
+            #OBS does not update luceneDB - OK?
         dubbls = dubblList
     return (tit, childErrs, famErrs, relErrs, dubbls)
 
@@ -277,7 +284,7 @@ def doMergePers(persId1, persId2, config):
 def doMergeFam(famId1, famId2, config):
     res = 'Not implemented fully'
     mergeFam(famId1, famId2, config['persons'], config['families'],
-             config['relations'], config['originalData'])
+             config['relations'], config['originalData'], updateLucene=True)
     return res
 
 def doRemoveFam(famId, config):

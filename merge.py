@@ -40,8 +40,9 @@ if noStrict:
 else:
     print 'Do not accept relation errors when merging'
     strict = True
-from mergeUtils import createMapSimple, mergeEvent
-from mergeUtils import Imap, reverseImap, Fmap, reverseFmap, Fignore
+from mergeUtils import createMapSimple, mergeEvent, findAndMergeDuplFams
+#from mergeUtils import Imap, reverseImap, Fmap, reverseFmap, Fignore
+from mergeUtils import Imap, Fmap
 
 t0 = time.time()
 
@@ -104,7 +105,7 @@ def sanityChecks(config):
         print 'Relation ERROR Family', famId, 'have multiple husb/wife', pStr
         ERRORS = True
     for p in relErr:
-        print 'Relation WARNING Person without relations:', p['_id'], p['name']
+        print 'Relation WARNING Person without relations:', p
         WARNINGS = True
     return (ERRORS, WARNINGS)
 
@@ -230,6 +231,15 @@ for r in config['relations'].find({}, {'_id': 0}):
 print 'Try to repair any new relation errors'
 #FIX bästa ordningen?? Fam, child, rel ??
 (childErr, famErr, relErr) = sanity(config['match_persons'], config['match_families'],
+                                    config['match_relations'])
+resChild = repairChild(childErr, config['match_persons'], config['match_families'],
+                  config['match_relations'], config['match_originalData'])
+resFam = repairFam(famErr, config['match_persons'], config['match_families'],
+                   config['match_relations'], config['match_originalData'])
+resRel = repairRel(relErr, config['match_persons'], config['match_families'],
+                   config['match_relations'], config['match_originalData'])
+"""
+(childErr, famErr, relErr) = sanity(config['match_persons'], config['match_families'],
                                     config['match_relations'], do=['child'])
 resChild = repairChild(childErr, config['match_persons'], config['match_families'],
                   config['match_relations'], config['match_originalData'])
@@ -241,8 +251,13 @@ resFam = repairFam(famErr, config['match_persons'], config['match_families'],
 #                                    config['match_relations'], do=['match_child'])
 #repairRel(relErr, config['match_persons'], config['match_families'],
 #          config['match_relations'], config['match_originalData'])
+"""
 
 print 'Check and merge duplicate families'
+findAndMergeDuplFams(config['match_persons'], config['match_families'],
+            config['match_relations'], config['match_originalData'])
+
+"""
 #Check for duplicate families: Fall 2 relationserror
 #Find and merge families where husb and wife are same
 #  and marriages do not conflict
@@ -298,6 +313,7 @@ for s in d.values():
       if marrEvents:
           config['match_families'].update_one({'_id': F['_id']}, {'$set':
                                               {'marriage': mergeEvent(marrEvents)}})
+"""
 print 'Time:',time.time() - t0
 
 if WARNINGS:
