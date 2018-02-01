@@ -131,6 +131,10 @@ logging.info('Time %s',time.time() - t0)
 logging.info('Cleaning by applying patterns and rules')
 #Find and merge duplicate persons. How? Not done here
 
+from mergeUtils import findAndMergeDuplFams
+findAndMergeDuplFams(config['persons'], config['families'], config['relations'],
+                     config['originalData'])
+"""
 #Find and merge families where husb and wife are same
 #  and marriages do not conflict
 logging.info('Merge families where husb and wife are same persons')
@@ -185,6 +189,7 @@ for s in d.values():
       if marrEvents:
           config['families'].update_one({'_id': F['_id']}, {'$set':
                                               {'marriage': mergeEvent(marrEvents)}})
+"""
 logging.info('Time %s',time.time() - t0)
 logging.info('Indexing %s in Lucene', dbName)
 from luceneDB import luceneDB

@@ -55,7 +55,7 @@ function doAction(args) {
   <h1>RGD {{title}}</h1>
 <h3>  Relationsproblem: <a href="/relationsEditor/child">Barn i mer än 2 familjer</a>
   ||  <a href="/relationsEditor/family">Familjer med mer än 1 HUSB/WIFE</a>
-  ||  <a href="/relationsEditor/relation">Personer/Familjer utan relationer(*)</a>
+  ||  <a href="/relationsEditor/relation">Personer/Familjer utan relationer</a>
 </h3>
 <h3>Hitta möjliga dubbletter:
     <a href="/relationsEditor/dubblett">Dubbletter(**)</a>

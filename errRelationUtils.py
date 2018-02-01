@@ -5,7 +5,7 @@ from collections import defaultdict
 import codecs, locale
 from dbUtils import getFamilyFromId
 from matchUtils import nodeSim
-from mergeUtils import mergeEvent
+from mergeUtils import mergeEvent, mergeFam, mergePers
 from graphUtils import eventDisp, printNode, mapPersId
 from luceneDB import luceneDB
 """
@@ -23,7 +23,7 @@ def sanity(personDB, familyDB, relationDB, do=['child', 'family', 'relation']):
     #SANITY CHECKS
     childErr = []
     famErr = []
-    relErr = []
+    relErr = set()
     if 'child' in do:
         #can only be child in 1 family
         aggrPipe = [
@@ -57,13 +57,22 @@ def sanity(personDB, familyDB, relationDB, do=['child', 'family', 'relation']):
                 famErr.append((multiPartner['_id'], pers))
     if 'relation' in do:
         #Persons without relations
+        """
+        Slow
         for pers in personDB.find():
             rel = relationDB.find_one({'persId': pers['_id']})
             if not rel:
                 #print 'Relation WARNING Person without relations:', pers['_id'], pers['name']
                 relErr.append(pers)
+        """
+        pers = set(personDB.find({}, {'_id': 1}).distinct('_id'))
+        persRel = set(relationDB.find({}, {'_id': 0, 'persId': 1}).distinct('persId'))
+        #families
+        fam = set(familyDB.find({}, {'_id': 1}).distinct('_id'))
+        famRel = set(relationDB.find({}, {'_id': 0, 'famId': 1}).distinct('famId'))
+        relErr = pers.difference(persRel).union(fam.difference(famRel))
     return (childErr, famErr, relErr)
-
+"""
 def mergeFam(fId1, fId2, personDB, familyDB, relationDB, origDB):
 #    print '  Merging families', fId2, 'into', fId1
     origDB.update_one({'recordId': fId1, 'type': 'family'},
@@ -113,7 +122,7 @@ def mergePers(pId1, pId2, personDB, familyDB, relationDB, origDB):
     searchDB.deleteRec(pId2)
     #Evt check if pId1 barn i två familjer och inga problem => delete den familjen
     return
-
+"""
 def repairChild(childErr, personDB, familyDB, relationDB, origDB):
     notFixed = []
     for (pers, chFams) in childErr:
@@ -144,7 +153,8 @@ def repairChild(childErr, personDB, familyDB, relationDB, origDB):
                 #   other partner similar
                 parentsCond = ( (husbSame or wifeSame) )
                 if parentsCond and otherSimilarity>simLimit and chSame>=chSameLimit:
-                    mergeFam( chFams[i], chFams[j], personDB, familyDB, relationDB, origDB)
+                    mergeFam( chFams[i], chFams[j], personDB, familyDB,
+                              relationDB, origDB, updateLucene=True)
                     merged.append(chFams[j])
                     print 'p1 merged', chFams[i], chFams[j]
                     continue
@@ -161,7 +171,8 @@ def repairChild(childErr, personDB, familyDB, relationDB, origDB):
                                  husbSimilarity > simLimit )
                               )
                 if parentsCond and chSame>=chSameLimit:
-                    mergeFam( chFams[i], chFams[j], personDB, familyDB, relationDB, origDB)
+                    mergeFam( chFams[i], chFams[j], personDB, familyDB,
+                              relationDB, origDB, updateLucene=True)
                     merged.append(chFams[j])
                     print 'p1a merged', chFams[i], chFams[j]
                     continue
@@ -175,7 +186,8 @@ def repairChild(childErr, personDB, familyDB, relationDB, origDB):
                                  (not work['wife'] and match['wife']))
                               )
                 if parentsCond and chSame>=chSameLimit:
-                    mergeFam( chFams[i], chFams[j], personDB, familyDB, relationDB, origDB)
+                    mergeFam( chFams[i], chFams[j], personDB, familyDB,
+                              relationDB, origDB, updateLucene=True)
                     merged.append(chFams[j])
                     print 'p2 merged', chFams[i], chFams[j]
                     continue
@@ -189,7 +201,8 @@ def repairChild(childErr, personDB, familyDB, relationDB, origDB):
                 #p5: 1 family without parents
                 if (((work['husb'] is None) and (work['wife'] is None)) or
                     ((match['husb'] is None) and (match['wife'] is None))):
-                    mergeFam( chFams[i], chFams[j], personDB, familyDB, relationDB, origDB)
+                    mergeFam( chFams[i], chFams[j], personDB, familyDB,
+                              relationDB, origDB, updateLucene=True)
                     merged.append(chFams[j])
                     print 'p5 merged', chFams[i], chFams[j]
                     continue
@@ -258,11 +271,15 @@ def repairFam(famErr, personDB, familyDB, relationDB, origDB):
     return notFixed
 
 def repairRel(relErr, personDB, familyDB, relationDB, origDB):
-    #Persons without relations
-    print 'repairRel not implemented yet'
-    #for p in relErr:
-    #    print 'Relation WARNING Person without relations:', p['_id'], p['name']
-    return relErr
+    #Persons/families without relations
+    rErr = relErr.copy()
+    for id in relErr:
+        if id.startswith('F_'):
+            #delete families without relations
+            print 'Deleting family without relations', id
+            familyDB.delete_one({'_id': id})
+            rErr.remove(id)
+    return rErr
 
 def printFams(famList, centerPersonId, centerFamId, gvFil, personDB, familyDB, relationDB):
     global mapPersId
@@ -395,5 +412,5 @@ if __name__=="__main__":
     print 'Multi husb/wife in one family'
     repairFam(famErr, personDB, familyDB, relationDB, origDB)
 
-    #print 'Rel err'
-    #repairRel(relErr, personDB, familyDB, relationDB, origDB)
+    print 'Rel err'
+    repairRel(relErr, personDB, familyDB, relationDB, origDB)
