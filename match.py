@@ -51,6 +51,11 @@ common.config = config
 #setupDir(mDBname)
 from luceneDB import luceneDB
 searchDB = luceneDB(mDBname)
+#make sure we have a fresh LuceneIndex to search in
+#  deleteRec does not update merged events FIXED with updateDeleteRec
+#searchDB = luceneDB(mDBname, dropDB=True)
+#searchDB.index(config['match_persons'], config['match_families'], config['match_relations'])
+#Should be optimized??
 
 person_list = config['persons']
 fam_list = config['families']

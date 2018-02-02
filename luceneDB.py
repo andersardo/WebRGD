@@ -95,12 +95,32 @@ class luceneDB:
         writer.close()
         return
 
+    def updateDeleteRec(self, pid1, pid2, personDB, familyDB, relationDB):
+        config = IndexWriterConfig(self.analyzer)
+        config.setOpenMode(IndexWriterConfig.OpenMode.APPEND)
+        writer = IndexWriter(self.indexDir, config)
+        mt = matchtext()
+        writer.deleteDocuments(Term('uid', pid1))
+        writer.deleteDocuments(Term('uid', pid2))
+        p = personDB.find_one({'_id': pid1})
+        matchtxt = mt.matchtextPerson(p, personDB, familyDB, relationDB)
+        doc = Document()
+        doc.add(Field('uid',str(pid1), StringField.TYPE_STORED))
+        doc.add(Field('sex',str(p['sex']), StringField.TYPE_STORED))
+        doc.add(Field("match", matchtxt, TextField.TYPE_NOT_STORED))
+        doc.add(Field("text", mt.luceneFix(self.personText(p)), TextField.TYPE_NOT_STORED))
+        writer.addDocument(doc)
+        writer.commit()
+        writer.close()
+        self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
+        return
+
     def deleteRec(self, pid):
         config = IndexWriterConfig(self.analyzer)
         config.setOpenMode(IndexWriterConfig.OpenMode.APPEND)
         writer = IndexWriter(self.indexDir, config)
-        res = writer.deleteDocuments(Term('uid', pid))
-        res = writer.commit()
+        writer.deleteDocuments(Term('uid', pid))
+        writer.commit()
         writer.close()
         self.searcher = IndexSearcher(DirectoryReader.open(self.indexDir))
         return

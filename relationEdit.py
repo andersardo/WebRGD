@@ -59,8 +59,6 @@ def editList(config, typ):
     if typ in ('dubblett', 'dubblettFind'):
         tit = 'Dubblett editor databas: ' + config['workDB']
         if len(dubblList) == 0 or typ=='dubblettFind':
-            #from luceneUtils import setupDir, search
-            #setupDir(config['workDB'])  ##FIX RuntimeError: attachCurrentThread()
             searchDB = luceneDB(config['workDB'])
             from matchtext import matchtext
             mt_tmp = matchtext()

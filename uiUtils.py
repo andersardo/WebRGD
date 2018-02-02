@@ -118,10 +118,10 @@ def famDisp( tmpfid, rgdfid, match = None ):
                                             "matchFam" : match['matchid']})
     ignargs = {'where': 'res', 'what': '/actions/ignoreRelation', 'role': 'family',
                'workFam': str(match['workid']), 'matchFam': str(match['matchid'])}
-    ignButt = '<br><button onclick="doAction('+str(ignargs)+')">Ignorera Match</button>'
+    ignButt = '<br><button onclick="doAction('+str(ignargs)+')">Ignorera match</button>'
     ign = 'Marriage/ '+match['status']
     if flag: ign += '<br><b>Ignorerad</b>'
-    else: ign += ignButt
+    elif match['status'] in ('Match', 'OK', 'rOK'): ign += ignButt
     marr.extend(['', ign, match['matchRefId']])
     try: marr.append(eventDisp(match['marriage']['match']))
     except: marr.append('-')

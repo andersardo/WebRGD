@@ -107,7 +107,8 @@ def mergePers(pId1, pId2, personDB, familyDB, relationDB, origDB):
     personDB.delete_one({'_id': pId2}) #delete person pId2
     # FIX Need name of DB:
     searchDB = luceneDB(personDB.full_name.split('.')[0])
-    searchDB.deleteRec(pId2)
+    #searchDB.deleteRec(pId2)
+    searchDB.updateDeleteRec(pId1, pId2, personDB, familyDB, relationDB)
     #Evt check if pId1 barn i två familjer och inga problem => delete den familjen
     return
 
@@ -171,7 +172,7 @@ def findAndMergeDuplFams(personDB, familyDB, relationDB, origDB):
             if (famId1Partner is None) and (famId2Partner is None):
                 fam1Chil = relationDB.find({'relTyp': 'child', 'famId': famId1}).count()
                 fam2Chil = relationDB.find({'relTyp': 'child', 'famId': famId2}).count()
-                if fam1Chil==0 and fam2Chil==0:
+                if fam1Chil==0 or fam2Chil==0:
                     mergeFam(famId1, famId2, personDB, familyDB, relationDB, origDB)
             elif (famId1Partner and famId2Partner and
                   (famId1Partner['persId'] == famId2Partner['persId']) ):
