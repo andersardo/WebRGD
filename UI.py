@@ -581,7 +581,7 @@ def listSkillnad(typ):
 def relationEditor(typ):
     (tit, childErrs, famErrs, relErrs, dubbls) = editList(common.config, typ)
     return bottle.template('listEdit', title = tit, childErrs=childErrs,
-                           famErrs=famErrs, relErrs=relErrs, dubbletter=dubbls)
+                           famErrs=famErrs, relErrs=relErrs, dubbletter=dubbls, hits=[])
 
 def viewRelErr(person, family, typ):
     if typ == 'child':
@@ -606,7 +606,7 @@ def viewRelErr(person, family, typ):
 def queryDB():
     (tit, res) = doQuery(bottle.request.query.q, common.config)
     return bottle.template('listEdit', title = tit, childErrs=[],
-                           famErrs=[], relErrs=[], dubbletter=res) #TMP
+                           famErrs=[], relErrs=[], dubbletter=[], hits=res) #TMP
 
 #Likheter
 @bottle.route('/downloadFamMatches')

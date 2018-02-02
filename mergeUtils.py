@@ -87,7 +87,7 @@ def createMapSimple(config):
     return False
 
 def mergePers(pId1, pId2, personDB, familyDB, relationDB, origDB):
-    print '  Merging persons', pId2, 'into', pId1
+    #print '  Merging persons', pId2, 'into', pId1
     origDB.update_one({'recordId': pId1, 'type': 'person'},
                       {'$push': {'map': pId2}})
     for r in relationDB.find({'persId': pId2}):
@@ -107,12 +107,13 @@ def mergePers(pId1, pId2, personDB, familyDB, relationDB, origDB):
     personDB.delete_one({'_id': pId2}) #delete person pId2
     # FIX Need name of DB:
     searchDB = luceneDB(personDB.full_name.split('.')[0])
-    searchDB.deleteRec(pId2)
+    #searchDB.deleteRec(pId2)
+    searchDB.updateDeleteRec(pId1, pId2, personDB, familyDB, relationDB)
     #Evt check if pId1 barn i två familjer och inga problem => delete den familjen
     return
 
 def mergeFam(fId1, fId2, personDB, familyDB, relationDB, origDB, updateLucene=False):
-    print '  Merging families', fId2, 'into', fId1
+    #print '  Merging families', fId2, 'into', fId1
     origDB.update_one({'recordId': fId1, 'type': 'family'},
                       {'$push': {'map': fId2}})
     #Test fId1:husb/wife == fId2:husb/wife -- evt merge persons?
@@ -148,7 +149,6 @@ def mergeFam(fId1, fId2, personDB, familyDB, relationDB, origDB, updateLucene=Fa
     return
 
 def findAndMergeDuplFams(personDB, familyDB, relationDB, origDB):
-    print 'Check and merge duplicate families'
     #Check for duplicate families
     #Find and merge families where husb and wife are same
     #  and marriages do not conflict(?)
@@ -172,7 +172,7 @@ def findAndMergeDuplFams(personDB, familyDB, relationDB, origDB):
             if (famId1Partner is None) and (famId2Partner is None):
                 fam1Chil = relationDB.find({'relTyp': 'child', 'famId': famId1}).count()
                 fam2Chil = relationDB.find({'relTyp': 'child', 'famId': famId2}).count()
-                if fam1Chil==0 and fam2Chil==0:
+                if fam1Chil==0 or fam2Chil==0:
                     mergeFam(famId1, famId2, personDB, familyDB, relationDB, origDB)
             elif (famId1Partner and famId2Partner and
                   (famId1Partner['persId'] == famId2Partner['persId']) ):

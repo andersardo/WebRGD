@@ -124,6 +124,18 @@ function doAction(args) {
 </table> 
 %end
 
+%if len(hits)>1:
+<H3>Sökresultat</H3>
+<table border=1 id="relerr">
+%for r in hits:
+  <tr>
+    %for cell in r:
+      <td>{{!cell}}</td>
+    %end
+  </tr>
+%end
+</table> 
+%end
 
 <div id="verif"></div>
 <div id="res"></div>
