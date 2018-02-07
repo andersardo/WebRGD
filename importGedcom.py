@@ -108,6 +108,7 @@ logging.info('Time %s',time.time() - t0)
 
 #############################################################
 #print 'Only keep families with more than 1 member'
+logging.info('Families')
 for fam in people.family_list():
 #Keep all families - see Redmine 543
 #    if familyMembers[str(fam)] > 1:
@@ -132,69 +133,13 @@ logging.info('Cleaning by applying patterns and rules')
 #Find and merge duplicate persons. How? Not done here
 
 from mergeUtils import findAndMergeDuplFams
-findAndMergeDuplFams(config['persons'], config['families'], config['relations'],
-                     config['originalData'])
-"""
-#Find and merge families where husb and wife are same
-#  and marriages do not conflict
-logging.info('Merge families where husb and wife are same persons')
-from collections import defaultdict
-from mergeUtils import mergeEvent
-d = defaultdict(set)
-for husb in config['relations'].find({'relTyp': 'husb'}):
-    for wife in config['relations'].find({'$and':
-                        [{'famId': husb['famId']}, {'relTyp': 'wife'}]}):
-        d[husb['persId'], wife['persId']].add(husb['famId'])
-for s in d.values():
-    if len(s)>=2:
-      fdubl = list(s)
-      #merge all into fdubl[0]
-      #F = config['families'].find_one({'_id': fdubl[0]}, {'_id': 1})
-      F = config['families'].find_one({'_id': fdubl[0]}) #need marriage
-      if 'marriage'in F:
-          marrEvents = [F['marriage']]
-      else:
-          marrEvents = []
-      FId = F['_id']
-      #USE for fd in fdubl[1:]:
-      for fd in fdubl:
-          if fd == fdubl[0]: continue
-          #FIX check marriage dates - see pattern notes
-          #Enl Rolf: Marr  datum kan vara olika eller blanka
-          fam2beMerged = config['families'].find_one({'_id': fd})
-          if 'marriage' in fam2beMerged: marrEvents.append(fam2beMerged['marriage'])
-          print 'Merging family %s into %s' % (fam2beMerged['_id'], FId)
-          config['originalData'].update_one({'recordId': F['_id'], 'type': 'family'},
-                                            {'$push': {'map': fam2beMerged['_id']}})
-          config['families'].delete_one({'_id': fam2beMerged['_id']})
-          config['relations'].delete_many({'$and': [{'famId': fam2beMerged['_id']},
-                                               {'$or': [{'relTyp': 'husb'},
-                                                        {'relTyp': 'wife'}]}
-                                           ]})
-          #only children in fam2beMerged left - move to new family
-          config['relations'].update_many({'famId': fam2beMerged['_id']},
-                                          {'$set': {'famId': F['_id']}})
-          #remove duplicates
-          for ids in config['relations'].aggregate([
-              { "$group": {
-                  "_id": { "persId": "$persId", "relTyp": "$relTyp", 'famId': '$famId' }, 
-                  "uniqueIds": { "$addToSet": "$_id" },
-                  "count": { "$sum": 1 }
-                }},
-              { "$match": { "count": { "$gt": 1 } } }
-          ]):
-              config['relations'].remove({'_id': ids['uniqueIds'][1]})
-
-      #merge all marriage events
-      if marrEvents:
-          config['families'].update_one({'_id': F['_id']}, {'$set':
-                                              {'marriage': mergeEvent(marrEvents)}})
-"""
-logging.info('Time %s',time.time() - t0)
-logging.info('Indexing %s in Lucene', dbName)
 from luceneDB import luceneDB
 searchDB = luceneDB(dbName)
-#setupDir(dbName)
+searchDB.dummyIndex()  #Index must be available for findAndMergeDuplFams to work
+findAndMergeDuplFams(config['persons'], config['families'], config['relations'],
+                     config['originalData'])
+logging.info('Time %s',time.time() - t0)
+logging.info('Indexing %s in Lucene', dbName)
 searchDB.index(config['persons'],config['families'],config['relations'])
 logging.info('Time %s',time.time() - t0)
 #stats

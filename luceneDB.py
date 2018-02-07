@@ -57,6 +57,20 @@ class luceneDB:
             elif field in ('_id', 'refId'): txt.append(value)
         return ' '.join(txt).lower()
 
+    def dummyIndex(self):
+        """
+        Create a dummy index - to avoid problems updating it
+        """
+        config = IndexWriterConfig(self.analyzer)
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)
+        writer = IndexWriter(self.indexDir, config)
+        doc = Document()
+        doc.add(Field('uid', 'dummy', StringField.TYPE_STORED))
+        writer.addDocument(doc)
+        writer.commit()
+        writer.close()
+        return
+
     def index(self, personDB, familyDB, relationDB):
         """
         indexes a database
