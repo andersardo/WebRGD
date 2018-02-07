@@ -56,7 +56,6 @@ searchDB = luceneDB(mDBname)
 #searchDB = luceneDB(mDBname, dropDB=True)
 #searchDB.index(config['match_persons'], config['match_families'], config['match_relations'])
 #Should be optimized??
-
 person_list = config['persons']
 fam_list = config['families']
 
@@ -71,7 +70,6 @@ match_family = config['match_families']
 
 dubltmp = defaultdict(list)
 dbltmpNs = defaultdict(float)
-
 ant=0
 for p in person_list.find({}, no_cursor_timeout=True):
     matchtxt = mt_tmp.matchtextPerson(p, person_list, fam_list, config['relations'])
@@ -107,7 +105,6 @@ for p in person_list.find({}, no_cursor_timeout=True):
         if (sc/score > 3.0): break
 logging.info('%d person matchings inserted', ant)
 logging.info('Time %s',time.time() - t0)
-
 #Families match-status calculated from person match-status => No SVM
 ant = 0
 fams = set()
@@ -144,7 +141,6 @@ for (tFamId,rFamId) in fams:    #  for all involved families
     ant += 1
 logging.info('%d family matchings inserted', ant)
 logging.info('Time %s',time.time() - t0)
-
 ############################
 #EVT SVM for fam-matches?
 ############################
