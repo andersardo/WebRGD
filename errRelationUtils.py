@@ -314,6 +314,7 @@ def printFams(famList, centerPersonId, centerFamId, gvFil, personDB, familyDB, r
             prev = ch
         gvFil.write('{rank=same; ')
         for ch in fam['children']:
+            print ch, mapPersId
             gvFil.write(mapPersId[ch] + '; ')
         gvFil.write("}\n")
 
