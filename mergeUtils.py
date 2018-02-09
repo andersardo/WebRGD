@@ -173,10 +173,12 @@ def findAndMergeDuplFams(personDB, familyDB, relationDB, origDB):
                 fam1Chil = relationDB.find({'relTyp': 'child', 'famId': famId1}).count()
                 fam2Chil = relationDB.find({'relTyp': 'child', 'famId': famId2}).count()
                 if fam1Chil==0 or fam2Chil==0:
+                    #print 'Merging fam pattern1', famId1, famId2
                     mergeFam(famId1, famId2, personDB, familyDB, relationDB, origDB)
             elif (famId1Partner and famId2Partner and
                   (famId1Partner['persId'] == famId2Partner['persId']) ):
                 #Conflicting marriages?
+                #print 'Merging fam pattern2', famId1, famId2
                 mergeFam(famId1, famId2, personDB, familyDB, relationDB, origDB)
     return
 
