@@ -237,9 +237,9 @@ def repairChild(childErr, personDB, familyDB, relationDB, origDB):
                      continue
                 """
                 print 'Not repaired', pers['_id'], pers['name'], chFams[i], chFams[j]
-                print '  ',
-                for x in (minCh, chSame, husbSame, wifeSame, husbSimilarity, wifeSimilarity, otherSimilarity): print x,
-                print
+                #print '  ',
+                #for x in (minCh, chSame, husbSame, wifeSame, husbSimilarity, wifeSimilarity, otherSimilarity): print x,
+                #print
                 notFixed.append((pers, chFams))
     return notFixed
 
@@ -314,7 +314,7 @@ def printFams(famList, centerPersonId, centerFamId, gvFil, personDB, familyDB, r
             prev = ch
         gvFil.write('{rank=same; ')
         for ch in fam['children']:
-            print ch, mapPersId
+            #print ch, mapPersId
             gvFil.write(mapPersId[ch] + '; ')
         gvFil.write("}\n")
 

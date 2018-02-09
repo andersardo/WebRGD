@@ -8,7 +8,7 @@ def doQuery(q, config):
     searchDB = luceneDB(config['workDB'])
     res = [['Namn, Id', 'Född', 'Död', 'score', 'action']]
     for uid, score in searchDB.query(q):
-        print uid, score
+        #print uid, score
         pers = config['persons'].find_one({'_id': uid})
         t = persDisp(pers)
         t[0] += '<br/>' + uid
