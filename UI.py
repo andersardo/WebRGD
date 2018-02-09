@@ -19,7 +19,7 @@ import bottle
 from bottle import response
 from beaker.middleware import SessionMiddleware
 from cork import Cork
-from bson.objectid import ObjectId
+#from bson.objectid import ObjectId
 
 # Use users.json and roles.json in the local conf directory
 aaa = Cork('conf', email_sender='WebRGD@dis.se', smtp_server=conf.config.mailserver)
@@ -862,8 +862,10 @@ def action():
 @bottle.route('/actions/setOK/person')
 @authorize()
 def act1():
-    return setOKperson(ObjectId(bottle.request.query.wid),
-                       ObjectId(bottle.request.query.mid), button=True)
+    #return setOKperson(ObjectId(bottle.request.query.wid),
+    #                   ObjectId(bottle.request.query.mid), button=True)
+    return setOKperson(bottle.request.query.wid,
+                       bottle.request.query.mid, button=True)
 
 @bottle.route('/actions/setEjOK/family')
 @authorize()
